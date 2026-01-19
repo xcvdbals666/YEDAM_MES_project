@@ -1,10 +1,11 @@
 const express = require("express");
 const router = express.Router();
 
-const produceService = require("../services/produceService.js");
+const produceService = require("../services/produceService1.js");
 
-router.get(`/produce`, async (req, res) => {
-  let list = await produceService.findAll();
+router.get(`/production/planList`, async (req, res) => {
+  const data = req.params;
+  let list = await produceService.findAll(data);
   res.send(list);
 });
 
@@ -12,12 +13,12 @@ router.get(`/produce`, async (req, res) => {
 router.get(`/workorderList`, async (req, res) => {
   const list = await produceService.findAllWkotbl();
   res.send(list);
-})
+});
 
 //전체 생산계획서 조회
 router.get(`/prdpList`, async (req, res) => {
   const list = await produceService.findAllPrdp();
   res.send(list);
-})
+});
 
 module.exports = router;

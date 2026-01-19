@@ -1,7 +1,7 @@
 <script setup>
 import { ref, watch } from 'vue';
 import { FilterMatchMode } from '@primevue/core/api';
-import { useMaterialStore } from '@/stores/material';
+import { useMaterialStore } from '@/stores/material1';
 
 const props = defineProps({
   visible: Boolean

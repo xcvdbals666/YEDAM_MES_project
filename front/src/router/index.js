@@ -1,27 +1,26 @@
 import Main from '@/views/Main.vue';
 import { createRouter, createWebHistory } from 'vue-router';
-import ProductionRoutes from '../router/Productions'
-
+import ProductionRoutes1 from './productions1.js';
+import ProductionRoutes2 from './productions2.js';
 
 const router = createRouter({
-    history: createWebHistory(),
-    routes: [
+  history: createWebHistory(),
+  routes: [
+    {
+      path: '/',
+      name: 'main',
+      component: Main,
+      children: [
         {
-            path: '/material/request',
-            name: 'materialRequest',
-            component: () => import('@/views/material/MprPurchaseRequest.vue')
-          
-            path: '/outbound',
-            name: 'outbound',
-            component: () => import('@/views/order/OutboundList.vue')
-            path: '/',
-            component: AppLayout,
-            children: [
-
-                ...ProductionRoutes,
-            ]
+          path: '/test',
+          name: 'test',
+          component: () => import('@/views/test.vue')
         },
-    ]
+        ...ProductionRoutes1,
+        ...ProductionRoutes2
+      ]
+    }
+  ]
 });
 
 export default router;

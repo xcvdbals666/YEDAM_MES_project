@@ -1,10 +1,10 @@
 const express = require("express");
 const router = express.Router();
 
-const qualityServie = require("../services/qualityServie.js");
+const qualityService = require("../services/qualityService2.js");
 
 router.get(`/quality`, async (req, res) => {
-  let list = await qualityServie.findAll();
+  let list = await qualityService.findAll();
   res.send(list);
 });
 

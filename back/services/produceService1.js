@@ -7,17 +7,24 @@ const findAll = async () => {
   return list;
 };
 
+//전체 생산계획서 조회
+const findAllPrdp = async (data) => {
+  const { name, prdpStart, prdpEnd, dueStart, dueEnd } = data;
+  const prdpName = `%name%`;
+  let list = await mysql.query("selectAllPrdp", [], "produce");
+  return list;
+};
+
 //전체 작업지시서 조회
 const findAllWkotbl = async () => {
   const list = await mysql.query("selectAllWkotbl", [], "produce");
   return list;
-}
+};
 
-//전체 생산계획서 조회
-const findAllPrdp = async () => {
-  const list = await mysql.query("selectAllPrdp", [], "produce");
-  return list;
-}
+// const findAllPrdp = async () => {
+//   const list = await mysql.query("selectAllPrdp", [], "produce");
+//   return list;
+// };
 
 module.exports = {
   findAll,
