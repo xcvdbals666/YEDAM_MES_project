@@ -139,6 +139,11 @@ const router = createRouter({
             path: '/auth/error',
             name: 'error',
             component: () => import('@/views/pages/auth/Error.vue')
+        },
+        {
+            path: '/quality/qi',
+            name: 'QiOrderList',
+            component: () => import('@/views/QiOrderList.vue')
         }
     ]
 });
