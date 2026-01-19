@@ -1,62 +1,62 @@
 <!-- views/Productions.WorkOrderList.vue (작업지시서 목록조회 및 검색 wko_tbl ) -->
- <!-- http://localhost:3000/produce/workorderList -->
+<!-- http://localhost:3000/produce/workorderList -->
 <script setup>
-import { onMounted, ref, computed } from 'vue'
-import { storeToRefs } from 'pinia'
-import { useProductionsStore } from '@/stores/Productions'
+import { onMounted, ref, computed } from 'vue';
+import { storeToRefs } from 'pinia';
+import { useProductionsStore } from '@/stores/production1';
 
-const store = useProductionsStore()
-const { wkoList, loading } = storeToRefs(store)
+const store = useProductionsStore();
+const { wkoList, loading } = storeToRefs(store);
 
-onMounted(store.fetchWorkOrders)
+onMounted(store.fetchWorkOrders);
 
-const from = ref('') 
-const to = ref('')
-const stat = ref('')       
-const line = ref('')      
-const name = ref('')       
-const wko = ref('')       
+const from = ref('');
+const to = ref('');
+const stat = ref('');
+const line = ref('');
+const name = ref('');
+const wko = ref('');
 
 // 날짜 비교용
-const toStart = (d) => (d ? new Date(d + 'T00:00:00') : null)
-const toEnd = (d) => (d ? new Date(d + 'T23:59:59') : null)
+const toStart = (d) => (d ? new Date(d + 'T00:00:00') : null);
+const toEnd = (d) => (d ? new Date(d + 'T23:59:59') : null);
 
 const filteredList = computed(() => {
-  const f = toStart(from.value)
-  const t = toEnd(to.value)
+  const f = toStart(from.value);
+  const t = toEnd(to.value);
 
   return (wkoList.value || []).filter((row) => {
     // row.start_date가 '2026-01-19 10:00:00' 같은 문자열이라고 가정
-    const rowStart = row.start_date ? new Date(String(row.start_date).replace(' ', 'T')) : null
+    const rowStart = row.start_date ? new Date(String(row.start_date).replace(' ', 'T')) : null;
 
     // 기간
-    if (f && rowStart && rowStart < f) return false
-    if (t && rowStart && rowStart > t) return false
+    if (f && rowStart && rowStart < f) return false;
+    if (t && rowStart && rowStart > t) return false;
 
     // 상태(정확히 일치)
-    if (stat.value && String(row.stat) !== stat.value) return false
+    if (stat.value && String(row.stat) !== stat.value) return false;
 
     // 라인(정확히 일치)
-    if (line.value && String(row.line_code) !== line.value) return false
+    if (line.value && String(row.line_code) !== line.value) return false;
 
     // 제품명(포함)
-    if (name.value && !String(row.wko_name || '').includes(name.value)) return false
+    if (name.value && !String(row.wko_name || '').includes(name.value)) return false;
 
     // 지시서번호(포함)
-    if (wko.value && !String(row.wko_code || '').includes(wko.value)) return false
+    if (wko.value && !String(row.wko_code || '').includes(wko.value)) return false;
 
-    return true
-  })
-})
+    return true;
+  });
+});
 
 const reset = () => {
-  from.value = ''
-  to.value = ''
-  stat.value = ''
-  line.value = ''
-  name.value = ''
-  wko.value = ''
-}
+  from.value = '';
+  to.value = '';
+  stat.value = '';
+  line.value = '';
+  name.value = '';
+  wko.value = '';
+};
 </script>
 
 <template>
@@ -100,7 +100,6 @@ const reset = () => {
   </div>
 
   <div class="card">
-
     <h3>작업지시서 목록</h3>
 
     <DataTable :value="filteredList" :loading="loading" paginator :rows="10" showGridlines>
@@ -117,14 +116,12 @@ const reset = () => {
   </div>
 </template>
 
-
-
 <style scoped lang="scss">
 :deep(.p-datatable-frozen-tbody) {
-    font-weight: bold;
+  font-weight: bold;
 }
 
 :deep(.p-datatable-scrollable .p-frozen-column) {
-    font-weight: bold;
+  font-weight: bold;
 }
 </style>
