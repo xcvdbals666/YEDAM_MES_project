@@ -1,8 +1,8 @@
 // src / router / Productions.js
-import WorkOrderList from '../views/Productions/WorkOrderList.vue'
-import WorkOrderMgt from '../views/Productions/WorkOrderMgt.vue'
+import WorkOrderList from '../views/Productions/WorkOrderList.vue';
+import WorkOrderMgt from '../views/Productions/WorkOrderMgt.vue';
 
-const ProductionRoutes = [
+const ProductionRoutes1 = [
   {
     path: '/workorderList',
     name: 'WorkOrderList',
@@ -12,7 +12,7 @@ const ProductionRoutes = [
     path: '/workorderMgt',
     name: 'WorkOrderMgt',
     component: WorkOrderMgt
-  },
-]
+  }
+];
 
-export default ProductionRoutes
+export default ProductionRoutes1;

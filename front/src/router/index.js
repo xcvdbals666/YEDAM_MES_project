@@ -1,6 +1,7 @@
 import Main from '@/views/Main.vue';
 import { createRouter, createWebHistory } from 'vue-router';
-import ProductionRoutes from '../router/Productions';
+import ProductionRoutes1 from './productions1.js';
+import ProductionRoutes2 from './productions2.js';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -15,22 +16,8 @@ const router = createRouter({
           name: 'test',
           component: () => import('@/views/test.vue')
         },
-        {
-          path: '/production/plan',
-          name: 'productionPlan',
-          component: () => import('@/views/Productions/ProductionPlan.vue')
-        },
-        {
-          path: '/production/planList',
-          name: 'productionPlanList',
-          component: () => import('@/views/Productions/ProductionPlanList.vue')
-        },
-        {
-          path: '/production/result',
-          name: 'productionResult',
-          component: () => import('@/views/Productions/ProductionResult.vue')
-        },
-        ...ProductionRoutes
+        ...ProductionRoutes1,
+        ...ProductionRoutes2
       ]
     }
   ]
