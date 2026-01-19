@@ -1,5 +1,7 @@
 import AppLayout from '@/layout/AppLayout.vue';
 import { createRouter, createWebHistory } from 'vue-router';
+import ProductionRoutes from '../router/Productions'
+
 
 const router = createRouter({
     history: createWebHistory(),
@@ -8,6 +10,9 @@ const router = createRouter({
             path: '/',
             component: AppLayout,
             children: [
+
+                ...ProductionRoutes,
+
                 {
                     path: '/',
                     name: 'dashboard',
