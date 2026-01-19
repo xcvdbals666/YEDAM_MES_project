@@ -9,10 +9,21 @@ const findAllOrder = async () => {
 // 공급업체 목록 조회
 const findAllClient = async () => {
   let list = await mysql.orderQuery("selectAllClient");
+// 게시글 전체 목록
+const findAll = async () => {
+  let list = await mysql.query("selectAll", [], "order");
+  return list;
+};
+
+// 출고 조회
+const findAllOutreqtbl = async () => {
+  let list = await mysql.query("selectAllOutreqtbl", [], "order");
   return list;
 };
 
 module.exports = {
   findAllOrder,
   findAllClient,
+  findAll,
+  findAllOutreqtbl,
 };
