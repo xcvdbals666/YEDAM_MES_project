@@ -21,22 +21,20 @@ SELECT wko_code,
 FROM wko_tbl
 `;
 
-//전체 생산계획서 조회
-const selectAllPrdp = `
-SELECT prdp_code,
-       prdp_name,
-       prdp_date,
-       start_date,
-       end_date,
-       due_date,
-       ord_code,
-       reg
-FROM prdp_tbl
-`;
+// //전체 생산계획서 조회
+// const selectAllPrdp = `
+// SELECT prdp_code,
+//        prdp_name,
+//        prdp_date,
+//        start_date,
+//        end_date,
+//        due_date,
+//        ord_code,
+//        reg
+// FROM prdp_tbl
+// `;
 
 module.exports = {
   selectAllPrdp,
-  selectAll,
   selectAllWkotbl,
-  selectAllPrdp,
 };

@@ -115,9 +115,8 @@ WHERE md.mrp_code = ?`;
 module.exports = {
   selectByEmpcodeEmpTbl,
   selectByMatCodeMatTbl,
-  selectAll,
   selectMpoByCode,
-  selecttNextMpoCode,
+  selectNextMpoCode,
   insertMpo,
   insertMpoDetail,
   selectByMrpCodeMrpDetail,

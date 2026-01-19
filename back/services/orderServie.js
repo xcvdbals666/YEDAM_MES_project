@@ -9,6 +9,9 @@ const findAllOrder = async () => {
 // 공급업체 목록 조회
 const findAllClient = async () => {
   let list = await mysql.orderQuery("selectAllClient");
+  return list;
+};
+
 // 게시글 전체 목록
 const findAll = async () => {
   let list = await mysql.query("selectAll", [], "order");

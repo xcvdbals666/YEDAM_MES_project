@@ -63,6 +63,5 @@ const findByMrpCodeMrpDetail = async (mrpCode) => {
 module.exports = {
   findByEmpcodeEmpTbl,
   findByMatCodeMatTbl,
-  findAll,
   findByMrpCodeMrpDetail,
 };
