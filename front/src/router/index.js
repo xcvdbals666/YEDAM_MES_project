@@ -1,4 +1,3 @@
-import AppLayout from '@/layout/AppLayout.vue';
 import { createRouter, createWebHistory } from 'vue-router';
 import ProductionRoutes from '../router/Productions'
 
@@ -7,6 +6,9 @@ const router = createRouter({
     history: createWebHistory(),
     routes: [
         {
+            path: '/outbound',
+            name: 'outbound',
+            component: () => import('@/views/order/OutboundList.vue')
             path: '/',
             component: AppLayout,
             children: [
