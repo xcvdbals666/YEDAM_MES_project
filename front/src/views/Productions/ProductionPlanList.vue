@@ -1,4 +1,9 @@
-<script setup></script>
+<script setup>
+import { reactive, ref } from 'vue';
+const data = reactive({
+  prdp
+});
+</script>
 <template>
   <Fluid class="card grid gap-4">
     <div class="font-semibold text-xl">생산계획</div>
