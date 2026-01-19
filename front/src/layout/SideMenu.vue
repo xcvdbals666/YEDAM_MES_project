@@ -105,6 +105,11 @@ const model = ref([
             label: '예시 메뉴',
             icon: 'pi pi-fw pi-sign-in',
             to: ''
+          },
+          {
+            label: '발주서관리',
+            icon: 'pi pi-fw pi-sign-in',
+            to: '/mpotable'
           }
         ]
       },
