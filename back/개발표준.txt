@@ -1,0 +1,69 @@
+1.  sqls 폴더에 본인이 작성할 쿼리문 넣을 파일 만들기
+    1-1. 쿼리변수명
+    조회 : select + 범위 + 테이블명 ex) selectAllCenter
+    삽입 : insert + 테이블명 ex) insertUsers
+    삭제 : delete + 범위 + 테이블명 ex) deleteByIdUsers
+    수정 : update + 범위 + 테이블명 ex) updateByIdUsers
+
+    1-2. 쿼리 형식 => SELECT등 명령어 다 대문자, 줄바꿔서 가독성 좋게
+    const selectAll = 
+    `SELECT board_id
+        , title
+        , content
+        , author
+        , create_date
+    FROM board
+    ORDER BY board_id`; 
+
+    1-3. mappers.js 생산, 자재, 품질, 주문 공정으로 따로 구분
+    const ???Sql = require("./sqls/???.js");
+    else if(type == ??) {
+    executeSql = ???Sql[selected];
+    }
+
+2.  services 폴더에 서비스 모듈 생성
+    2-1. 서비스 파일명은 기능명 + Service ex) usersService.js
+    2-2. 메서드 명
+    조회 : find + 범위 + 테이블명 ex) findAllCenter
+    삽입 : add + 테이블명 ex) addUsers
+    삭제 : remove + 범위 + 테이블명 ex) removeByIdUsers
+    수정 : modify + 범위 + 테이블명 ex) modifyByIdUsers
+
+    2-3. insert, update, delete할 때는 return할 때 아래와 같이 하기
+    ex) insert의 경우
+    let resObj = {};
+    if (result.insertId > 0) {
+    resObj = {
+    status: "success",
+    no: result.insertId,
+    };
+    } else {
+    resObj = { status: "fail" };
+    }
+
+    return resObj;
+
+    ex) update, delete의 경우
+    let resObj = {};
+    if (result.affectedRows > 0) {
+    resObj = { status: "success", no: userNo };
+    } else {
+    resObj = { status: "fail" };
+    }
+
+    return resObj;
+
+3.  routers 폴더에 라우터 생성
+    3-1. 라우터 파일명은 기능명 + Router ex) usersRouter.js
+
+4.  app.js 에 라우터 추가
+    const usersRouter = require("./routers/usersRouter.js");
+    app.use(`/api`, usersRouter);
+
+5.  변수명 => 카멜케이스
+
+6.  뷰 파일 이름 => 첫글자 대문자로 카멜케이스
+
+7.  뷰 라우터 각 공정별로 다 만들기
+
+8.  뷰 컴포넌트  => 첫글자 대문자로 카멜케이스
