@@ -39,6 +39,19 @@ const query = async (selected, values, type) => {
   }
 };
 
+//검색용 보조쿼리 추가
+const rquery = async (sql, values = []) => {
+  let conn = null;
+  try {
+    conn = await pool.getConnection();
+    const [rows] = await conn.query(sql, values);
+    return rows;
+  } finally {
+    if (conn) conn.release();
+  }
+};
+
 module.exports = {
   query,
+  rquery,
 };
