@@ -1,7 +1,7 @@
 // 전체조회
-const selectAll = `SELECT *
+const selectAllQiOrderCheckList = `SELECT *
 FROM qcr_tbl`;
 
 module.exports = {
-  selectAll,
+  selectAllQiOrderCheckList,
 };

@@ -1,5 +1,6 @@
 import Main from '@/views/Main.vue';
 import { createRouter, createWebHistory } from 'vue-router';
+import qualityRouter1 from './quality1.js'; // 품질
 import ProductionRoutes1 from './productions1.js';
 import ProductionRoutes2 from './productions2.js';
 
@@ -17,7 +18,8 @@ const router = createRouter({
           component: () => import('@/views/test.vue')
         },
         ...ProductionRoutes1,
-        ...ProductionRoutes2
+        ...ProductionRoutes2,
+        ...qualityRouter1
       ]
     }
   ]
