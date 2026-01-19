@@ -1,117 +1,94 @@
 <!-- views/Productions.WorkOrderList.vue (작업지시서 목록조회 및 검색 wko_tbl ) -->
 <!-- http://localhost:3000/produce/workorderList -->
 <script setup>
-import { onMounted, ref, computed } from 'vue';
+import { onMounted } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useProductionsStore } from '@/stores/production1';
 
 const store = useProductionsStore();
-const { wkoList, loading } = storeToRefs(store);
+const { wkoList, loading, error, from, to, stat, line, name, wko } = storeToRefs(store);
 
-onMounted(store.fetchWorkOrders);
+const statusOptions = [
+  { label: '진행중', value: 'v1' },
+  { label: '작업완료', value: 'v2' },
+  { label: '작업보류', value: 'v3' }
+];
 
-const from = ref('');
-const to = ref('');
-const stat = ref('');
-const line = ref('');
-const name = ref('');
-const wko = ref('');
-
-// 날짜 비교용
-const toStart = (d) => (d ? new Date(d + 'T00:00:00') : null);
-const toEnd = (d) => (d ? new Date(d + 'T23:59:59') : null);
-
-const filteredList = computed(() => {
-  const f = toStart(from.value);
-  const t = toEnd(to.value);
-
-  return (wkoList.value || []).filter((row) => {
-    // row.start_date가 '2026-01-19 10:00:00' 같은 문자열이라고 가정
-    const rowStart = row.start_date ? new Date(String(row.start_date).replace(' ', 'T')) : null;
-
-    // 기간
-    if (f && rowStart && rowStart < f) return false;
-    if (t && rowStart && rowStart > t) return false;
-
-    // 상태(정확히 일치)
-    if (stat.value && String(row.stat) !== stat.value) return false;
-
-    // 라인(정확히 일치)
-    if (line.value && String(row.line_code) !== line.value) return false;
-
-    // 제품명(포함)
-    if (name.value && !String(row.wko_name || '').includes(name.value)) return false;
-
-    // 지시서번호(포함)
-    if (wko.value && !String(row.wko_code || '').includes(wko.value)) return false;
-
-    return true;
-  });
-});
-
-const reset = () => {
-  from.value = '';
-  to.value = '';
-  stat.value = '';
-  line.value = '';
-  name.value = '';
-  wko.value = '';
+const statusMap = {
+  v1: '진행중',
+  v2: '작업완료',
+  v3: '작업보류'
 };
+
+onMounted(() => {
+  store.fetchWorkOrders();
+});
 </script>
 
 <template>
   <div class="card">
-    <!-- 검색  -->
-    <div class="flex flex-wrap items-end gap-2 mb-3">
-      <div class="flex flex-col gap-1">
-        <label class="text-sm">기간(시작)</label>
-        <input type="date" v-model="from" class="p-inputtext p-component" />
+    <div class="font-semibold text-xl pb-4">작업지시서 조회</div>
+
+    <div class="search-box">
+      <div class="search-left">
+        <div class="field-row">
+          <label>기간</label>
+          <div class="date-wrap">
+            <input type="date" v-model="from" class="p-inputtext p-component" />
+            <input type="date" v-model="to" class="p-inputtext p-component" />
+          </div>
+        </div>
+
+        <div class="field-row">
+          <label>제품명</label>
+          <InputText v-model="name" placeholder="제품명" class="w-full" />
+        </div>
       </div>
 
-      <div class="flex flex-col gap-1">
-        <label class="text-sm">기간(종료)</label>
-        <input type="date" v-model="to" class="p-inputtext p-component" />
+      <div class="search-mid">
+        <div class="field-row">
+          <label>상태</label>
+          <Dropdown v-model="stat" :options="statusOptions" optionLabel="label" optionValue="value" class="w-full" placeholder="상태 선택" />
+        </div>
+
+        <div class="field-row">
+          <label>작업지시번호</label>
+          <InputText v-model="wko" placeholder="작업지시번호 입력" class="w-full" />
+        </div>
       </div>
 
-      <div class="flex flex-col gap-1">
-        <label class="text-sm">상태</label>
-        <InputText v-model="stat" placeholder="예: v1" />
-      </div>
+      <div class="search-right">
+        <div class="field-row">
+          <label>라인</label>
+          <InputText v-model="line" placeholder="라인 입력" class="w-full" />
+        </div>
 
-      <div class="flex flex-col gap-1">
-        <label class="text-sm">라인</label>
-        <InputText v-model="line" placeholder="예: LINE01" />
-      </div>
-
-      <div class="flex flex-col gap-1">
-        <label class="text-sm">제품명</label>
-        <InputText v-model="name" placeholder="제품명 포함검색" />
-      </div>
-
-      <div class="flex flex-col gap-1">
-        <label class="text-sm">작업지시번호</label>
-        <InputText v-model="wko" placeholder="번호 포함검색" />
-      </div>
-
-      <div class="flex gap-2">
-        <Button label="초기화" outlined icon="pi pi-refresh" @click="reset" />
+        <div class="field-row">
+          <label>공정유형</label>
+          <Dropdown v-model="procType" :options="procOptions" class="w-full" />
+        </div>
       </div>
     </div>
+
+    <div class="search-btns">
+      <Button label="검색" icon="pi pi-search" @click="store.search()" />
+      <Button label="초기화" icon="pi pi-refresh" outlined @click="store.reset()" />
+    </div>
   </div>
-
   <div class="card">
-    <h3>작업지시서 목록</h3>
+    <div v-if="error" class="p-message p-message-error mb-3">작업지시서 조회 실패</div>
 
-    <DataTable :value="filteredList" :loading="loading" paginator :rows="10" showGridlines>
-      <template #empty>데이터가 없습니다.</template>
-
+    <DataTable :value="wkoList" :loading="loading" paginator :rows="10" showGridlines>
       <Column field="wko_code" header="지시서번호" />
       <Column field="wko_name" header="제품명" />
       <Column field="line_code" header="라인코드" />
-      <Column field="wko_qtt" header="지시수량" />
       <Column field="start_date" header="시작시간" />
       <Column field="end_date" header="완료예정일" />
-      <Column field="stat" header="상태" />
+      <Column header="상태">
+        <template #body="{ data }">
+          {{ statusMap[data.stat] || data.stat }}
+        </template>
+      </Column>
     </DataTable>
   </div>
 </template>
@@ -123,5 +100,50 @@ const reset = () => {
 
 :deep(.p-datatable-scrollable .p-frozen-column) {
   font-weight: bold;
+}
+
+.search-box {
+  display: grid;
+  grid-template-columns: 3fr 2fr 2fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.search-left,
+.search-mid,
+.search-right {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.field-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.date-wrap {
+  display: flex;
+  gap: 10px;
+}
+
+.field-row label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #444;
+}
+
+.search-btns {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+@media (max-width: 900px) {
+  .search-box {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

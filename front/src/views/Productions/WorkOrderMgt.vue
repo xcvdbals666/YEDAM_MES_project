@@ -13,7 +13,8 @@
   </script>
   <template>
   <div class="card">
-    <!-- 검색  -->
+    <div class="font-semibold text-xl pb-4">기본정보</div>
+    
     <div class="flex flex-wrap items-end gap-2 mb-3">
       <div class="flex flex-col gap-1">
         <label class="text-sm">작업지시번호</label>

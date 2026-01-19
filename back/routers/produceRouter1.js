@@ -11,7 +11,7 @@ router.get(`/production/planList`, async (req, res) => {
 
 //전체 작업지시서 조회 + 검색
 router.get(`/workorderList`, async (req, res) => {
-  const list = await produceService.findAllWkotbl();
+  const list = await produceService.searchWorkOrders(req.query);
   res.send(list);
 });
 
