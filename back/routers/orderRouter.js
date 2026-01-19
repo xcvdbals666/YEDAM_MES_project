@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-const orderServie = require("../services/orderServie.js");
+const orderServie = require("../services/orderService.js");
 
 router.get(`/order`, async (req, res) => {
   let list = await orderServie.findAll();

@@ -1,10 +1,10 @@
 const express = require("express");
 const router = express.Router();
 
-const materialServie = require("../services/materialServie.js");
+const materialService = require("../services/materialService.js");
 
 router.get(`/material`, async (req, res) => {
-  let list = await materialServie.findAll();
+  let list = await materialService.findAll();
   res.send(list);
 });
 
