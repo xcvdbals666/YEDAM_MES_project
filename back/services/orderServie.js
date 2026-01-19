@@ -7,6 +7,13 @@ const findAll = async () => {
   return list;
 };
 
+// 출고 조회
+const findAllOutreqtbl = async () => {
+  let list = await mysql.query("selectAllOutreqtbl", [], "order");
+  return list;
+};
+
 module.exports = {
   findAll,
+  findAllOutreqtbl,
 };
