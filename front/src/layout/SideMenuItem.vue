@@ -43,9 +43,9 @@ const itemClick = (event, item) => {
       layoutState.menuHoverActive = true;
     }
   } else {
-    // layoutState.overlayMenuActive = false;
-    // layoutState.mobileMenuActive = false;
-    // layoutState.menuHoverActive = false;
+    layoutState.overlayMenuActive = false;
+    layoutState.mobileMenuActive = false;
+    layoutState.menuHoverActive = false;
   }
 };
 

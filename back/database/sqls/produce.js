@@ -1,7 +1,9 @@
-// 전체조회
-const selectAll = `SELECT *
-FROM qcr_tbl`;
+// 생산계획조회
+const selectAllPrdp = `
+SELECT *
+FROM prdp_tbl
+WHERE prdp_name LIKE ? AND prdp_date BETWEEN ? AND ? AND due_date BETWEEN ? AND ?`;
 
 module.exports = {
-  selectAll,
+  selectAllPrdp,
 };

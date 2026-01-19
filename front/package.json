@@ -11,6 +11,8 @@
         "@primeuix/themes": "^2.0.0",
         "axios": "^1.13.2",
         "chart.js": "3.3.2",
+        "pinia": "^3.0.4",
+        "pinia-plugin-persistedstate": "^4.7.1",
         "primeicons": "^7.0.0",
         "primevue": "^4.5.2",
         "proxy": "^2.2.0",

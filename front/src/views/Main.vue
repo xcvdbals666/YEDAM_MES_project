@@ -29,6 +29,7 @@ const containerClass = computed(() => {
       </div>
       <Footer />
     </div>
+    <div class="layout-mask animate-fadein" @click="hideMobileMenu" />
   </div>
   <Toast />
 </template>

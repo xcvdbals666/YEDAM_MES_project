@@ -3,8 +3,9 @@ const router = express.Router();
 
 const produceService = require("../services/produceService.js");
 
-router.get(`/produce`, async (req, res) => {
-  let list = await produceService.findAll();
+router.get(`/production/planList`, async (req, res) => {
+  const data = req.params;
+  let list = await produceService.findAll(data);
   res.send(list);
 });
 

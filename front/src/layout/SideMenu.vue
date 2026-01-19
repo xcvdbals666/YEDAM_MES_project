@@ -9,16 +9,9 @@ const model = ref([
     path: '/pages',
     items: [
       {
-        label: '테스트 메뉴',
+        label: '테스트화면(후에 대시보드 메인화면으로 교체)',
         icon: 'pi pi-fw pi-user',
-        path: '/test',
-        items: [
-          {
-            label: '예시 메뉴',
-            icon: 'pi pi-fw pi-sign-in',
-            to: '/test'
-          }
-        ]
+        path: '/test'
       },
       {
         label: '기준정보',
@@ -87,7 +80,7 @@ const model = ref([
           {
             label: '생산실적조회',
             icon: 'pi pi-fw pi-lock',
-            to: ''
+            to: '/production/result'
           }
         ]
       },

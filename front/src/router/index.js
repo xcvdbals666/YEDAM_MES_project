@@ -23,6 +23,11 @@ const router = createRouter({
           path: '/production/planList',
           name: 'productionPlanList',
           component: () => import('@/views/Productions/ProductionPlanList.vue')
+        },
+        {
+          path: '/production/result',
+          name: 'productionResult',
+          component: () => import('@/views/Productions/ProductionResult.vue')
         }
       ]
     }

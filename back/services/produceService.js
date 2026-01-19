@@ -7,6 +7,13 @@ const findAll = async () => {
   return list;
 };
 
+const findAllPrdp = async (data) => {
+  const { name, prdpStart, prdpEnd, dueStart, dueEnd } = data;
+  const prdpName = `%name%`;
+  let list = await mysql.query("selectAllPrdp", [], "produce");
+  return list;
+};
+
 module.exports = {
   findAll,
 };
