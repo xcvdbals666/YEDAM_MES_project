@@ -3,7 +3,7 @@ const mysql = require("../database/mapper.js");
 
 // 게시글 전체 목록
 const findAll = async () => {
-  let list = await mysql.materialQuery("selectAll");
+  let list = await mysql.query("selectAll", [], "material");
   return list;
 };
 
