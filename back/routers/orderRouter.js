@@ -8,4 +8,9 @@ router.get(`/order`, async (req, res) => {
   res.send(list);
 });
 
+router.get(`/outbounds`, async (req, res) => {
+  let list = await orderServie.findAllOutreqtbl();
+  res.send(list);
+});
+
 module.exports = router;
