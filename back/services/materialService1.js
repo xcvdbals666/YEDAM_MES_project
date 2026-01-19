@@ -1,18 +1,6 @@
 // 순수 기능에 대한 정의 => 함수(function)
 const mysql = require("../database/mapper.js");
 
-// 작성자 선택 - 사원 정보 조회
-const findByEmpcodeEmpTbl = async () => {
-  let list = await mysql.query("selectByEmpcodeEmpTbl", [], "material");
-  return list;
-};
-
-// 자재 선택 - 자재 정보 조회
-const findByMatCodeMatTbl = async () => {
-  let list = await mysql.query("selectByMatCodeMatTbl", [], "material");
-  return list;
-};
-
 //발주서 기본정보 등록
 const addMpo = async (mpoData) => {
   //발주서 번호 생성(자동생성)
@@ -51,6 +39,11 @@ const addMpo = async (mpoData) => {
 
   return resObj;
 };
+//발주 자재 모달 상세 조회
+const findAllMpo = async () => {
+  let list = await mysql.query("selectAllMpo", [], "material");
+  return list;
+};
 //발주 자재 상세목록
 const findByMrpCodeMrpDetail = async (mrpCode) => {
   let list = await mysql.query(
@@ -61,7 +54,7 @@ const findByMrpCodeMrpDetail = async (mrpCode) => {
   return list;
 };
 module.exports = {
-  findByEmpcodeEmpTbl,
-  findByMatCodeMatTbl,
   findByMrpCodeMrpDetail,
+  addMpo,
+  findAllMpo,
 };
