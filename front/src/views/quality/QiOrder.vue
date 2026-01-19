@@ -1,27 +1,52 @@
 <!-- QiOrder.vue -->
 <!-- 검사지시서 관리 페이지-->
 <script setup>
-import { NodeService } from '@/service/NodeService';
+import { ProductService } from '@/service/ProductService';
+import { FilterMatchMode } from '@primevue/core/api';
+import { onMounted } from 'vue';
+
+onMounted(() => {
+  ProductService.getProducts().then((data) => {
+    products.value = data;
+    console.log(products.value);
+  });
+});
+
+const products = ref();
+const selectedProducts = ref();
+const filters = ref({
+  global: { value: null, matchMode: FilterMatchMode.CONTAINS }
+});
+
 import { onBeforeMount, ref } from 'vue';
 import axios from 'axios';
 
-const treeValue = ref(null);
-const treeTableValue = ref(null);
-const selectedTreeTableValue = ref(null);
-
 onBeforeMount(() => {
-  NodeService.getTreeNodes(allQiList.value).then((data) => (treeValue.value = data));
-  NodeService.getTreeTableNodes(allQiList.value).then((data) => (treeTableValue.value = data));
+  // qcr_tbl 데이터 불러오기(맨처음 접속시)
+  axios //
+    .get('/quality/qiorder')
+    .then((res) => {
+      allQiList.value = res.data;
+      console.log('allQiList: ', allQiList.value);
+    });
 });
-
-// qcr_tbl 데이터 불러오기(맨처음 접속시)
 let allQiList = ref([]);
-axios //
-  .get('/quality/qiorder')
-  .then((res) => {
-    allQiList.value = res.data;
-    console.log('allQiList: ', allQiList.value);
-  });
+
+// 재고목록 불러오기
+let minbndList = ref([]);
+const searchMinbndList = async () => {
+  await axios //
+    .get('quality/minbndlist')
+    .then((res) => {
+      console.log(res);
+      res.data.forEach((data) => {
+        if (!minbndList.value.includes(data.qio_code)) {
+          minbndList.value.push(data.qio_code);
+        }
+      });
+    });
+  console.log(minbndList.value);
+};
 </script>
 
 <template>
@@ -66,7 +91,7 @@ axios //
       <div class="font-semibold text-xl flex justify-between">
         <div>기본 정보</div>
         <div class="flex flex-row gap-2">
-          <Button label="재고목록 불러오기" />
+          <Button type="button" @click="searchMinbndList" label="재고목록 불러오기" />
           <Button label="생산목록 불러오기" />
         </div>
       </div>
@@ -101,13 +126,28 @@ axios //
     </div>
   </div>
 
-  <div class="card">
-    <div class="font-semibold text-xl mb-4">검사항목</div>
-    <TreeTable>
-      <Column field="검사항목" header="검사항목" :expander="true">검사항목</Column>
-      <Column field="기준값(상한)" header="기준값(상한)">기준값(상한)</Column>
-      <Column field="기준값(하한)" header="기준값(하한)">기준값(하한)</Column>
-      <Column field="단위" header="단위">단위</Column>
-    </TreeTable>
-  </div>
+  <DataTable
+    ref="dt"
+    v-model:selection="selectedProducts"
+    :value="allQiList"
+    dataKey="qcr_code"
+    :paginator="true"
+    :rows="10"
+    :filters="filters"
+    paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+    :rowsPerPageOptions="[5, 10, 25]"
+    currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products"
+  >
+    <template #header>
+      <div class="flex flex-wrap gap-2 items-center justify-between">
+        <h4 class="m-0">검사항목</h4>
+      </div>
+    </template>
+
+    <Column selectionMode="multiple" style="width: 3rem" :exportable="false"></Column>
+    <Column field="inspection_item" header="검사항목" sortable style="min-width: 12rem"></Column>
+    <Column field="range_top" header="기준값(상한)" sortable style="min-width: 16rem"></Column>
+    <Column field="range_bot" header="기준값(하한)" sortable style="min-width: 10rem"></Column>
+    <Column field="note" header="단위" sortable style="min-width: 10rem"></Column>
+  </DataTable>
 </template>

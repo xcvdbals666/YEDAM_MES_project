@@ -90,9 +90,9 @@ const model = ref([
         path: '/quality',
         items: [
           {
-            label: '예시 메뉴',
+            label: '품질검사 지시관리',
             icon: 'pi pi-fw pi-sign-in',
-            to: ''
+            to: '/qiorder'
           }
         ]
       },
