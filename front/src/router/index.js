@@ -1,5 +1,6 @@
 import Main from '@/views/Main.vue';
 import { createRouter, createWebHistory } from 'vue-router';
+import ProductionRoutes from '../router/Productions';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -28,25 +29,10 @@ const router = createRouter({
           path: '/production/result',
           name: 'productionResult',
           component: () => import('@/views/Productions/ProductionResult.vue')
-        }
+        },
+        ...ProductionRoutes
       ]
     }
-    // {
-    //     path: '/',
-    //     component: AppLayout,
-    //     children: [
-    //         {
-    //             path: '/',
-    //             name: 'dashboard',
-    //             component: () => import('@/views/Dashboard.vue')
-    //         },
-    //     ]
-    // },
-    // {
-    //     path: '/landing',
-    //     name: 'landing',
-    //     component: () => import('@/views/pages/Landing.vue')
-    // },
   ]
 });
 
