@@ -18,13 +18,14 @@ const pinia = createPinia();
 
 app.use(pinia);
 app.use(router);
+app.use(pinia);
 app.use(PrimeVue, {
-    theme: {
-        preset: Aura,
-        options: {
-            darkModeSelector: '.app-dark'
-        }
+  theme: {
+    preset: Aura,
+    options: {
+      darkModeSelector: '.app-dark'
     }
+  }
 });
 app.use(ToastService);
 app.use(ConfirmationService);
