@@ -1,4 +1,8 @@
 // 전체조회
+const selectAllOrder = `SELECT *
+FROM ord_tbl
+ORDER BY board_id`;
+
 const selectAll = `SELECT *
 FROM qcr_tbl`;
 
@@ -14,7 +18,13 @@ const selectAllOutreqtbl = `SELECT r.out_req_code, pr.prod_name, po.req_qtt, po.
                             JOIN client_tbl c ON c.client_code = r.client_code
                             JOIN ord_tbl o ON o.ord_code = r.ord_code`;
 
+// 주문작성시 client 목록 가져오기(납품업체)
+const selectAllClient = `SELECT client_code,client_name 
+FROM client_tbl 
+WHERE client_type = 'l1';`;
 module.exports = {
+  selectAllOrder,
+  selectAllClient,
   selectAll,
   selectAllOutreqtbl,
 };
