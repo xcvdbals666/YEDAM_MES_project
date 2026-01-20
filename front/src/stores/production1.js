@@ -11,7 +11,7 @@ export const useProductionsStore = defineStore('productions', () => {
 
   //라인목록 조회
   const fetchLines = async () => {
-    const res = await axios.get('/produce/allLineList');
+    const res = await axios.get('/api/produce/allLineList');
     lines.value = res.data;
   };
 
@@ -38,7 +38,7 @@ export const useProductionsStore = defineStore('productions', () => {
         wko: wko.value || undefined
       };
 
-      const res = await axios.get('/produce/workorderList', { params });
+      const res = await axios.get('/api/produce/workorderList', { params });
       wkoList.value = res.data;
     } catch (e) {
       console.error(e);
@@ -78,7 +78,7 @@ export const useProductionsStore = defineStore('productions', () => {
     prdpError.value = null;
 
     try {
-      const res = await axios.get('/produce/prdpListActive');
+      const res = await axios.get('/api/produce/prdpListActive');
       prdpList.value = res.data;
     } catch (e) {
       prdpError.value = e; //에러발생시
