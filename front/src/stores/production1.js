@@ -72,6 +72,7 @@ export const useProductionsStore = defineStore('productions', () => {
   const prdpList = ref([]);
   const prdpLoading = ref(false);
   const prdpError = ref(null);
+  const allProducts = ref([]);
 
   const fetchPrdpActive = async () => {
     prdpLoading.value = true; // = 리스트 로딩중
@@ -87,9 +88,38 @@ export const useProductionsStore = defineStore('productions', () => {
     }
   };
 
+  //제품명 드롭다운 목록에 가져오기
+  const fetchAllPrdDistinct = async () => {
+    const res = await axios.get('/api/produce/allProductsList');
+    allProducts.value = res.data;
+  };
+
   //#########################
   //모달 끝
   //#########################
+
+  //생산계획서에 딸린 계획서 디테일 테이블에서 데이터 가져오기
+  const prdpItems = ref([]);
+  const prdpItemsLoading = ref(false);
+  const prdpItemsError = ref(null);
+
+  const fetchPrdpItems = async (prdpCode) => {
+    prdpItemsLoading.value = true;
+    prdpItemsError.value = null;
+
+    try {
+      const res = await axios.get(`/api/produce/prdpDetail/${prdpCode}`);
+      prdpItems.value = res.data;
+      return res.data;
+    } catch (e) {
+      console.error(e);
+      prdpItemsError.value = e;
+      prdpItems.value = [];
+      throw e;
+    } finally {
+      prdpItemsLoading.value = false;
+    }
+  };
 
   return {
     wkoList,
@@ -109,6 +139,12 @@ export const useProductionsStore = defineStore('productions', () => {
     fetchPrdpActive,
     prdpList,
     prdpLoading,
-    prdpError
+    prdpError,
+    allProducts,
+    fetchAllPrdDistinct,
+    prdpItems,
+    prdpItemsLoading,
+    prdpItemsError,
+    fetchPrdpItems
   };
 });

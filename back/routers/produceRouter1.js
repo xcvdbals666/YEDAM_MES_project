@@ -22,7 +22,20 @@ router.get(`/allLineList`, async (req, res) => {
 
 //생산계획 (due_date가 오늘날짜 기준 최근 60일까지만) 조회 - 모달 선택용 리스트
 router.get(`/prdpListActive`, async (req, res) => {
-  const list = await produceService.findPrdbActive();
+  const list = await produceService.findPrdpActive();
+  res.send(list);
+});
+
+//작업지시서 : 생산계획 상세 + 제품명 가져오기 (prdp_code로 가져오기)
+router.get(`/prdpDetail/:prdpCode`, async (req, res) => {
+  const { prdpCode } = req.params;
+  const list = await produceService.findPrdpDetail(prdpCode);
+  res.send(list);
+});
+
+//제품 목록 중복없이 조회
+router.get(`/allProductsList`, async (req, res) => {
+  const list = await produceService.findAllPrdDistinct();
   res.send(list);
 });
 
