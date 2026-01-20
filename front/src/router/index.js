@@ -12,24 +12,17 @@ const router = createRouter({
   history: createWebHistory(),
   routes: [
     {
-      path: '/',
-      name: 'main',
-      component: Main,
-      children: [
-        {
-          path: '/test',
-          name: 'test',
-          component: () => import('@/views/test.vue')
-        },
-        ...ProductionRoutes1,
-        ...ProductionRoutes2,
-        ...qualityRouter1,
-        ...Material1Routes1,
-        ...qualityRouter2,
-        ...materialRoutes2,
-        ...Order2
-      ]
-    }
+      path: '/test',
+      name: 'test',
+      component: () => import('@/views/test.vue')
+    },
+    ...ProductionRoutes1,
+    ...ProductionRoutes2,
+    ...qualityRouter1,
+    ...Material1Routes1,
+    ...qualityRouter2,
+    ...materialRoutes2,
+    ...Order2
   ]
 });
 
