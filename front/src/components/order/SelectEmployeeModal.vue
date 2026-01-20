@@ -1,12 +1,13 @@
+<!-- src/components/order/SelectEmployeeModal.vue -->
 <script setup>
 import { ref, watch } from 'vue';
-import { useMaterialStore } from '@/stores/material2';
+import { useOrderStore2 } from '@/stores/order2';
 
 const props = defineProps({
   visible: Boolean
 });
 const emit = defineEmits(['update:visible', 'select']);
-const store = useMaterialStore();
+const store = useOrderStore2();
 
 const selectedEmployee = ref(null);
 const keyword = ref(''); // 검색 입력값
@@ -23,7 +24,7 @@ watch(
   }
 );
 
-// 검색어 변경될 때 서버에 검색
+// 검색어 변경될 때
 watch(keyword, (val) => {
   store.fetchEmployees({ keyword: val });
 });
@@ -33,35 +34,48 @@ const close = () => {
   emit('update:visible', false);
 };
 
-// 작성자 선택
+// 출고 담당자 선택
 const confirm = () => {
-  if (!selectedEmployee.value) {
-    alert('작성자를 선택해주세요.');
-    return;
-  }
-
+  if (!selectedEmployee.value) return;
   emit('select', selectedEmployee.value);
+  // console.log(selectedEmployee.value);
   close();
 };
 </script>
 
 <template>
-  <Dialog header="작성자 선택" :visible="visible" modal style="width: 900px" @update:visible="close">
+  <Dialog header="출고 담당자 선택" :visible="visible" modal style="width: 900px" @update:visible="close">
     <div class="mb-3">
       <InputText v-model="keyword" placeholder="사번 또는 사원명을 입력해주세요" class="w-full" />
     </div>
 
     <DataTable :value="store.employees" v-model:selection="selectedEmployee" selectionMode="single" dataKey="emp_code" scrollable scrollHeight="400px">
-      <template #empty><p class="text-center">검색 결과가 없습니다.</p></template>
-      <Column selectionMode="single" style="width: 3rem" />
+      <Column selectionMode="single" style="width: 6rem" />
+      <Column />
       <Column field="emp_code" header="사원번호" />
+      <Column />
       <Column field="emp_name" header="사원명" />
-      <Column field="dept_name" header="부서명" />
     </DataTable>
 
     <template #footer>
-      <Button label="취소" severity="secondary" @click="close" />
-      <Button label="확인" @click="confirm" />
+      <div class="button-group">
+        <Button label="취소" severity="contrast" @click="close" />
+        <Button label="확인" severity="warn" @click="confirm" />
+      </div>
     </template>
   </Dialog>
 </template>
+<style scoped>
+.button-group {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  padding-top: 18px;
+}
+
+.button-group :deep(.p-button) {
+  width: auto;
+  min-width: auto;
+  padding: 10px 35px;
+}
+</style>

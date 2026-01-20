@@ -33,8 +33,6 @@ export default defineConfig({
   server: {
     // 프록시 설정.
     proxy: {
-      // 생산/
-
       '/api': {
         target: 'http://localhost:3000',
         changeOrigin: true // 대상서버의 출처를 변경.
