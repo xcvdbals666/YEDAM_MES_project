@@ -1,162 +1,101 @@
 <!-- QiOrder.vue -->
 <!-- 검사지시서 관리 페이지-->
 <script setup>
-import { ProductService } from '@/service/ProductService';
-import { FilterMatchMode } from '@primevue/core/api';
-import { onMounted } from 'vue';
+import QiOrderHeader from '../../components/quality1/QiOrderHeader.vue';
+import QiOrderItem from '../../components/quality1/QiOrderItem.vue';
+import QiOrderMain from '../../components/quality1/QiOrderMain.vue';
+import SelectMinbndModal from '../../components/quality1/modal/SelectMinbndModal.vue';
+import SelectQiOrderModal from '@/components/quality1/modal/SelectQiOrderModal.vue';
+import { useQuality1Store } from '../../stores/quality1';
 
-onMounted(() => {
-  ProductService.getProducts().then((data) => {
-    products.value = data;
-    console.log(products.value);
-  });
-});
-
-const products = ref();
-const selectedProducts = ref();
-const filters = ref({
-  global: { value: null, matchMode: FilterMatchMode.CONTAINS }
-});
-
-import { onBeforeMount, ref } from 'vue';
+import { onBeforeMount, ref, watch } from 'vue';
 import axios from 'axios';
 
-onBeforeMount(() => {
+const quality1 = useQuality1Store();
+
+onBeforeMount(async () => {
   // qcr_tbl 데이터 불러오기(맨처음 접속시)
-  axios //
-    .get('/quality/qiorder')
-    .then((res) => {
-      allQiList.value = res.data;
-      console.log('allQiList: ', allQiList.value);
-    });
+  await quality1.fetchQcrInfo();
+  allQiList.value = quality1.qcrInfo;
 });
 let allQiList = ref([]);
 
 // 재고목록 불러오기
-let minbndList = ref([]);
+// 모달창 열기
+let minbndList = ref([{ qio_code: '', mat_code: '', mat_name: '', inspection_item: '', com_value: '', note: '', sum: '' }]);
+let display = ref(false); // 모달창 오픈 위해서
+
 const searchMinbndList = async () => {
   await axios //
     .get('quality/minbndlist')
     .then((res) => {
-      console.log(res);
-      res.data.forEach((data) => {
-        if (!minbndList.value.includes(data.qio_code)) {
-          minbndList.value.push(data.qio_code);
-        }
-      });
+      minbndList.value = res.data;
+      console.log(minbndList.value);
     });
-  console.log(minbndList.value);
+  display.value = true;
 };
+
+// 재고불러오기 모달창 닫기
+const closeMOdal = () => {
+  display.value = false;
+  orderDisplay.value = false;
+};
+
+// 선택된 값 불러오기
+const selectComp = (data) => {
+  if (data != null) {
+    console.log(data[0]);
+    seletedMinbnd.value = data[0];
+    console.log(seletedMinbnd.value);
+    display.value = false;
+
+    allQiList.value.forEach((value) => {
+      console.log(data);
+      if (value.com_value == seletedMinbnd.value.com_value) {
+        selectedQcrList.value.push(value);
+      }
+      console.log(selectedQcrList.value);
+    });
+  } else {
+    display.value = false;
+  }
+};
+
+// QiOrderItem의 항목 채우기(모달창 선택값)
+let seletedMinbnd = ref([]);
+
+// QiOrderMain의 값 선택하기(모달창 선택값)
+let selectedQcrList = ref([]);
+
+// 검사지시지 전체 불러오기
+let orderDisplay = ref(false);
+const searchOrderList = async () => {
+  await quality1.fetchOrderList();
+  orderDisplay.value = true;
+};
+
+// 선택한 검사지시서 정보 조회
+const selectedOrder = (data) => {
+  console.log(data);
+  orderDisplay.value = false;
+};
+
+// 변화 감지
+watch(
+  () => [selectedQcrList.value, seletedMinbnd.value],
+  ([newVal1, newVal2], [oldVal1, oldVal2]) => {
+    console.log('Parent originalUserData changed:', [newVal1, newVal2], '->', [oldVal1, oldVal2]);
+  },
+
+  { deep: true },
+  { immediate: true }
+);
 </script>
 
 <template>
-  <div class="flex mt-8">
-    <div class="card flex flex-col gap-4 w-full">
-      <div class="font-semibold text-xl flex justify-between">
-        <div>기본 정보</div>
-        <div class="flex flex-row gap-2">
-          <Button label="삭제" severity="danger" />
-          <Button label="초기화" severity="secondary" />
-          <Button label="저장" severity="success" />
-          <Button label="검사지 불러오기" />
-        </div>
-      </div>
-      <div class="grid grid-cols-4 gap-4">
-        <div class="col-span-2">
-          <div class="grid grid-cols-3">
-            <label for="OrderCode" class="col-span-1">검사지시 코드</label>
-            <InputText id="OrderCode" type="text" class="col-span-2" />
-          </div>
-        </div>
-        <div class="col-span-2">
-          <div class="grid grid-cols-3">
-            <label for="orderDate" class="col-span-1">지시일자</label>
-            <InputText id="orderDate" type="text" class="col-span-2" />
-          </div>
-        </div>
-      </div>
-      <div class="grid grid-cols-4 gap-4">
-        <div class="col-span-2">
-          <div class="grid grid-cols-3">
-            <label for="orderPeople" class="col-span-1">지시자</label>
-            <InputText id="orderPeople" type="text" class="col-span-2" />
-          </div>
-        </div>
-        <div class="col-span-2"></div>
-      </div>
-    </div>
-  </div>
-  <div class="flex">
-    <div class="card flex flex-col gap-4 w-full">
-      <div class="font-semibold text-xl flex justify-between">
-        <div>기본 정보</div>
-        <div class="flex flex-row gap-2">
-          <Button type="button" @click="searchMinbndList" label="재고목록 불러오기" />
-          <Dialog header="Dialog" v-model:visible="display" :breakpoints="{ '960px': '75vw' }" :style="{ width: '30vw' }" :modal="true">
-            <p class="leading-normal m-0">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis
-              aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-            </p>
-            <template #footer>
-              <Button label="Save" @click="close" />
-            </template>
-          </Dialog>
-          <Button label="생산목록 불러오기" />
-        </div>
-      </div>
-      <div class="grid grid-cols-4 gap-4">
-        <div class="col-span-2">
-          <div class="grid grid-cols-3">
-            <label for="checkThing" class="col-span-1">검사대상</label>
-            <InputText id="checkThing" type="text" class="col-span-2" />
-          </div>
-        </div>
-        <div class="col-span-2">
-          <div class="grid grid-cols-3">
-            <label for="thingCode" class="col-span-1">품목코드</label>
-            <InputText id="thingCode" type="text" class="col-span-2" />
-          </div>
-        </div>
-      </div>
-      <div class="grid grid-cols-4 gap-4">
-        <div class="col-span-2">
-          <div class="grid grid-cols-3">
-            <label for="thingName" class="col-span-1">품목이름</label>
-            <InputText id="thingName" type="text" class="col-span-2" />
-          </div>
-        </div>
-        <div class="col-span-2">
-          <div class="grid grid-cols-3">
-            <label for="checkNum" class="col-span-1">검사수량</label>
-            <InputText id="checkNum" type="text" class="col-span-2" />
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <DataTable
-    ref="dt"
-    v-model:selection="selectedProducts"
-    :value="allQiList"
-    dataKey="qcr_code"
-    :paginator="true"
-    :rows="10"
-    :filters="filters"
-    paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-    :rowsPerPageOptions="[5, 10, 25]"
-    currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products"
-  >
-    <template #header>
-      <div class="flex flex-wrap gap-2 items-center justify-between">
-        <h4 class="m-0">검사항목</h4>
-      </div>
-    </template>
-
-    <Column selectionMode="multiple" style="width: 3rem" :exportable="false"></Column>
-    <Column field="inspection_item" header="검사항목" sortable style="min-width: 12rem"></Column>
-    <Column field="range_top" header="기준값(상한)" sortable style="min-width: 16rem"></Column>
-    <Column field="range_bot" header="기준값(하한)" sortable style="min-width: 10rem"></Column>
-    <Column field="note" header="단위" sortable style="min-width: 10rem"></Column>
-  </DataTable>
+  <QiOrderHeader @search-order-list="searchOrderList"></QiOrderHeader>
+  <QiOrderItem :selected-minbnd="seletedMinbnd" :key="seletedMinbnd" @search-list="searchMinbndList"></QiOrderItem>
+  <QiOrderMain :all-qi-list="allQiList" :selected-qcr-list="selectedQcrList" :key="selectedQcrList"></QiOrderMain>
+  <SelectMinbndModal :display="display" :minbnd="minbndList" @close="closeMOdal" @select-comp="selectComp"></SelectMinbndModal>
+  <SelectQiOrderModal :display="orderDisplay" :qi-order-list="quality1.qiOrderList" @close="closeMOdal" @selected-order="selectedOrder"></SelectQiOrderModal>
 </template>

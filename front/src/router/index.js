@@ -4,6 +4,7 @@ import qualityRouter1 from './quality1.js'; // 품질
 import qualityRouter2 from './quality2.js'; // 품질
 import ProductionRoutes1 from './productions1.js';
 import ProductionRoutes2 from './productions2.js';
+import Material1Routes1 from './material1.js';
 import materialRoutes2 from './material2.js'; // 자재
 
 const router = createRouter({
@@ -22,6 +23,7 @@ const router = createRouter({
         ...ProductionRoutes1,
         ...ProductionRoutes2,
         ...qualityRouter1,
+        ...Material1Routes1,
         ...qualityRouter2,
         ...materialRoutes2
       ]

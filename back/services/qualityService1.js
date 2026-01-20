@@ -14,7 +14,14 @@ const findAllMinbndList = async () => {
   return list;
 };
 
+// 검사지 전체 불러오기
+const findAllQiOrderList = async () => {
+  let list = await mysql.query("selectAllQiOrderList", [], "quality1");
+  return list;
+};
+
 module.exports = {
   findAllQiOrderCheckList,
   findAllMinbndList,
+  findAllQiOrderList,
 };

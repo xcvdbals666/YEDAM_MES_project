@@ -16,4 +16,9 @@ router.get(`/minbndlist`, async (req, res) => {
   res.send(list);
 });
 
+// 검사지 전체 불러오기
+router.get(`/qiorderlist`, async (req, res) => {
+  let list = await qualityService.findAllQiOrderList();
+  res.send(list);
+});
 module.exports = router;
