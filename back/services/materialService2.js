@@ -95,8 +95,10 @@ const addMprTbl = async ({ request, requestDetail }) => {
 
 // 자재구매요청 정보 조회
 const findByMprCodeMprTbl = async (keyword) => {
+  console.log("[findByMprCodeMprTbl] keyword:", keyword);
   let sql = `
     select
+      concat(m.mpr_code, '-', d.mat_code) as row_key,
       m.mpr_code,
       mt.mat_name,
       d.mat_code,
@@ -140,7 +142,17 @@ const findByMprCodeMprTbl = async (keyword) => {
 
   sql += " order by m.mpr_code desc, d.mpr_d_code asc";
 
-  return mysql.rquery(sql, params);
+  console.log("[SQL]", sql);
+  console.log("[PARAMS]", params);
+
+  try {
+    const result = await mysql.rquery(sql, params);
+    console.log("[RESULT COUNT]", result.length);
+    return result;
+  } catch (err) {
+    console.error("[DB ERROR]", err);
+    throw err;
+  }
 };
 
 module.exports = {
@@ -148,6 +160,6 @@ module.exports = {
   findByMatCodeMatTbl,
   findMaxMprCode,
   addMprTbl,
-  findByMprCodeMprTbl,
   findAllMrpCodeMrpTbl,
+  findByMprCodeMprTbl,
 };

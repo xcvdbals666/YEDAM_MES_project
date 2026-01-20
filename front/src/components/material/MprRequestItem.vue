@@ -55,7 +55,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="card mt-10 min-h-[530px]">
+  <div class="card mt-10 min-h-[450px]">
     <div class="flex justify-between align-items-center mb-3">
       <h4 class="m-0">요청 자재</h4>
 
@@ -65,7 +65,7 @@ onMounted(() => {
       </div>
     </div>
 
-    <DataTable :value="rows" v-model:selection="selectedRows" selectionMode="checkbox" dataKey="__key" tableStyle="table-layout: fixed; width: 100%;" class="p-datatable-sm" scrollable scroll-height="435px">
+    <DataTable :value="rows" v-model:selection="selectedRows" selectionMode="checkbox" dataKey="__key" tableStyle="table-layout: fixed; width: 100%;" class="p-datatable-sm" scrollable scroll-height="345px">
       <Column selectionMode="multiple" headerStyle="width: 48px; background-color: #f9fafb; padding: 10px;" />
 
       <Column header="자재코드" headerStyle="width: 120px; background-color: #f9fafb; padding: 10px;">

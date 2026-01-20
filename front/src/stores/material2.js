@@ -6,7 +6,8 @@ export const useMaterialStore = defineStore('material2', {
   state: () => ({
     employees: [],
     materials: [],
-    mrpCode: []
+    mrpCode: [],
+    requestList: []
   }),
   // getters
   // actions
@@ -20,7 +21,7 @@ export const useMaterialStore = defineStore('material2', {
     // mrp code 불러오기
     async fetchMrpCode() {
       const response = await axios.get(`/api/material/getMrpCode`);
-      console.log(response.data);
+      // console.log(response.data);
       this.mrpCode = response.data;
       return this.mrpCode;
     },
@@ -36,6 +37,12 @@ export const useMaterialStore = defineStore('material2', {
       const response = await axios.post('/api/material/mat-request', payload);
       console.log(payload);
       return response.data;
+    },
+
+    // 자재구매요청 정보 조회
+    async fetchRequest(keyword) {
+      const response = await axios.get('/api/material/mat-request', { params: keyword });
+      this.requestList = response.data;
     }
   },
   persist: true

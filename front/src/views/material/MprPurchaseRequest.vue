@@ -4,10 +4,20 @@ import { useMaterialStore } from '@/stores/material2';
 import axios from 'axios';
 import MprRequestHeader from '@/components/material/MprRequestHeader.vue';
 import MprRequestItem from '@/components/material/MprRequestItem.vue';
-import SelectEmployeeModal from '@/components/material/modal/SelectEmployeeModal.vue';
-import SelectMaterialModal from '@/components/material/modal/SelectMaterialModal.vue';
+import SelectModal from '@/components/material/modal/SelectModal.vue';
+// import SelectEmployeeModal from '@/components/material/modal/SelectEmployeeModal.vue';
+// import SelectMaterialModal from '@/components/material/modal/SelectMaterialModal.vue';
 
 const store = useMaterialStore();
+
+// 날짜 포맷
+const formatDate = (v) => {
+  const d = new Date(v);
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+};
 
 // 요청 정보
 const requestInfo = ref({
@@ -17,7 +27,7 @@ const requestInfo = ref({
   mrpCode: null, // MRP 계획번호 일단 NULL
   department: '', // 부서이름(프론트 표시용)
   deadline: null, // 납부일자
-  reqDate: new Date().toISOString().slice(0, 10) // 요청일자
+  reqDate: formatDate(new Date()) // 요청일자
 });
 
 // 요청 상세 정보
@@ -103,7 +113,7 @@ const initialRequestInfo = () => ({
   mrpCode: null,
   department: '',
   deadline: null,
-  reqDate: formatDate()
+  reqDate: formatDate(new Date())
 });
 
 const initialDetailRow = () => ({
@@ -117,12 +127,6 @@ const initialDetailRow = () => ({
   clientName: '',
   matCode: ''
 });
-
-// 날짜 포맷
-const formatDate = (v = null) => {
-  if (!v) return new Date().toISOString().slice(0, 10);
-  return new Date(v).toISOString().slice(0, 10);
-};
 
 // AutoComplete 검색 함수
 const searchMrp = (event) => {
@@ -147,7 +151,7 @@ const openMaterialModal = (row) => {
 // 초기화
 const doReset = async (askConfirm = true) => {
   if (askConfirm) {
-    if (!confirm('...')) return;
+    if (!confirm('입력한 검색 조건을 모두 초기화하시겠습니까?')) return;
   }
 
   requestInfo.value = initialRequestInfo();
@@ -234,6 +238,8 @@ const save = async () => {
     />
     <MprRequestItem v-model="requestDetailInfo" @selected-material="(row) => openMaterialModal(row)" />
   </div>
-  <SelectEmployeeModal v-model:visible="showWriterModal" @select="selectWriter" />
-  <SelectMaterialModal v-model:visible="showMaterialModal" @select="selectMaterial" />
+  <!-- <SelectEmployeeModal v-model:visible="showWriterModal" @select="selectWriter" />
+  <SelectMaterialModal v-model:visible="showMaterialModal" @select="selectMaterial" /> -->
+  <SelectModal v-model:visible="showWriterModal" type="employee" @select="selectWriter" />
+  <SelectModal v-model:visible="showMaterialModal" type="material" @select="selectMaterial" />
 </template>
