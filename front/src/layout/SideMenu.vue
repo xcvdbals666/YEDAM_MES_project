@@ -31,9 +31,9 @@ const model = ref([
         path: '/order',
         items: [
           {
-            label: '예시 메뉴',
+            label: '주문서 관리',
             icon: 'pi pi-fw pi-sign-in',
-            to: ''
+            to: '/ordManager'
           }
         ]
       },
@@ -110,7 +110,6 @@ const model = ref([
             label: '발주서관리',
             icon: 'pi pi-fw pi-sign-in',
             to: '/mpotable'
-            
           }
         ]
       },

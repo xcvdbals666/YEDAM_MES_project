@@ -6,27 +6,30 @@ const findAllOrder = async () => {
   let list = await mysql.query("selectAllOrder", [], "order1");
   return list;
 };
+const findOrderDetailByCode = async (code) => {
+  let list = await mysql.query("selectOrderDetailByCode", [code], "order1");
+  return list;
+};
 // 공급업체 목록 조회
 const findAllClient = async () => {
   let list = await mysql.query("selectAllClient", [], "order1");
   return list;
 };
 
-// 게시글 전체 목록
-const findAll = async () => {
-  let list = await mysql.query("selectAll", [], "order");
+// 영업부서 직원 전체조회
+const findAllEmployees = async () => {
+  let list = await mysql.query("selectAllEmployees", [], "order1");
   return list;
 };
-
-// 출고 조회
-const findAllOutreqtbl = async () => {
-  let list = await mysql.query("selectAllOutreqtbl", [], "order");
+// 완제품 전체 조회
+const findAllProducts = async () => {
+  let list = await mysql.query("selectAllProducts", [], "order1");
   return list;
 };
-
 module.exports = {
   findAllOrder,
   findAllClient,
-  findAll,
-  findAllOutreqtbl,
+  findAllEmployees,
+  findAllProducts,
+  findOrderDetailByCode,
 };
