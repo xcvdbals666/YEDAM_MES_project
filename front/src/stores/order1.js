@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import axios from 'axios';
 
-const url = '/order';
+const url = '/api/order';
 
 export const useOrderStore = defineStore('order', {
   // state
