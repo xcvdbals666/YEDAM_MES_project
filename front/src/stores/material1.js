@@ -32,7 +32,7 @@ export const useMaterialStore = defineStore('material', {
   actions: {
     // MPR 선택 → 요청서에 포함된 자재 조회 (상세)
     async fetchMprMaterials(mprCode) {
-      const response = await axios.get(`/material/mpr/${mprCode}`, { headers: { 'Cache-Control': 'no-cache' } });
+      const response = await axios.get(`/api/material/mpr/${mprCode}`, { headers: { 'Cache-Control': 'no-cache' } });
 
       this.materials = response.data.map((item) => ({
         ...item,
@@ -44,7 +44,7 @@ export const useMaterialStore = defineStore('material', {
 
     // MPR 목록 조회 (모달용)
     async fetchMprList() {
-      const response = await axios.get('/material/mpr', {
+      const response = await axios.get('/api/material/mpr', {
         headers: { 'Cache-Control': 'no-cache' }
       });
       this.mprList = response.data;
@@ -53,18 +53,23 @@ export const useMaterialStore = defineStore('material', {
 
     // 자재 전체 조회 (모달용)
     async fetchMatList() {
-      const response = await axios.get('/material/mat');
+      const response = await axios.get('/api/material/mat');
       this.matList = response.data;
       return this.matList;
     },
 
+    //저장
+    async saveMpo(payload) {
+      const response = await axios.post('/material/mpo', payload);
+      return response.data;
+    },
     // MPR 검색
     async searchMprList(keyword) {
       try {
         if (!keyword) {
           return await this.fetchMprList();
         } else {
-          const response = await axios.get(`/material/mpr/search/${keyword}`, { headers: { 'Cache-Control': 'no-cache' } });
+          const response = await axios.get(`/api/material/mpr/search/${keyword}`, { headers: { 'Cache-Control': 'no-cache' } });
           this.mprList = response.data;
           return this.mprList;
         }

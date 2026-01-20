@@ -1,38 +1,9 @@
 const mysql = require("../database/mapper.js");
 
+// 발주서 (MPO) 관련
 // 발주서 전체 목록 조회 (모달용)
 const findAllMpoTbl = async () => {
   let list = await mysql.query("selectAllMpoTbl", [], "material1");
-  return list;
-};
-// 자재구매요청서 목록 조회
-const findAllMprTbl = async () => {
-  let list = await mysql.query("selectAllMprTbl", [], "material1");
-  return list;
-};
-//자재 추가 목록 조회(모달용)
-const findAllMatTbl = async () => {
-  let list = await mysql.query("selectAllMatTbl", [], "material1");
-  return list;
-};
-
-// 자재구매요청서 검색
-const searchMprTbl = async (keyword) => {
-  let list = await mysql.query(
-    "selectSearchMprTbl",
-    [keyword, keyword, keyword], // 3번 반복 (mpr_code, mcode, note)
-    "material1",
-  );
-  return list;
-};
-
-// 자재구매요청서(MPR) 기준 자재 목록 조회
-const findByMprCode = async (mprCode) => {
-  let list = await mysql.query(
-    "selectByMrpCodeMrpDetailTbl",
-    [mprCode],
-    "material1",
-  );
   return list;
 };
 
@@ -70,7 +41,7 @@ const addMpoTbl = async (mpoData) => {
   );
 
   let resObj = {};
-  if (list.insertId > 0) {
+  if (list.affectedRows > 0) {
     // 3. 발주서 자재 상세 등록 (반복)
     for (let item of mpoData.materials) {
       await mysql.query(
@@ -88,8 +59,7 @@ const addMpoTbl = async (mpoData) => {
     }
     resObj = {
       status: "success",
-      no: list.insertId,
-      poCode: nextCode, // 생성된 발주서 번호 반환
+      poCode: nextCode,
     };
   } else {
     resObj = { status: "fail" };
@@ -97,24 +67,52 @@ const addMpoTbl = async (mpoData) => {
   return resObj;
 };
 
-// MRP 기반 자재 목록 조회 (발주서 등록 시 자재 불러오기)
-const findByMrpCodeMrpDTbl = async (mrpCode) => {
+// 자재구매요청서 (MPR) 관련
+// 자재구매요청서 목록 조회
+const findAllMprTbl = async () => {
+  let list = await mysql.query("selectAllMprTbl", [], "material1");
+  return list;
+};
+
+// 자재구매요청서 검색
+const searchMprTbl = async (keyword) => {
   let list = await mysql.query(
-    "selectByMrpCodeMrpDetailTbl",
-    [mrpCode],
+    "selectSearchMprTbl",
+    [keyword, keyword, keyword],
     "material1",
   );
   return list;
 };
 
+// 자재구매요청서(MPR) 기준 자재 목록 조회
+const findByMprCode = async (mprCode) => {
+  let list = await mysql.query(
+    "selectByMrpCodeMrpDetailTbl",
+    [mprCode],
+    "material1",
+  );
+  return list;
+};
+
+// 자재 (MAT) 관련
+// 자재 전체 목록 조회 (모달용)
+const findAllMatTbl = async () => {
+  let list = await mysql.query("selectAllMatTbl", [], "material1");
+  return list;
+};
+
 module.exports = {
-  findByMrpCodeMrpDTbl,
-  addMpoTbl,
+  // 발주서 (MPO)
   findAllMpoTbl,
-  findAllMprTbl,
-  searchMprTbl,
   findByCodeMpoTbl,
   findByCodeMpoDTbl,
+  addMpoTbl,
+
+  // 자재구매요청서 (MPR)
+  findAllMprTbl,
+  searchMprTbl,
   findByMprCode,
+
+  // 자재 (MAT)
   findAllMatTbl,
 };

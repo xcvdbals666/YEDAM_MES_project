@@ -2,12 +2,16 @@
 <script setup>
 import { ref } from 'vue';
 import { useMaterialStore } from '@/stores/material1';
+import { useMaterialStore as useMaterialStore2 } from '@/stores/material2';
 import SelectMrpModal from '@/components/material/modal/SelectMrpModal.vue';
 import AddMaterialModal from '@/components/material/modal/AddMaterialModal.vue';
+import SelectEmployeeModal from '@/components/material/modal/SelectEmployeeModal.vue';
 
 const mpoStore = useMaterialStore();
 const showMrpModal = ref(false);
 const showAddModal = ref(false);
+const showEmployee = ref(false);
+const empStore = useMaterialStore2();
 const unitMap = {
   h1: 'kg',
   h2: 't',
@@ -21,6 +25,11 @@ const unitMap = {
   ha: 'N'
 };
 const getUnitName = (code) => unitMap[code] || code;
+
+// 사원 선택 시
+const handleSelectEmployee = (employee) => {
+  mpoStore.mpoData.mcode = employee.emp_name; // 또는 emp_code
+};
 
 // 자재 추가 함수 추가
 const addMaterialToTable = (mat) => {
@@ -49,13 +58,41 @@ const handleSelectMpr = async (mpr) => {
 const openAddModal = () => {
   showAddModal.value = true;
 };
+
+const saveMpo = async () => {
+  const payload = {
+    stat: mpoStore.mpoData.stat,
+    mcode: mpoStore.mpoData.mcode,
+    note: mpoStore.mpoData.note || '',
+    materials: mpoStore.materials.map((m) => ({
+      mat_code: m.mat_code,
+      unit: m.unit,
+      req_qtt: m.req_qtt,
+      deadline: m.delivery_date,
+      client_code: m.client_code
+    }))
+  };
+
+  try {
+    const result = await mpoStore.saveMpo(payload);
+    if (result.status === 'success') {
+      alert('저장되었습니다!');
+      mpoStore.mpoData.purchaseCode = result.poCode;
+    } else {
+      alert('저장 실패');
+    }
+  } catch (err) {
+    alert('저장 실패');
+    console.error(err);
+  }
+};
 </script>
 
 <template>
   <div>
     <!-- 상단 버튼 -->
     <div class="flex justify-end gap-2 mb-4">
-      <Button label="저장" severity="info" />
+      <Button label="저장" severity="info" @click="saveMpo" />
       <Button label="초기화" severity="contrast" />
       <Button label="삭제" severity="danger" />
       <Button label="발주정보 불러오기" severity="success" />
@@ -84,7 +121,7 @@ const openAddModal = () => {
             </td>
             <th>작성자</th>
             <td>
-              <InputText v-model="mpoStore.mpoData.mcode" placeholder="작성자 선택" class="w-full" />
+              <InputText v-model="mpoStore.mpoData.mcode" placeholder="작성자 선택" class="w-full" @click="showEmployee = true" />
             </td>
             <th>발주상태</th>
             <td>
@@ -160,6 +197,8 @@ const openAddModal = () => {
     <!-- 모달 -->
     <SelectMrpModal :visible="showMrpModal" @update:visible="showMrpModal = $event" @select="handleSelectMpr" />
     <AddMaterialModal :visible="showAddModal" @update:visible="showAddModal = $event" @add="addMaterialToTable" />
+    <!-- 사원 모달 -->
+    <SelectEmployeeModal :visible="showEmployee" @update:visible="showEmployee = $event" @select="handleSelectEmployee" />
   </div>
 </template>
 <style scoped>

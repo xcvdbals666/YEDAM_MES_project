@@ -8,9 +8,7 @@ const props = defineProps({
 const emit = defineEmits(['update:visible', 'add']);
 const store = useMaterialStore();
 const selectedMat = ref(null);
-const calcShortage = (row) => {
-  row.shortage_qtt = Math.max(0, row.req_qtt - Number(row.current_stock));
-};
+
 const unitMap = {
   h1: 'kg',
   h2: 't',

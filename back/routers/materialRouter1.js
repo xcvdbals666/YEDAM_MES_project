@@ -24,14 +24,12 @@ router.get("/mpr", async (req, res) => {
 });
 
 // 자재 마스터 (자재추가 모달)
-
 router.get("/mat", async (req, res) => {
   const list = await materialService.findAllMatTbl();
   res.send(list);
 });
 
 // MRP
-
 router.get("/mrp/:mrpCode", async (req, res) => {
   const { mrpCode } = req.params;
   const list = await materialService.findByMrpCodeMrpDTbl(mrpCode);
@@ -39,7 +37,6 @@ router.get("/mrp/:mrpCode", async (req, res) => {
 });
 
 // MPO
-
 router.post("/mpo", async (req, res) => {
   const result = await materialService.addMpoTbl(req.body);
   res.send(result);
