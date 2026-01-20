@@ -1,0 +1,58 @@
+{
+  "hash": "dbb9ce17",
+  "configHash": "4a22c810",
+  "lockfileHash": "65abea9f",
+  "browserHash": "c8c44dac",
+  "optimized": {
+    "vue": {
+      "src": "../../node_modules/vue/dist/vue.runtime.esm-bundler.js",
+      "file": "vue.js",
+      "fileHash": "f243ee62",
+      "needsInterop": false
+    },
+    "pinia": {
+      "src": "../../node_modules/pinia/dist/pinia.mjs",
+      "file": "pinia.js",
+      "fileHash": "4eb5ea77",
+      "needsInterop": false
+    },
+    "@primeuix/themes/aura": {
+      "src": "../../node_modules/@primeuix/themes/dist/aura/index.mjs",
+      "file": "@primeuix_themes_aura.js",
+      "fileHash": "3919b263",
+      "needsInterop": false
+    },
+    "primevue/config": {
+      "src": "../../node_modules/primevue/config/index.mjs",
+      "file": "primevue_config.js",
+      "fileHash": "0c162857",
+      "needsInterop": false
+    },
+    "primevue/confirmationservice": {
+      "src": "../../node_modules/primevue/confirmationservice/index.mjs",
+      "file": "primevue_confirmationservice.js",
+      "fileHash": "6fd605e1",
+      "needsInterop": false
+    },
+    "primevue/toastservice": {
+      "src": "../../node_modules/primevue/toastservice/index.mjs",
+      "file": "primevue_toastservice.js",
+      "fileHash": "10faa5d1",
+      "needsInterop": false
+    },
+    "vue-router": {
+      "src": "../../node_modules/vue-router/dist/vue-router.mjs",
+      "file": "vue-router.js",
+      "fileHash": "cbd4ec0f",
+      "needsInterop": false
+    }
+  },
+  "chunks": {
+    "chunk-GFKAIPHP": {
+      "file": "chunk-GFKAIPHP.js"
+    },
+    "chunk-6DAX75OX": {
+      "file": "chunk-6DAX75OX.js"
+    }
+  }
+}
