@@ -1,113 +1,101 @@
 <!-- QiOrder.vue -->
 <!-- 검사지시서 관리 페이지-->
 <script setup>
-import { NodeService } from '@/service/NodeService';
-import { onBeforeMount, ref } from 'vue';
+import QiOrderHeader from '../../components/quality1/QiOrderHeader.vue';
+import QiOrderItem from '../../components/quality1/QiOrderItem.vue';
+import QiOrderMain from '../../components/quality1/QiOrderMain.vue';
+import SelectMinbndModal from '../../components/quality1/modal/SelectMinbndModal.vue';
+import SelectQiOrderModal from '@/components/quality1/modal/SelectQiOrderModal.vue';
+import { useQuality1Store } from '../../stores/quality1';
+
+import { onBeforeMount, ref, watch } from 'vue';
 import axios from 'axios';
 
-const treeValue = ref(null);
-const treeTableValue = ref(null);
-const selectedTreeTableValue = ref(null);
+const quality1 = useQuality1Store();
 
-onBeforeMount(() => {
-  NodeService.getTreeNodes(allQiList.value).then((data) => (treeValue.value = data));
-  NodeService.getTreeTableNodes(allQiList.value).then((data) => (treeTableValue.value = data));
+onBeforeMount(async () => {
+  // qcr_tbl 데이터 불러오기(맨처음 접속시)
+  await quality1.fetchQcrInfo();
+  allQiList.value = quality1.qcrInfo;
 });
-
-// qcr_tbl 데이터 불러오기(맨처음 접속시)
 let allQiList = ref([]);
-axios //
-  .get('/quality/qiorder')
-  .then((res) => {
-    allQiList.value = res.data;
-    console.log('allQiList: ', allQiList.value);
-  });
+
+// 재고목록 불러오기
+// 모달창 열기
+let minbndList = ref([{ qio_code: '', mat_code: '', mat_name: '', inspection_item: '', com_value: '', note: '', sum: '' }]);
+let display = ref(false); // 모달창 오픈 위해서
+
+const searchMinbndList = async () => {
+  await axios //
+    .get('quality/minbndlist')
+    .then((res) => {
+      minbndList.value = res.data;
+      console.log(minbndList.value);
+    });
+  display.value = true;
+};
+
+// 재고불러오기 모달창 닫기
+const closeMOdal = () => {
+  display.value = false;
+  orderDisplay.value = false;
+};
+
+// 선택된 값 불러오기
+const selectComp = (data) => {
+  if (data != null) {
+    console.log(data[0]);
+    seletedMinbnd.value = data[0];
+    console.log(seletedMinbnd.value);
+    display.value = false;
+
+    allQiList.value.forEach((value) => {
+      console.log(data);
+      if (value.com_value == seletedMinbnd.value.com_value) {
+        selectedQcrList.value.push(value);
+      }
+      console.log(selectedQcrList.value);
+    });
+  } else {
+    display.value = false;
+  }
+};
+
+// QiOrderItem의 항목 채우기(모달창 선택값)
+let seletedMinbnd = ref([]);
+
+// QiOrderMain의 값 선택하기(모달창 선택값)
+let selectedQcrList = ref([]);
+
+// 검사지시지 전체 불러오기
+let orderDisplay = ref(false);
+const searchOrderList = async () => {
+  await quality1.fetchOrderList();
+  orderDisplay.value = true;
+};
+
+// 선택한 검사지시서 정보 조회
+const selectedOrder = (data) => {
+  console.log(data);
+  orderDisplay.value = false;
+};
+
+// 변화 감지
+watch(
+  () => [selectedQcrList.value, seletedMinbnd.value],
+  ([newVal1, newVal2], [oldVal1, oldVal2]) => {
+    console.log('Parent originalUserData changed:', [newVal1, newVal2], '->', [oldVal1, oldVal2]);
+  },
+
+  { deep: true },
+  { immediate: true }
+);
 </script>
 
 <template>
-  <div class="flex mt-8">
-    <div class="card flex flex-col gap-4 w-full">
-      <div class="font-semibold text-xl flex justify-between">
-        <div>기본 정보</div>
-        <div class="flex flex-row gap-2">
-          <Button label="삭제" severity="danger" />
-          <Button label="초기화" severity="secondary" />
-          <Button label="저장" severity="success" />
-          <Button label="검사지 불러오기" />
-        </div>
-      </div>
-      <div class="grid grid-cols-4 gap-4">
-        <div class="col-span-2">
-          <div class="grid grid-cols-3">
-            <label for="OrderCode" class="col-span-1">검사지시 코드</label>
-            <InputText id="OrderCode" type="text" class="col-span-2" />
-          </div>
-        </div>
-        <div class="col-span-2">
-          <div class="grid grid-cols-3">
-            <label for="orderDate" class="col-span-1">지시일자</label>
-            <InputText id="orderDate" type="text" class="col-span-2" />
-          </div>
-        </div>
-      </div>
-      <div class="grid grid-cols-4 gap-4">
-        <div class="col-span-2">
-          <div class="grid grid-cols-3">
-            <label for="orderPeople" class="col-span-1">지시자</label>
-            <InputText id="orderPeople" type="text" class="col-span-2" />
-          </div>
-        </div>
-        <div class="col-span-2"></div>
-      </div>
-    </div>
-  </div>
-  <div class="flex">
-    <div class="card flex flex-col gap-4 w-full">
-      <div class="font-semibold text-xl flex justify-between">
-        <div>기본 정보</div>
-        <div class="flex flex-row gap-2">
-          <Button label="재고목록 불러오기" />
-          <Button label="생산목록 불러오기" />
-        </div>
-      </div>
-      <div class="grid grid-cols-4 gap-4">
-        <div class="col-span-2">
-          <div class="grid grid-cols-3">
-            <label for="checkThing" class="col-span-1">검사대상</label>
-            <InputText id="checkThing" type="text" class="col-span-2" />
-          </div>
-        </div>
-        <div class="col-span-2">
-          <div class="grid grid-cols-3">
-            <label for="thingCode" class="col-span-1">품목코드</label>
-            <InputText id="thingCode" type="text" class="col-span-2" />
-          </div>
-        </div>
-      </div>
-      <div class="grid grid-cols-4 gap-4">
-        <div class="col-span-2">
-          <div class="grid grid-cols-3">
-            <label for="thingName" class="col-span-1">품목이름</label>
-            <InputText id="thingName" type="text" class="col-span-2" />
-          </div>
-        </div>
-        <div class="col-span-2">
-          <div class="grid grid-cols-3">
-            <label for="checkNum" class="col-span-1">검사수량</label>
-            <InputText id="checkNum" type="text" class="col-span-2" />
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="font-semibold text-xl mb-4">검사항목</div>
-    <TreeTable>
-      <Column field="검사항목" header="검사항목" :expander="true">검사항목</Column>
-      <Column field="기준값(상한)" header="기준값(상한)">기준값(상한)</Column>
-      <Column field="기준값(하한)" header="기준값(하한)">기준값(하한)</Column>
-      <Column field="단위" header="단위">단위</Column>
-    </TreeTable>
-  </div>
+  <QiOrderHeader @search-order-list="searchOrderList"></QiOrderHeader>
+  <QiOrderItem :selected-minbnd="seletedMinbnd" :key="seletedMinbnd" @search-list="searchMinbndList"></QiOrderItem>
+  <QiOrderMain :all-qi-list="allQiList" :selected-qcr-list="selectedQcrList" :key="selectedQcrList"></QiOrderMain>
+  <SelectMinbndModal :display="display" :minbnd="minbndList" @close="closeMOdal" @select-comp="selectComp"></SelectMinbndModal>
+  <SelectQiOrderModal :display="orderDisplay" :qi-order-list="quality1.qiOrderList" @close="closeMOdal" @selected-order="selectedOrder"></SelectQiOrderModal>
 </template>

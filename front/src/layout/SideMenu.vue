@@ -95,6 +95,11 @@ const model = ref([
         path: '/quality',
         items: [
           {
+            label: '품질검사 지시관리',
+            icon: 'pi pi-fw pi-sign-in',
+            to: '/qiorder'
+          },
+          {
             label: '품질검사 목록조회',
             icon: 'pi pi-fw pi-sign-in',
             to: '/qiorderlist'
