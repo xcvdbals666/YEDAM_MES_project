@@ -27,6 +27,12 @@ const findByCodeMpoDTbl = async (purchaseCode) => {
   return list;
 };
 
+// 발주서 검색
+const searchMpoTbl = async (keyword) => {
+  let list = await mysql.query("selectSearchMpoTbl", [keyword], "material1");
+  return list;
+};
+
 // 발주서 등록 (기본정보 + 자재 상세)
 const addMpoTbl = async (mpoData) => {
   // 1. 발주서 번호 자동생성
@@ -43,10 +49,13 @@ const addMpoTbl = async (mpoData) => {
   let resObj = {};
   if (list.affectedRows > 0) {
     // 3. 발주서 자재 상세 등록 (반복)
+    let seq = 1;
     for (let item of mpoData.materials) {
+      const mpo_d_code = `${nextCode}-${String(seq).padStart(3, "0")}`;
       await mysql.query(
         "insertMpoDetailTbl",
         [
+          mpo_d_code,
           nextCode,
           item.mat_code,
           item.unit,
@@ -56,6 +65,7 @@ const addMpoTbl = async (mpoData) => {
         ],
         "material1",
       );
+      seq++;
     }
     resObj = {
       status: "success",
@@ -107,6 +117,7 @@ module.exports = {
   findByCodeMpoTbl,
   findByCodeMpoDTbl,
   addMpoTbl,
+  searchMpoTbl,
 
   // 자재구매요청서 (MPR)
   findAllMprTbl,

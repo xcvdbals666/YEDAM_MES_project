@@ -42,6 +42,13 @@ router.post("/mpo", async (req, res) => {
   res.send(result);
 });
 
+// 발주서 검색
+router.get("/mpo/search/:keyword", async (req, res) => {
+  const { keyword } = req.params;
+  const list = await materialService.searchMpoTbl(keyword);
+  res.send(list);
+});
+
 router.get("/mpo/:purchaseCode/detail", async (req, res) => {
   const { purchaseCode } = req.params;
   const list = await materialService.findByCodeMpoDTbl(purchaseCode);

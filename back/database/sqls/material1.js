@@ -1,14 +1,16 @@
 // 발주서 (MPO) 관련
 // 발주서 전체 목록 조회
 const selectAllMpoTbl = `
-SELECT
+SELECT 
   mpo.purchase_code,
-  mpo.purchase_req_date,
+  DATE_FORMAT(mpo.purchase_req_date, '%Y-%m-%d') AS purchase_req_date,  
   mpo.stat,
-  mpo.regdate,
   mpo.mcode,
-  mpo.note
+  GROUP_CONCAT(DISTINCT m.mat_name SEPARATOR ', ') AS material_names
 FROM mpo_tbl mpo
+LEFT JOIN mpo_d_tbl d ON mpo.purchase_code = d.purchase_code
+LEFT JOIN mat_tbl m ON d.mat_code = m.mat_code
+GROUP BY mpo.purchase_code, mpo.purchase_req_date, mpo.stat, mpo.mcode
 ORDER BY mpo.purchase_code DESC
 `;
 
@@ -16,7 +18,7 @@ ORDER BY mpo.purchase_code DESC
 const selectByCodeMpoTbl = `
 SELECT 
   mpo.purchase_code,           
-  mpo.purchase_req_date,       
+  DATE_FORMAT(mpo.purchase_req_date, '%Y-%m-%d') AS purchase_req_date,     
   mpo.mcode,                   
   mpo.stat,                    
   mpo.note,                    
@@ -35,23 +37,38 @@ SELECT
   m.material_type_code,
   mpod.unit,
   mpod.req_qtt,
-  mpod.deadline,
-  c.client_name,
+  IFNULL(s.current_qty, 0) AS current_stock,
+  CASE
+    WHEN mpod.req_qtt - IFNULL(s.current_qty, 0) > 0
+    THEN mpod.req_qtt - IFNULL(s.current_qty, 0)
+    ELSE 0
+  END AS shortage_qtt,
+  DATE_FORMAT(mpod.deadline, '%Y-%m-%d') AS deadline,
+  c.client_name AS supplier_name,
   mpod.client_code
 FROM mpo_d_tbl mpod
 JOIN mat_tbl m ON mpod.mat_code = m.mat_code
 LEFT JOIN client_tbl c ON mpod.client_code = c.client_code
+LEFT JOIN (
+  SELECT mat_code,
+         IFNULL(SUM(inbnd_qtt), 0) - IFNULL(SUM(outbnd_qtt), 0) AS current_qty
+  FROM (
+    SELECT mat_code, inbnd_qtt, 0 AS outbnd_qtt FROM minbnd_tbl
+    UNION ALL
+    SELECT mat_code, 0 AS inbnd_qtt, outbnd_qtt FROM moutbnd_tbl
+  ) x
+  GROUP BY mat_code
+) s ON s.mat_code = mpod.mat_code
 WHERE mpod.purchase_code = ?
 `;
 
 // 발주서번호 자동생성
 const selectNextMpoCode = `
 SELECT 
-  CONCAT('MPO-', DATE_FORMAT(NOW(), '%Y%m%d'), '-', 
-    LPAD(IFNULL(MAX(CAST(SUBSTRING(purchase_code, 16) AS UNSIGNED)), 0) + 1, 3, '0')) 
+  CONCAT('BJ', LPAD(IFNULL(MAX(CAST(SUBSTRING(purchase_code, 3) AS UNSIGNED)), 0) + 1, 4, '0')) 
   AS next_code
 FROM mpo_tbl
-WHERE purchase_code LIKE CONCAT('MPO-', DATE_FORMAT(NOW(), '%Y%m%d'), '%')
+WHERE purchase_code LIKE 'BJ%'
 `;
 
 // 발주서 기본정보 등록
@@ -69,13 +86,30 @@ INSERT INTO mpo_tbl (
 // 발주서 자재 상세 등록
 const insertMpoDetailTbl = `
 INSERT INTO mpo_d_tbl (
+  mpo_d_code,
   purchase_code,
   mat_code,
   unit,
   req_qtt,
   deadline,
   client_code
-) VALUES (?, ?, ?, ?, ?, ?)
+) VALUES (?, ?, ?, ?, ?, ?, ?)
+`;
+
+// 발주서 검색
+const selectSearchMpoTbl = `
+SELECT 
+  mpo.purchase_code,
+  DATE_FORMAT(mpo.purchase_req_date, '%Y-%m-%d') AS purchase_req_date,
+  mpo.stat,
+  mpo.mcode,
+  GROUP_CONCAT(DISTINCT m.mat_name SEPARATOR ', ') AS material_names
+FROM mpo_tbl mpo
+LEFT JOIN mpo_d_tbl d ON mpo.purchase_code = d.purchase_code
+LEFT JOIN mat_tbl m ON d.mat_code = m.mat_code
+WHERE mpo.purchase_code LIKE CONCAT('%', ?, '%')
+GROUP BY mpo.purchase_code, mpo.purchase_req_date, mpo.stat, mpo.mcode
+ORDER BY mpo.purchase_code DESC
 `;
 
 // 자재구매요청서 (MPR) 관련
@@ -83,9 +117,9 @@ INSERT INTO mpo_d_tbl (
 const selectAllMprTbl = `
 SELECT 
   m.mpr_code,
-  m.reqdate,
+  DATE_FORMAT(m.reqdate, '%Y-%m-%d') AS reqdate,
   m.mcode,
-  m.deadline,
+  DATE_FORMAT(m.deadline, '%Y-%m-%d') AS deadline,
   m.mrp_code,
   GROUP_CONCAT(DISTINCT mat.mat_name SEPARATOR ', ') AS material_names
 FROM mpr_tbl m
@@ -99,9 +133,9 @@ ORDER BY m.mpr_code DESC
 const selectSearchMprTbl = `
 SELECT 
   m.mpr_code,
-  m.reqdate,
+  DATE_FORMAT(m.reqdate, '%Y-%m-%d') AS reqdate,
   m.mcode,
-  m.deadline,
+  DATE_FORMAT(m.deadline, '%Y-%m-%d') AS deadline,
   m.mrp_code,
   GROUP_CONCAT(DISTINCT mat.mat_name SEPARATOR ', ') AS material_names
 FROM mpr_tbl m
@@ -137,7 +171,8 @@ FROM (
       ELSE 0
     END AS order_qtt,
     DATE_FORMAT(DATE_ADD(CURDATE(), INTERVAL 7 DAY), '%Y-%m-%d') AS delivery_date,
-    c.client_name AS supplier_name
+    c.client_name AS supplier_name,
+    m.sup AS client_code
   FROM mpr_d_tbl rd
   JOIN mat_tbl m ON rd.mat_code = m.mat_code
   LEFT JOIN client_tbl c ON c.client_code = m.sup
@@ -196,6 +231,7 @@ module.exports = {
   selectNextMpoCode,
   insertMpoTbl,
   insertMpoDetailTbl,
+  selectSearchMpoTbl,
 
   // 자재구매요청서 (MPR)
   selectAllMprTbl,
