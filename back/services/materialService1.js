@@ -45,6 +45,10 @@ const findByCodeMpoDTbl = async (purchaseCode) => {
 const addMpoTbl = async (mpoData) => {
   // 1. 발주서 번호 자동생성
   let codeResult = await mysql.query("selectNextMpoCode", [], "material1");
+//발주서 기본정보 등록
+const addMpo = async (mpoData) => {
+  //발주서 번호 생성(자동생성)
+  let codeResult = await mysql.query("selectNextMpoCode", [], "material");
   let nextCode = codeResult[0].next_code;
 
   // 2. 발주서 기본정보 등록
@@ -100,4 +104,5 @@ module.exports = {
   searchMprTbl,
   findByCodeMpoTbl,
   findByCodeMpoDTbl,
+  findByMrpCodeMrpDetail,
 };
