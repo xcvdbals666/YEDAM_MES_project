@@ -8,18 +8,6 @@ const materialService = require("../services/materialService1.js");
 //   res.send(list);
 // });
 
-// 작성자 선택 - 사원 정보 조회
-router.get("/emp", async (req, res) => {
-  let list = await materialService.findByEmpcodeEmpTbl();
-  res.send(list);
-});
-
-// 자재 선택 - 자재 정보 조회
-router.get(`/mat-detail`, async (req, res) => {
-  let list = await materialService.findByMatCodeMatTbl();
-  res.send(list);
-});
-
 //발주서 기본 등록
 router.post(`/mpo`, async (req, res) => {
   let list = await materialService.addMpo(req.body);

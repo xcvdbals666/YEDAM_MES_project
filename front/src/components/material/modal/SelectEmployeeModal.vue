@@ -1,7 +1,6 @@
 <script setup>
 import { ref, watch } from 'vue';
-import { FilterMatchMode } from '@primevue/core/api';
-import { useMaterialStore } from '@/stores/material1';
+import { useMaterialStore } from '@/stores/material2';
 
 const props = defineProps({
   visible: Boolean
@@ -10,23 +9,24 @@ const emit = defineEmits(['update:visible', 'select']);
 const store = useMaterialStore();
 
 const selectedEmployee = ref(null);
+const keyword = ref(''); // 검색 입력값
 
-// 검색(프론트)
-const filters = ref({
-  global: { value: null, matchMode: FilterMatchMode.CONTAINS }
-});
-
-// 모달이 열렸는지 확인
+// 모달 열렸을 때
 watch(
   () => props.visible,
   (val) => {
     if (val) {
-      store.fetchEmployees();
+      store.fetchEmployees({ keyword: '' });
       selectedEmployee.value = null;
-      filters.value.global.value = null;
+      keyword.value = '';
     }
   }
 );
+
+// 검색어 변경될 때 서버에 검색
+watch(keyword, (val) => {
+  store.fetchEmployees({ keyword: val });
+});
 
 // 모달 닫기
 const close = () => {
@@ -44,14 +44,14 @@ const confirm = () => {
 <template>
   <Dialog header="작성자 선택" :visible="visible" modal style="width: 900px" @update:visible="close">
     <div class="mb-3">
-      <InputText v-model="filters.global.value" placeholder="사번 또는 사원명을 입력해주세요" class="w-full" />
+      <InputText v-model="keyword" placeholder="사번 또는 사원명을 입력해주세요" class="w-full" />
     </div>
 
-    <DataTable :value="store.employees" v-model:selection="selectedEmployee" selectionMode="single" dataKey="emp_code" :filters="filters" :globalFilterFields="['emp_code', 'empName', 'deptName']" scrollable scrollHeight="400px">
+    <DataTable :value="store.employees" v-model:selection="selectedEmployee" selectionMode="single" dataKey="emp_code" scrollable scrollHeight="400px">
       <Column selectionMode="single" style="width: 3rem" />
-      <Column field="empCode" header="사원번호" />
-      <Column field="empName" header="사원명" />
-      <Column field="deptName" header="부서명" />
+      <Column field="emp_code" header="사원번호" />
+      <Column field="emp_name" header="사원명" />
+      <Column field="dept_name" header="부서명" />
     </DataTable>
 
     <template #footer>
