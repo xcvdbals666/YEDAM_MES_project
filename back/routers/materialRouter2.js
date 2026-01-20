@@ -16,10 +16,38 @@ router.get("/next-code", async (req, res) => {
   res.send({ mprCode });
 });
 
+// mrp code 조회
+// router.get("/getMrpCode", async (req, res) => {
+//   const list = await materialService2.findAllMrpCodeMrpTbl();
+//   res.send(list);
+// });
+
 // 자재 선택 - 자재 정보 조회
 router.get(`/mat-info`, async (req, res) => {
-  let list = await materialService2.findByMatCodeMatTbl();
+  const { keyword = "" } = req.query;
+  let list = await materialService2.findByMatCodeMatTbl(keyword);
   res.send(list);
 });
 
+// 자재구매요청
+router.post(`/mat-request`, async (req, res) => {
+  const data = req.body;
+  let result = await materialService2.addMprTbl(data);
+  res.send(result);
+});
+
+// 자재구매요청 정보 조회
+router.get("/mat-request", async (req, res) => {
+  const { mprCode, matName, matCode, reqDate, clientCode } = req.query;
+
+  const list = await materialService2.findByMprCodeMprTbl({
+    mprCode,
+    matName,
+    matCode,
+    reqDate,
+    clientCode,
+  });
+
+  res.send(list);
+});
 module.exports = router;

@@ -34,6 +34,11 @@ const model = ref([
             label: '주문서 관리',
             icon: 'pi pi-fw pi-sign-in',
             to: '/ordManager'
+          },
+          {
+            label: '출고 조회',
+            icon: 'pi pi-fw pi-sign-in',
+            to: '/outbound'
           }
         ]
       },
@@ -90,9 +95,9 @@ const model = ref([
         path: '/quality',
         items: [
           {
-            label: '예시 메뉴',
+            label: '품질검사 목록조회',
             icon: 'pi pi-fw pi-sign-in',
-            to: ''
+            to: '/qiorderlist'
           }
         ]
       },
@@ -104,7 +109,12 @@ const model = ref([
           {
             label: '자재구매 요청',
             icon: 'pi pi-fw pi-sign-in',
-            to: '/mat/request'
+            to: '/matRequest'
+          },
+          {
+            label: '자재구매 요청목록',
+            icon: 'pi pi-fw pi-sign-in',
+            to: '/matList'
           },
           {
             label: '발주서관리',

@@ -7,29 +7,24 @@ import ProductionRoutes2 from './productions2.js';
 import Material1Routes1 from './material1.js';
 import materialRoutes2 from './material2.js'; // 자재
 import OrderRoutes1 from './order1.js'; //주문
+import Order2 from './order2.js';
 
 const router = createRouter({
   history: createWebHistory(),
   routes: [
     {
-      path: '/',
-      name: 'main',
-      component: Main,
-      children: [
-        {
-          path: '/test',
-          name: 'test',
-          component: () => import('@/views/test.vue')
-        },
-        ...ProductionRoutes1,
-        ...ProductionRoutes2,
-        ...qualityRouter1,
-        ...Material1Routes1,
-        ...qualityRouter2,
-        ...materialRoutes2,
-        ...OrderRoutes1
-      ]
-    }
+      path: '/test',
+      name: 'test',
+      component: () => import('@/views/test.vue')
+    },
+    ...ProductionRoutes1,
+    ...ProductionRoutes2,
+    ...qualityRouter1,
+    ...Material1Routes1,
+    ...qualityRouter2,
+    ...materialRoutes2,
+    ...Order2,
+    ...OrderRoutes1
   ]
 });
 
