@@ -14,13 +14,13 @@ const findAllClient = async () => {
 
 // 게시글 전체 목록
 const findAll = async () => {
-  let list = await mysql.query("selectAll", [], "order");
+  let list = await mysql.query("selectAll", [], "order1");
   return list;
 };
 
 // 출고 조회
 const findAllOutreqtbl = async () => {
-  let list = await mysql.query("selectAllOutreqtbl", [], "order");
+  let list = await mysql.query("selectAllOutreqtbl", [], "order1");
   return list;
 };
 
