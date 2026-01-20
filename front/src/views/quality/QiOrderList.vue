@@ -73,7 +73,7 @@ const filteredOrders = computed(() => {
       <!-- 종료일 -->
       <div class="flex flex-col gap-2">
         <label class="font-semibold">지시일자 - 종료일</label>
-        <DatePicker v-model="endDate" class="w-full" inputClass="w-full" showIcon showButtonBar appendTo="body" placeholder="종료일" />
+        <DatePicker v-model="insp_date" class="w-full" inputClass="w-full" showIcon showButtonBar appendTo="body" placeholder="종료일" />
       </div>
     </div>
 
@@ -89,7 +89,10 @@ const filteredOrders = computed(() => {
 
   <section class="flex-1 bg-white px-6 pt-15 pb-6 rounded-xl shadow-sm border border-gray-200 flex flex-col">
     <div class="flex justify-between items-center mb-5">
-      <div class="text-s text-gray-800">검색결과 {{ filteredOrders.length }} 건</div>
+      <div class="text-s text-gray-800">
+        검색결과
+        <span class="text-orange-500 font-bold">{{ filteredOrders.length }}</span> 건
+      </div>
     </div>
 
     <!--수정해야함-->
