@@ -20,8 +20,22 @@ const findAllQiOrderList = async () => {
   return list;
 };
 
+// 검사지에 해당하는 자재 및 검사항목 불러오기
+const findQiOrderItemInfo = async (qio_code) => {
+  let list = await mysql.query("selectQiOrderItem", [qio_code], "quality1");
+  return list;
+};
+
+// 생산실적 불러오기
+const findQiProduceList = async () => {
+  let list = await mysql.query("selectQiProduceList", [], "quality1");
+  return list;
+};
+
 module.exports = {
   findAllQiOrderCheckList,
   findAllMinbndList,
   findAllQiOrderList,
+  findQiOrderItemInfo,
+  findQiProduceList,
 };

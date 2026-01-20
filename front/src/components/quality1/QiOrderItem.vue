@@ -2,13 +2,13 @@
 import { defineEmits, defineProps, ref } from 'vue';
 
 const props = defineProps({
-  selectedMinbnd: { type: Object, required: true }
+  selectedMinbnd: { type: Array, required: true }
 });
 
 const emit = defineEmits();
 
 // 항목에 채울 내용
-let QiOrderItemInput = ref({ note: '', mat_code: '', mat_name: '', sum: '' });
+let QiOrderItemInput = ref({ note: '', mat_code: '', mat_name: '', inbnd_qtt: '' });
 QiOrderItemInput.value = props.selectedMinbnd;
 </script>
 <template>
@@ -19,7 +19,7 @@ QiOrderItemInput.value = props.selectedMinbnd;
         <div class="flex flex-row gap-2">
           <Button type="button" @click="$emit('searchList')" label="재고목록 불러오기" />
 
-          <Button label="생산목록 불러오기" />
+          <Button type="button" @click="$emit('searchProduceList')" label="생산목록 불러오기" />
         </div>
       </div>
       <div class="grid grid-cols-4 gap-4">
@@ -46,7 +46,7 @@ QiOrderItemInput.value = props.selectedMinbnd;
         <div class="col-span-2">
           <div class="grid grid-cols-3">
             <label for="checkNum" class="col-span-1">검사수량</label>
-            <InputText id="checkNum" type="text" class="col-span-2" v-model="QiOrderItemInput.sum" readonly />
+            <InputText id="checkNum" type="text" class="col-span-2" v-model="QiOrderItemInput.inbnd_qtt" readonly />
           </div>
         </div>
       </div>
