@@ -1,40 +1,31 @@
-// 생산계획조회
+// 생산계획 조회
 const selectAllPrdp = `
 SELECT *
 FROM prdp_tbl
-WHERE prdp_name LIKE ? AND prdp_date BETWEEN ? AND ? AND due_date BETWEEN ? AND ?`;
+WHERE prdp_code LIKE ? AND prdp_name LIKE ? AND prdp_date BETWEEN ? AND ? AND due_date BETWEEN ? AND ?`;
 
-//전체 작업지시서 조회
-const selectAllWkotbl = `
-SELECT wko_code,
-       start_date,
-       stat,
-       note,
-       prdp_code,
-       prod_code,
-       wko_qtt,
-       reg_date,
-       reg_code     AS writer,
-       end_date,
-       line_code,
-       wko_name
-FROM wko_tbl
+// 주문 검색
+const selectByCodeOrNameOrd = `
+SELECT o.ord_code, d.prod_code, p.prod_name, d.ord_amount, o.ord_name, o.ord_date
+FROM ord_tbl o 
+JOIN ord_d_tbl d ON o.ord_code = d.ord_code
+JOIN prod_tbl p ON d.prod_code = p.prod_code
+WHERE o.ord_code LIKE ? OR o.ord_name LIKE ?`;
+
+const selectByCodeOrNameProd = `
+SELECT prod_code, prod_name, com_value, unit, spec
+FROM prod_tbl
+WHERE prod_code LIKE ? OR prod_name LIKE ? OR com_value = ?
 `;
 
-// //전체 생산계획서 조회
-// const selectAllPrdp = `
-// SELECT prdp_code,
-//        prdp_name,
-//        prdp_date,
-//        start_date,
-//        end_date,
-//        due_date,
-//        ord_code,
-//        reg
-// FROM prdp_tbl
-// `;
+const selectByCodeOrNameLine = `
+SELECT line_code, line_name, line_type, note, is_used
+FROM line_tbl
+WHERE line_code LIKE ? OR line_name LIKE ?`;
 
 module.exports = {
   selectAllPrdp,
-  selectAllWkotbl,
+  selectByCodeOrNameOrd,
+  selectByCodeOrNameProd,
+  selectByCodeOrNameLine,
 };

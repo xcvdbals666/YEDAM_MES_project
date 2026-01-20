@@ -1,12 +1,13 @@
+// 서비스
 // 순수 기능에 대한 정의 => 함수(function)
 const mysql = require("../database/mapper.js");
 
-// 게시글 전체 목록
-const findAll = async () => {
-  let list = await mysql.query("selectAll", [], "quality");
-  return list;
+//품질 검사 지시 목록 검색
+const findQiOrderList = async (qio_code) => {
+  const params = qio_code ? [qio_code] : [""];
+  return await mysql.query("selectQiOrderList", params, "qi-order");
 };
 
 module.exports = {
-  findAll,
+  findQiOrderList,
 };
