@@ -1,5 +1,19 @@
+<!--QiOrderList.vue-->
+
 <script setup>
 import { ref } from 'vue';
+
+
+const display = ref(false);
+
+//모달창 쓰기 위함
+const open = () => {
+  display.value = true;
+};
+
+const close = () => {
+  display.value = false;
+};
 
 const startDate = ref(null);
 const endDate = ref(null);
@@ -39,7 +53,28 @@ const endDate = ref(null);
     <!-- 버튼 영역 -->
     <div class="flex gap-4 justify-center mt-2">
       <Button label="전체" severity="warn" />
-      <Button label="조회" />
+
+                <Dialog header="품질검사 지시 목록 조회" v-model:visible="display" :breakpoints="{ '960px': '75vw' }" :style="{ width: '30vw' }" :modal="true">
+                    <p class="leading-normal m-0">
+                          <div class="flex-1 overflow-auto rounded-lg border border-gray-200">
+                          <DataTable :value="filteredUsers" v-model:selection="selectedRows" dataKey="user_no" :paginator="true" :rows="rows" v-model:filters="filters" :globalFilterFields="globalFilterFields" showGridlines @page="onPageChange" :selectionPageOnly="true">
+                            <template #empty>
+                              <div class="text-center py-6 text-gray-400">데이터 없음</div>
+                            </template>
+
+                            <!--수정해야함-->
+                            <Column selectionMode="multiple" headerStyle="width:48px" />
+                            <Column header="지시코드" field="name" headerClass="table-header" bodyClass="table-body" />
+                            <Column header="지시일자" headerClass="table-header" bodyClass="table-body" />
+                          </DataTable>
+                        </div>
+                    </p>
+                    <template #footer>
+                        <Button label="취소"  @click="close" />
+                        <Button label="확인" @click="close" />
+                    </template>
+                </Dialog>
+                <Button label="조회" style="width: auto" @click="open" />
     </div>
   </div>
 
@@ -48,6 +83,7 @@ const endDate = ref(null);
       <h2 class="text-s text-gray-800">검색결과 {{}} 건</h2>
     </div>
 
+    <!--수정해야함-->
     <div class="flex-1 overflow-auto rounded-lg border border-gray-200">
       <DataTable :value="filteredUsers" v-model:selection="selectedRows" dataKey="user_no" :paginator="true" :rows="rows" v-model:filters="filters" :globalFilterFields="globalFilterFields" showGridlines @page="onPageChange" :selectionPageOnly="true">
         <template #empty>
