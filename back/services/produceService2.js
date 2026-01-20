@@ -1,33 +1,55 @@
-// 순수 기능에 대한 정의 => 함수(function)
 const mysql = require("../database/mapper.js");
 
-// 게시글 전체 목록
-const findAll = async () => {
-  let list = await mysql.query("selectAll", [], "produce");
-  return list;
-};
-
-//전체 생산계획서 조회
+// 생산계획서 조회
 const findAllPrdp = async (data) => {
-  const { name, prdpStart, prdpEnd, dueStart, dueEnd } = data;
-  const prdpName = `%name%`;
-  let list = await mysql.query("selectAllPrdp", [], "produce");
+  const { code, name, prdpStart, prdpEnd, dueStart, dueEnd } = data;
+  const prdpCode = `%${code}%`;
+  const prdpName = `%${name}%`;
+  let list = await mysql.query(
+    "selectAllPrdp",
+    [prdpCode, prdpName, prdpStart, prdpEnd, dueStart, dueEnd],
+    "produce2",
+  );
   return list;
 };
 
-//전체 작업지시서 조회
-const findAllWkotbl = async () => {
-  const list = await mysql.query("selectAllWkotbl", [], "produce");
+// 주문 검색
+const findByCodeOrNameOrd = async (data) => {
+  const query = `%${data.q}%`;
+  let list = await mysql.query(
+    "selectByCodeOrNameOrd",
+    [query, query],
+    "produce2",
+  );
   return list;
 };
 
-// const findAllPrdp = async () => {
-//   const list = await mysql.query("selectAllPrdp", [], "produce");
-//   return list;
-// };
+// 제품 검색
+const findByCodeOrNameProd = async (data) => {
+  const query = `%${data.q}%`;
+  const type = query === "봉지라면" ? "J1" : query === "컵라면" ? "J2" : "";
+  let list = await mysql.query(
+    "selectByCodeOrNameProd",
+    [query, query, type],
+    "produce2",
+  );
+  return list;
+};
+
+// 라인 검색
+const findByCodeOrNameLine = async (data) => {
+  const query = `%${data.q}%`;
+  let list = await mysql.query(
+    "selectByCodeOrNameLine",
+    [query, query],
+    "produce2",
+  );
+  return list;
+};
 
 module.exports = {
-  findAll,
-  findAllWkotbl,
   findAllPrdp,
+  findByCodeOrNameOrd,
+  findByCodeOrNameProd,
+  findByCodeOrNameLine,
 };

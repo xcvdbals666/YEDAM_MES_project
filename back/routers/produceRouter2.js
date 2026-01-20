@@ -1,23 +1,33 @@
 const express = require("express");
 const router = express.Router();
 
-const produceService = require("../services/produceService1.js");
+const produceService = require("../services/produceService2.js");
 
-router.get(`/production/planList`, async (req, res) => {
-  const data = req.params;
-  let list = await produceService.findAll(data);
+// 생산계획서 조회
+router.get(`/planList`, async (req, res) => {
+  const data = req.query;
+  let list = await produceService.findAllPrdp(data);
   res.send(list);
 });
 
-//전체 작업지시서 조회 + 검색
-router.get(`/workorderList`, async (req, res) => {
-  const list = await produceService.findAllWkotbl();
+// 주문 검색
+router.get(`/orderList`, async (req, res) => {
+  const data = req.query;
+  let list = await produceService.findByCodeOrNameOrd(data);
   res.send(list);
 });
 
-//전체 생산계획서 조회
-router.get(`/prdpList`, async (req, res) => {
-  const list = await produceService.findAllPrdp();
+// 제품 검색
+router.get(`/prodList`, async (req, res) => {
+  const data = req.query;
+  let list = await produceService.findByCodeOrNameProd(data);
+  res.send(list);
+});
+
+// 라인 검색
+router.get(`/lineList`, async (req, res) => {
+  const data = req.query;
+  let list = await produceService.findByCodeOrNameLine(data);
   res.send(list);
 });
 
