@@ -16,7 +16,9 @@ export const useMaterialStore = defineStore('material', {
     //자재목록
     materials: [],
     //mpr 모달용
-    mprList: []
+    mprList: [],
+    //mat 모달용
+    matList: []
   }),
   // getters
   getters: {
@@ -28,39 +30,48 @@ export const useMaterialStore = defineStore('material', {
 
   // actions
   actions: {
-    // 작성자 정보 불러오기
-    async fetchMrpMaterials(mrpCode) {
-      const response = await axios.get(`/material/mrp/${mrpCode}`);
+    // MPR 선택 → 요청서에 포함된 자재 조회 (상세)
+    async fetchMprMaterials(mprCode) {
+      const response = await axios.get(`/material/mpr/${mprCode}`, { headers: { 'Cache-Control': 'no-cache' } });
+
       this.materials = response.data.map((item) => ({
         ...item,
         selected: false
       }));
-      this.mpoData.mprCode = mrpCode;
+      this.mpoData.mprCode = mprCode;
       return this.materials;
     },
-    //mrp목록 조회
+
+    // MPR 목록 조회 (모달용)
     async fetchMprList() {
-      const response = await axios.get('/material/mpr');
+      const response = await axios.get('/material/mpr', {
+        headers: { 'Cache-Control': 'no-cache' }
+      });
       this.mprList = response.data;
       return this.mprList;
     },
-    // mpr 검색
+
+    // 자재 전체 조회 (모달용)
+    async fetchMatList() {
+      const response = await axios.get('/material/mat');
+      this.matList = response.data;
+      return this.matList;
+    },
+
+    // MPR 검색
     async searchMprList(keyword) {
       try {
         if (!keyword) {
-          // 검색어 없으면 전체 조회
-          const response = await axios.get('/material/mpr');
-          this.mprList = response.data;
+          return await this.fetchMprList();
         } else {
-          // 검색어 있으면 검색
-          const response = await axios.get(`/material/mpr/search/${keyword}`);
+          const response = await axios.get(`/material/mpr/search/${keyword}`, { headers: { 'Cache-Control': 'no-cache' } });
           this.mprList = response.data;
+          return this.mprList;
         }
-        return this.mprList;
       } catch (err) {
         console.log(err);
       }
-    },
-    persist: true
-  }
+    }
+  },
+  persist: true
 });
