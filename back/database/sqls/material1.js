@@ -59,8 +59,6 @@ WHERE mpod.purchase_code = ?`;
 
 //발주서 자재 상세 조회
 const selectByCodeMpoTbl = `
-//발주서 기본 정보 조회
-const selectMpoByCode = `
 SELECT 
     mpo.purchase_code,           
     mpo.purchase_req_date,       
@@ -138,7 +136,6 @@ module.exports = {
   selectSearchMprTbl,
   selectByCodeMpoTbl,
   selectByCodeMpoDTbl,
-  selectMpoByCode,
   selectNextMpoCode,
   insertMpoTbl,
   insertMpoDetailTbl,
