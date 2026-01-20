@@ -1,16 +1,26 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
+import axios from 'axios';
 import MprRequestHeader from '@/components/material/MprRequestHeader.vue';
 import MprRequestItem from '@/components/material/MprRequestItem.vue';
 import SelectEmployeeModal from '@/components/material/modal/SelectEmployeeModal.vue';
 
 const headerData = ref({
-  mprCode: 'PRQ0007',
+  mprCode: '',
   writer: '',
   empCode: '',
   department: '',
   deadline: null,
-  reqDate: '2025-12-09'
+  reqDate: new Date().toISOString().slice(0, 10)
+});
+
+onMounted(async () => {
+  try {
+    const response = await axios.get('/material/next-code');
+    headerData.value.mprCode = response.data.mprCode;
+  } catch (err) {
+    console.error('요청번호 조회 실패', err);
+  }
 });
 
 const items = ref([]);

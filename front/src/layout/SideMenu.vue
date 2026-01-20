@@ -102,9 +102,15 @@ const model = ref([
         path: '/material',
         items: [
           {
-            label: '예시 메뉴',
+            label: '자재구매 요청',
             icon: 'pi pi-fw pi-sign-in',
-            to: ''
+            to: '/mat/request'
+          },
+          {
+            label: '발주서관리',
+            icon: 'pi pi-fw pi-sign-in',
+            to: '/mpotable'
+            
           }
         ]
       },
