@@ -1,6 +1,6 @@
-// src / router / Productions.js
-import WorkOrderList from '../views/Productions/WorkOrderList.vue';
-import WorkOrderMgt from '../views/Productions/WorkOrderMgt.vue';
+// src / router / production1.js
+import WorkOrderList from '../views/productions/WorkOrderList.vue';
+import WorkOrderMgt from '../views/productions/WorkOrderMgt.vue';
 
 const ProductionRoutes1 = [
   {

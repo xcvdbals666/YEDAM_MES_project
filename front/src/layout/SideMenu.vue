@@ -70,12 +70,12 @@ const model = ref([
           {
             label: '작업지시서 관리',
             icon: 'pi pi-fw pi-lock',
-            to: ''
+            to: '/workorderList'
           },
           {
             label: '작업지시서 조회',
             icon: 'pi pi-fw pi-lock',
-            to: ''
+            to: '/workorderMgt'
           },
           {
             label: '작업진행 목록',
