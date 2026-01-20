@@ -1,35 +1,69 @@
-// 순수 기능에 대한 정의 => 함수(function)
 const mysql = require("../database/mapper.js");
 
-// 작성자 선택 - 사원 정보 조회
-const findByEmpcodeEmpTbl = async () => {
-  let list = await mysql.query("selectByEmpcodeEmpTbl", [], "material");
+// 발주서 전체 목록 조회 (모달용)
+const findAllMpoTbl = async () => {
+  let list = await mysql.query("selectAllMpoTbl", [], "material1");
+  return list;
+};
+// 자재구매요청서 목록 조회
+const findAllMprTbl = async () => {
+  let list = await mysql.query("selectAllMprTbl", [], "material1");
   return list;
 };
 
-// 자재 선택 - 자재 정보 조회
-const findByMatCodeMatTbl = async () => {
-  let list = await mysql.query("selectByMatCodeMatTbl", [], "material");
+// 자재구매요청서 검색
+const searchMprTbl = async (keyword) => {
+  let list = await mysql.query(
+    "selectSearchMprTbl",
+    [keyword, keyword, keyword], // 3번 반복 (mpr_code, mcode, note)
+    "material1",
+  );
   return list;
 };
 
+// 발주서 기본정보 조회 (발주서 선택 시)
+const findByCodeMpoTbl = async (purchaseCode) => {
+  let list = await mysql.query(
+    "selectByCodeMpoTbl",
+    [purchaseCode],
+    "material1",
+  );
+  return list;
+};
+
+// 발주서 자재 상세 조회 (발주서 선택 시)
+const findByCodeMpoDTbl = async (purchaseCode) => {
+  let list = await mysql.query(
+    "selectByCodeMpoDTbl",
+    [purchaseCode],
+    "material1",
+  );
+  return list;
+};
+
+// 발주서 등록 (기본정보 + 자재 상세)
+const addMpoTbl = async (mpoData) => {
+  // 1. 발주서 번호 자동생성
+  let codeResult = await mysql.query("selectNextMpoCode", [], "material1");
 //발주서 기본정보 등록
 const addMpo = async (mpoData) => {
   //발주서 번호 생성(자동생성)
   let codeResult = await mysql.query("selectNextMpoCode", [], "material");
   let nextCode = codeResult[0].next_code;
-  //발주서 기본정보 등록
+
+  // 2. 발주서 기본정보 등록
   let list = await mysql.query(
-    "insertMpo",
+    "insertMpoTbl",
     [nextCode, mpoData.stat, mpoData.mcode, mpoData.note],
-    "material",
+    "material1",
   );
+
   let resObj = {};
-  if (result.insertId > 0) {
-    //발주서 자재 상세 등록 반복
+  if (list.insertId > 0) {
+    // 3. 발주서 자재 상세 등록 (반복)
     for (let item of mpoData.materials) {
       await mysql.query(
-        "insertMpoDetail",
+        "insertMpoDetailTbl",
         [
           nextCode,
           item.mat_code,
@@ -38,30 +72,37 @@ const addMpo = async (mpoData) => {
           item.deadline,
           item.client_code,
         ],
-        "material",
+        "material1",
       );
     }
     resObj = {
       status: "success",
-      no: result.insertId,
+      no: list.insertId,
+      poCode: nextCode, // 생성된 발주서 번호 반환
     };
   } else {
     resObj = { status: "fail" };
   }
-
   return resObj;
 };
-//발주 자재 상세목록
-const findByMrpCodeMrpDetail = async (mrpCode) => {
+
+// MRP 기반 자재 목록 조회 (발주서 등록 시 자재 불러오기)
+const findByMrpCodeMrpDTbl = async (mrpCode) => {
   let list = await mysql.query(
-    "selectByMrpCodeMrpDetail",
+    "selectByMrpCodeMrpDetailTbl",
     [mrpCode],
-    "material",
+    "material1",
   );
   return list;
 };
+
 module.exports = {
-  findByEmpcodeEmpTbl,
-  findByMatCodeMatTbl,
+  findByMrpCodeMrpDTbl,
+  addMpoTbl,
+  findAllMpoTbl,
+  findAllMprTbl,
+  searchMprTbl,
+  findByCodeMpoTbl,
+  findByCodeMpoDTbl,
   findByMrpCodeMrpDetail,
 };
