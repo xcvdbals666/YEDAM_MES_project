@@ -3,9 +3,13 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useQualityStore } from '@/stores/quality2.js';
-import SelectQioModal from '@/components/material/modal/SelectQioModal.vue';
+// import SelectQioModal from '@/components/material/modal/SelectQioModal.vue';
 
 const qualityStore = useQualityStore();
+
+const displaQiomodal = ref(false);
+const searchKeyword = ref('');
+
 
 //검색
 const qio_code = ref('');
@@ -47,7 +51,9 @@ const filteredOrders = computed(() => {
 
 <template>
   <div class="card border border-gray-200 flex flex-col gap-6 p-fluid">
-    <SelectQioModal v-model:visible="items" class="mt-4" />
+    <!--모달창-->
+    <!-- <SelectQioModal v-model:visible="items" class="mt-4" /> -->
+
     <div class="text-2xl font-bold text-center">품질 검사 지시 조회</div>
 
     <!-- 검색 조건 영역 -->
