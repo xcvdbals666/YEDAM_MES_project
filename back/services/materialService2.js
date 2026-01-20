@@ -37,10 +37,10 @@ const findMaxMprCode = async () => {
 };
 
 // mrp code 조회
-// const findAllMrpCodeMrpTbl = async () => {
-//   const list = await mysql.query("selectAllMrpCodeMrpTbl", [], "material2");
-//   return list;
-// };
+const findAllMrpCodeMrpTbl = async () => {
+  const list = await mysql.query("selectAllMrpCodeMrpTbl", [], "material2");
+  return list;
+};
 
 // 자재 선택 - 자재 정보 조회
 const findByMatCodeMatTbl = async (keyword) => {
@@ -149,4 +149,5 @@ module.exports = {
   findMaxMprCode,
   addMprTbl,
   findByMprCodeMprTbl,
+  findAllMrpCodeMrpTbl,
 };

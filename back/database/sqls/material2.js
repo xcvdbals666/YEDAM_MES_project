@@ -8,7 +8,7 @@ const selectMaxMprCode = `SELECT IFNULL(MAX(mpr_code), 'MPR-000') AS last_code F
 const selectMaxMprDCode = `SELECT IFNULL(MAX(mpr_d_code), 'MPR-D-000') AS last_code FROM mpr_d_tbl`;
 
 // mrp code 조회
-// const selectAllMrpCodeMrpTbl = `SELECT mrp_code, plan_date FROM mrp_tbl order by plan_date desc`;
+const selectAllMrpCodeMrpTbl = `SELECT mrp_code, plan_date FROM mrp_tbl order by plan_date desc`;
 
 // 자재 선택 - 자재 정보 조회
 const selectByMatCodeMatTbl = `SELECT m.mat_code, m.mat_name, m.unit,
@@ -54,7 +54,7 @@ module.exports = {
   selectByMatCodeMatTbl,
   selectMaxMprCode,
   selectMaxMprDCode,
-  // selectAllMrpCodeMrpTbl,
+  selectAllMrpCodeMrpTbl,
   insertMprTbl,
   insertMprDTbl,
 };

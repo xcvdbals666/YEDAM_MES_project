@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useMaterialStore } from '@/stores/material2';
 import axios from 'axios';
 import MprRequestHeader from '@/components/material/MprRequestHeader.vue';
@@ -36,6 +36,7 @@ const requestDetailInfo = ref([
   }
 ]);
 
+// 자재 단위 매핑
 const UNIT_MAP = {
   h1: { label: 'kg' },
   h2: { label: 't' },
@@ -47,12 +48,20 @@ const UNIT_MAP = {
   h8: { label: '%' },
   h9: { label: 'cm' },
   ha: { label: 'N' }
-}; // 자재 단위 매핑
+};
+
+//AutoComplete 관련
+const mrpList = ref([]);
+const selectedMrpValue = ref(null);
+const mrpFilteredValue = ref([]);
 
 onMounted(async () => {
   try {
     const response = await axios.get('/api/material/next-code');
     requestInfo.value.mprCode = response.data.mprCode;
+
+    // mrp 목록 불러오기
+    mrpList.value = await store.fetchMrpCode();
   } catch (err) {
     console.error('요청번호 조회 실패', err);
   }
@@ -115,11 +124,43 @@ const formatDate = (v = null) => {
   return new Date(v).toISOString().slice(0, 10);
 };
 
+// AutoComplete 검색 함수
+const searchMrp = (event) => {
+  if (!event.query.trim().length) {
+    mrpFilteredValue.value = [...mrpList.value];
+  } else {
+    mrpFilteredValue.value = mrpList.value.filter((m) => m.mrp_code.toLowerCase().startsWith(event.query.toLowerCase()));
+  }
+};
+
+// AutoComplete 선택 결과 반영
+watch(selectedMrpValue, (v) => {
+  requestInfo.value.mrpCode = v ? v.mrp_code : null;
+});
+
 // 자재 선택 모달 열렸을 때 값 세팅
 const openMaterialModal = (row) => {
   selectedRow.value = row;
   showMaterialModal.value = true;
 };
+
+// 초기화
+const doReset = async (askConfirm = true) => {
+  if (askConfirm) {
+    if (!confirm('...')) return;
+  }
+
+  requestInfo.value = initialRequestInfo();
+  selectedMrpValue.value = null;
+
+  const response = await axios.get('/api/material/next-code');
+  requestInfo.value.mprCode = response.data.mprCode;
+
+  requestDetailInfo.value = [initialDetailRow()];
+};
+
+// 초기화 버튼
+const reset = () => doReset(true);
 
 // 저장
 const save = async () => {
@@ -170,34 +211,27 @@ const save = async () => {
   try {
     await store.insertMpr(payload);
     alert('자재구매요청이 저장되었습니다');
+
+    await doReset(false);
   } catch (err) {
     console.error(err);
     alert('저장 중 오류가 발생했습니다');
   }
 };
-
-// 초기화
-const reset = async () => {
-  if (!confirm('입력한 내용이 모두 초기화됩니다 계속하시려면 확인을 눌러주세요.')) return;
-
-  requestInfo.value = initialRequestInfo();
-
-  // 요청번호 다시 발급
-  try {
-    const response = await axios.get('/api/material/next-code');
-    requestInfo.value.mprCode = response.data.mprCode;
-  } catch (err) {
-    console.error('요청번호 재조회 실패', err);
-  }
-
-  // 상세 행 초기화 (1줄은 유지)
-  requestDetailInfo.value = [initialDetailRow()];
-};
 </script>
 
 <template>
   <div>
-    <MprRequestHeader v-model="requestInfo" @select-employee="showWriterModal = true" @save="save" @reset="reset" />
+    <MprRequestHeader
+      v-model="requestInfo"
+      :selectedMrpValue="selectedMrpValue"
+      :mrpFilteredValue="mrpFilteredValue"
+      @update:selectedMrpValue="selectedMrpValue = $event"
+      @search-mrp="searchMrp"
+      @select-employee="showWriterModal = true"
+      @save="save"
+      @reset="reset"
+    />
     <MprRequestItem v-model="requestDetailInfo" @selected-material="(row) => openMaterialModal(row)" />
   </div>
   <SelectEmployeeModal v-model:visible="showWriterModal" @select="selectWriter" />

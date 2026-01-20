@@ -13,7 +13,7 @@ const router = createRouter({
   history: createWebHistory(),
   routes: [
     {
-      path: '/test',
+      path: '/',
       name: 'test',
       component: () => import('@/views/test.vue')
     },

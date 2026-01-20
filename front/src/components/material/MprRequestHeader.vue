@@ -2,9 +2,11 @@
 import { computed } from 'vue';
 
 const props = defineProps({
-  modelValue: Object
+  modelValue: Object,
+  selectedMrpValue: Object,
+  mrpFilteredValue: Array
 });
-const emit = defineEmits(['update:modelValue', 'selectEmployee', 'save', 'reset']);
+const emit = defineEmits(['update:modelValue', 'update:selectedMrpValue', 'selectEmployee', 'save', 'reset', 'search-mrp']);
 
 const data = computed({
   get: () => props.modelValue,
@@ -63,8 +65,19 @@ const data = computed({
           <td>
             <InputText v-model="data.reqDate" readonly />
           </td>
-          <th></th>
-          <td></td>
+          <th>MRP 계획번호</th>
+          <td>
+            <AutoComplete
+              :modelValue="selectedMrpValue"
+              :suggestions="mrpFilteredValue"
+              optionLabel="mrp_code"
+              placeholder="MRP 계획번호"
+              dropdown
+              completeOnFocus
+              @complete="emit('search-mrp', $event)"
+              @update:modelValue="emit('update:selectedMrpValue', $event)"
+            />
+          </td>
         </tr>
       </tbody>
     </table>
