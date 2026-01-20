@@ -1,20 +1,6 @@
 // 순수 기능에 대한 정의 => 함수(function)
 const mysql = require("../database/mapper.js");
 
-//전체 생산계획서 조회
-const findAllPrdp = async (data) => {
-  const { name, prdpStart, prdpEnd, dueStart, dueEnd } = data;
-  const prdpName = `%name%`;
-  let list = await mysql.query("selectAllPrdp", [], "produce1");
-  return list;
-};
-
-//전체 작업지시서 조회
-const findAllWkotbl = async () => {
-  const list = await mysql.query("selectAllWkotbl", [], "produce1");
-  return list;
-};
-
 //동적쿼리 검색기능 + 전체 작업지시서 조회
 const searchWorkOrders = async ({ from, to, stat, line, name, wko }) => {
   let sql = `
@@ -54,8 +40,20 @@ const searchWorkOrders = async ({ from, to, stat, line, name, wko }) => {
   return await mysql.rquery(sql, params);
 };
 
+//라인 조회 (드롭다운용)
+const findAllLinesDJ = async () => {
+  const list = await mysql.query("selectAllLinesDJ", [], "produce1");
+  return list;
+};
+
+//생산계획 (due_date가 오늘날짜 기준 최근 60일까지만) 조회 - 모달 선택용 리스트
+const findPrdbActive = async () => {
+  const list = await mysql.query("selectPrdpActive", [], "produce1");
+  return list;
+};
+
 module.exports = {
-  findAllWkotbl,
-  findAllPrdp,
   searchWorkOrders,
+  findAllLinesDJ,
+  findPrdbActive,
 };

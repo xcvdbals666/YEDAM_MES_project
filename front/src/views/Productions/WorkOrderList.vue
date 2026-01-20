@@ -6,7 +6,7 @@ import { storeToRefs } from 'pinia';
 import { useProductionsStore } from '@/stores/production1';
 
 const store = useProductionsStore();
-const { wkoList, loading, error, from, to, stat, line, name, wko } = storeToRefs(store);
+const { wkoList, loading, error, from, to, stat, line, name, wko, lines } = storeToRefs(store);
 
 const statusOptions = [
   { label: '진행중', value: 'v1' },
@@ -14,6 +14,7 @@ const statusOptions = [
   { label: '작업보류', value: 'v3' }
 ];
 
+//
 const statusMap = {
   v1: '진행중',
   v2: '작업완료',
@@ -22,6 +23,7 @@ const statusMap = {
 
 onMounted(() => {
   store.fetchWorkOrders();
+  store.fetchLines();
 });
 </script>
 
@@ -60,13 +62,14 @@ onMounted(() => {
       <div class="search-right">
         <div class="field-row">
           <label>라인</label>
-          <InputText v-model="line" placeholder="라인 입력" class="w-full" />
+          <Dropdown v-model="line" :options="lines" optionLabel="line_code" optionValue="line_code" placeholder="라인 선택" class="w-full" />
         </div>
 
-        <div class="field-row">
+        <!-- 공정유형이 어딧는데 ... -->
+        <!-- <div class="field-row">
           <label>공정유형</label>
           <Dropdown v-model="procType" :options="procOptions" class="w-full" />
-        </div>
+        </div> -->
       </div>
     </div>
 
