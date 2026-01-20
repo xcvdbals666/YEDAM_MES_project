@@ -90,9 +90,9 @@ const model = ref([
         path: '/quality',
         items: [
           {
-            label: '예시 메뉴',
+            label: '품질검사 목록조회',
             icon: 'pi pi-fw pi-sign-in',
-            to: ''
+            to: '/qiorderlist'
           }
         ]
       },
@@ -110,7 +110,6 @@ const model = ref([
             label: '발주서관리',
             icon: 'pi pi-fw pi-sign-in',
             to: '/mpotable'
-            
           }
         ]
       },
