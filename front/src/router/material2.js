@@ -2,9 +2,14 @@
 
 const materialRoutes2 = [
   {
-    path: '/mat/request',
-    name: 'matRequest',
+    path: '/matRequest',
+    name: 'materialRequest',
     component: () => import('@/views/material/MprPurchaseRequest.vue')
+  },
+  {
+    path: '/matList',
+    name: 'materialList',
+    component: () => import('@/views/material/MprCheckRequest.vue')
   }
 ];
 
