@@ -1,14 +1,153 @@
 <!-- /src/viewsds/order/OutboundList.vue -->
 <script setup>
-import { onMounted, ref } from 'vue';
-import { useOrderStore } from '@/stores/order1';
+import { onMounted, ref, watch } from 'vue';
+import { useOrderStore2 } from '@/stores/order2';
+import SelectEmployeeModal from '@/components/order/SelectEmployeeModal.vue';
+import SelectOutModal from '@/components/order/SelectOutModal.vue';
+import SelectProductModal from '@/components/order/SelectProductModal.vue';
+import SelectVendorModal from '@/components/order/SelectVendorModal.vue';
 
-const orderStore = useOrderStore();
+const orderStore = useOrderStore2();
 
 onMounted(async () => {
   await orderStore.fetchOutbound();
   console.log('store :', orderStore.outboundList);
 });
+
+// 검색 조건 (API 전송용 + 화면 표시용)
+const searchParams = ref({
+  outCode: '', // 출고번호
+  prodCode: '', // 제품코드
+  prodName: '', // 제품명 (입력 필드 표시용)
+  outQtyStart: '', // 수량 시작
+  outQtyEnd: '', // 수량 끝
+  empCode: '', // 사원코드
+  empName: '', // 사원명 (입력 필드 표시용)
+  dateStart: null, // 날짜 시작
+  dateEnd: null, // 날짜 끝
+  vendorCode: '', // 거래처코드
+  vendorName: '' // 거래처명 (입력 필드 표시용)
+});
+
+// 에러 메시지 상태
+const errors = ref({
+  outQty: '',
+  date: ''
+});
+
+// 수량 실시간 검증
+watch(
+  () => [searchParams.value.outQtyStart, searchParams.value.outQtyEnd],
+  () => {
+    if (searchParams.value.outQtyStart && searchParams.value.outQtyEnd) {
+      const start = Number(searchParams.value.outQtyStart);
+      const end = Number(searchParams.value.outQtyEnd);
+
+      if (start > end) {
+        errors.value.outQty = '최소 수량이 최대 수량보다 클 수 없습니다.';
+      } else {
+        errors.value.outQty = '';
+      }
+    } else {
+      errors.value.outQty = '';
+    }
+  }
+);
+
+// 날짜 실시간 검증
+watch(
+  () => [searchParams.value.dateStart, searchParams.value.dateEnd],
+  () => {
+    if (searchParams.value.dateStart && searchParams.value.dateEnd) {
+      const startDate = new Date(searchParams.value.dateStart);
+      const endDate = new Date(searchParams.value.dateEnd);
+
+      if (startDate > endDate) {
+        errors.value.date = '시작일이 종료일보다 이후일 수 없습니다.';
+      } else {
+        errors.value.date = '';
+      }
+    } else {
+      errors.value.date = '';
+    }
+  }
+);
+
+// 모달 visible 상태들
+const showOutModal = ref(false);
+const showProductModal = ref(false);
+const showEmpModal = ref(false);
+const showVendorModal = ref(false);
+
+// 모달 열기 함수들
+const openOutModal = () => {
+  showOutModal.value = true;
+};
+
+const openProductModal = () => {
+  showProductModal.value = true;
+};
+
+const openEmpModal = () => {
+  showEmpModal.value = true;
+};
+
+const openVendorModal = () => {
+  showVendorModal.value = true;
+};
+
+// 모달에서 선택 시
+const selectOut = (out) => {
+  searchParams.value.outCode = out.out_req_code;
+};
+
+const selectProduct = (product) => {
+  searchParams.value.prodCode = product.prod_code;
+  searchParams.value.prodName = product.prod_name;
+};
+
+const selectEmployee = (emp) => {
+  searchParams.value.empCode = emp.emp_code;
+  searchParams.value.empName = emp.emp_name;
+};
+
+const selectVendor = (vendor) => {
+  searchParams.value.vendorCode = vendor.client_code;
+  searchParams.value.vendorName = vendor.client_name;
+};
+
+// 초기화
+const resetSearch = () => {
+  searchParams.value = {
+    outCode: '',
+    prodCode: '',
+    prodName: '',
+    outQtyStart: '',
+    outQtyEnd: '',
+    empCode: '',
+    empName: '',
+    dateStart: null,
+    dateEnd: null,
+    vendorCode: '',
+    vendorName: ''
+  };
+};
+
+// 조회
+const handleSearch = async () => {
+  // 에러가 있으면 조회 중단
+  if (errors.value.outQty || errors.value.date) {
+    return;
+  }
+
+  // 검증 통과 후 API 호출
+  try {
+    await orderStore.fetchOutboundWithParams(searchParams.value);
+    page.value = 1;
+  } catch (error) {
+    console.error('검색 실패:', error);
+  }
+};
 
 // 페이지네이션
 const page = ref(1);
@@ -36,16 +175,73 @@ const formatDate = (v) => {
 };
 </script>
 <template>
-  <div>
-    <h1>출고 요청 목록 페이지</h1>
-  </div>
+  <Fluid class="card">
+    <!-- 헤더 -->
+    <div class="mb-3 flex align-items-center">
+      <span class="text-2xl font-semibold">출고 조회</span>
+    </div>
+    <!-- 검색 테이블 -->
+    <table class="w-full">
+      <colgroup>
+        <col style="width: 100px" />
+        <col />
+        <col style="width: 100px" />
+        <col />
+        <col style="width: 100px" />
+        <col />
+        <col style="width: 100px" />
+        <col />
+      </colgroup>
+      <tbody>
+        <tr>
+          <th>출고번호</th>
+          <td><InputText class="w-full" v-model="searchParams.outCode" @click="openOutModal" readonly placeholder="출고번호 선택" /></td>
+
+          <th>출고제품</th>
+          <td><InputText class="w-full" v-model="searchParams.prodName" @click="openProductModal" readonly placeholder="제품 선택" /></td>
+
+          <th>출고수량</th>
+          <td colspan="3">
+            <div class="flex align-items-center gap-2">
+              <InputText class="w-full" v-model="searchParams.outQtyStart" type="number" placeholder="최소" :class="{ 'p-invalid': errors.outQty }" />
+              <span>~</span>
+              <InputText class="w-full" v-model="searchParams.outQtyEnd" type="number" placeholder="최대" :class="{ 'p-invalid': errors.outQty }" />
+            </div>
+            <small v-if="errors.outQty" class="p-error" style="display: block; margin-top: 4px">{{ errors.outQty }}</small>
+          </td>
+        </tr>
+        <tr>
+          <th>출고 담당자</th>
+          <td><InputText class="w-full" v-model="searchParams.empName" @click="openEmpModal" readonly placeholder="담당자 선택" /></td>
+
+          <th>거래처</th>
+          <td><InputText class="w-full" v-model="searchParams.vendorName" @click="openVendorModal" readonly placeholder="거래처 선택" /></td>
+
+          <th>출고일자</th>
+          <td colspan="3">
+            <div class="flex align-items-center gap-2">
+              <DatePicker class="w-full" :showIcon="true" :showButtonBar="true" v-model="searchParams.dateStart" placeholder="시작일" :class="{ 'p-invalid': errors.date }" />
+              <span>~</span>
+              <DatePicker class="w-full" :showIcon="true" :showButtonBar="true" v-model="searchParams.dateEnd" placeholder="종료일" :class="{ 'p-invalid': errors.date }" />
+            </div>
+            <small v-if="errors.date" class="p-error" style="display: block; margin-top: 4px">{{ errors.date }}</small>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="button-group">
+      <Button label="초기화" severity="contrast" @click="resetSearch" />
+      <Button label="조회" severity="warn" @click="handleSearch" />
+    </div>
+  </Fluid>
+
   <!-- 목록 -->
-  <section class="flex flex-col flex-1 bg-white px-6 pt-6 pb-6 rounded-xl shadow-sm border border-gray-200">
+  <Fluid class="flex flex-col flex-1 bg-white px-6 pt-6 pb-6 rounded-xl shadow-sm border border-gray-200">
     <div class="flex justify-between items-center">
       <p class="text-lg font-bold text-gray-800">검색 결과</p>
 
       <div class="flex gap-2 pb-6">
-        <Button label="엑셀 다운로드" raised icon="pi pi-file-excel" @click="openAddModal" />
+        <Button label="엑셀 다운로드" raised icon="pi pi-file-excel" />
       </div>
     </div>
 
@@ -112,7 +308,11 @@ const formatDate = (v) => {
         </Column>
       </DataTable>
     </div>
-  </section>
+  </Fluid>
+  <SelectOutModal v-model:visible="showOutModal" @select="selectOut" />
+  <SelectProductModal v-model:visible="showProductModal" @select="selectProduct" />
+  <SelectEmployeeModal v-model:visible="showEmpModal" @select="selectEmployee" />
+  <SelectVendorModal v-model:visible="showVendorModal" @select="selectVendor" />
 </template>
 <style scoped>
 :deep(.p-datatable-thead > tr > th) {
@@ -137,5 +337,39 @@ const formatDate = (v) => {
 :deep(.status-tag) {
   font-size: 0.8rem;
   padding: 0.35rem 0.75rem;
+}
+
+th,
+td {
+  padding: 8px 0;
+  vertical-align: middle;
+}
+
+.button-group {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  padding-top: 18px;
+}
+
+.button-group :deep(.p-button) {
+  width: auto;
+  min-width: auto;
+  padding: 10px 35px;
+}
+
+.p-error {
+  color: #e24c4c;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+:deep(.p-invalid) {
+  border-color: #e24c4c;
+}
+
+:deep(.p-invalid:focus) {
+  border-color: #e24c4c;
+  box-shadow: 0 0 0 0.2rem rgba(226, 76, 76, 0.25);
 }
 </style>

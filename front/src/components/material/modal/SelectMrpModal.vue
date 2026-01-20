@@ -1,6 +1,5 @@
 <script setup>
 import { ref, watch } from 'vue';
-import { FilterMatchMode } from '@primevue/core/api';
 import { useMaterialStore } from '@/stores/material1';
 
 const props = defineProps({
@@ -36,7 +35,10 @@ const close = () => {
 
 // mpr 선택
 const confirm = () => {
-  if (!selectedMpr.value) return;
+  if (!selectedMpr.value) {
+    alert('항목을 선택해주세요!');
+    return;
+  }
   emit('select', selectedMpr.value);
   close();
 };

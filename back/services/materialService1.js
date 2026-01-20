@@ -10,12 +10,27 @@ const findAllMprTbl = async () => {
   let list = await mysql.query("selectAllMprTbl", [], "material1");
   return list;
 };
+//자재 추가 목록 조회(모달용)
+const findAllMatTbl = async () => {
+  let list = await mysql.query("selectAllMatTbl", [], "material1");
+  return list;
+};
 
 // 자재구매요청서 검색
 const searchMprTbl = async (keyword) => {
   let list = await mysql.query(
     "selectSearchMprTbl",
     [keyword, keyword, keyword], // 3번 반복 (mpr_code, mcode, note)
+    "material1",
+  );
+  return list;
+};
+
+// 자재구매요청서(MPR) 기준 자재 목록 조회
+const findByMprCode = async (mprCode) => {
+  let list = await mysql.query(
+    "selectByMrpCodeMrpDetailTbl",
+    [mprCode],
     "material1",
   );
   return list;
@@ -100,4 +115,6 @@ module.exports = {
   searchMprTbl,
   findByCodeMpoTbl,
   findByCodeMpoDTbl,
+  findByMprCode,
+  findAllMatTbl,
 };
