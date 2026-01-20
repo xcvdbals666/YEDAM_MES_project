@@ -10,9 +10,8 @@ export const useMaterialStore = defineStore('material', {
   // actions
   actions: {
     // 작성자 정보 불러오기
-    async fetchEmployees() {
-      const response = await axios.get(`/material/emp`);
-      console.log(response.data);
+    async fetchEmployees({ keyword }) {
+      const response = await axios.get(`/material/emp`, { params: { keyword: keyword || '' } });
       this.employees = response.data;
     }
   },
