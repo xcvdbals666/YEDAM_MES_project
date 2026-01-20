@@ -22,7 +22,7 @@ const router = createRouter({
         ...ProductionRoutes1,
         ...ProductionRoutes2,
         ...qualityRouter1,
-        ...qualityRouter2
+        ...qualityRouter2,
         ...materialRoutes2
       ]
     }
