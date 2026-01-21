@@ -32,10 +32,43 @@ const findQiMpoList = async () => {
   return list;
 };
 
+// 검사지시서 등록
+const addQiOrderForm = async (data) => {
+  console.log(data);
+  const [rows] = await mysql.query(
+    "createQioCode",
+    [data.insp_date, data.insp_date],
+    "quality1",
+  );
+  let qio_code = rows.newQio;
+  console.log(qio_code);
+  const { insp_date, insp_vol, mpo_d_code } = data;
+  try {
+    console.log("전송 데이터:", [qio_code, insp_date, insp_vol, mpo_d_code]);
+
+    let list = await mysql.query(
+      "insertQio_tbl",
+      [qio_code, insp_date, insp_vol, mpo_d_code],
+      "quality1",
+    );
+    return list;
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+// 검사지시서 삭제
+const removeqiorder = async (id) => {
+  let list = await mysql.query("deleteQiOrder", [id], "quality1");
+  return list;
+};
+
 module.exports = {
   findAllQiOrderCheckList,
   findAllQiOrderList,
   findQiOrderItemInfo,
   findQiProduceList,
   findQiMpoList,
+  addQiOrderForm,
+  removeqiorder,
 };
