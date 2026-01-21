@@ -13,9 +13,12 @@
 import { ref, onMounted, computed } from 'vue';
 import { useProductionsStore } from '@/stores/production1';
 import { storeToRefs } from 'pinia';
+import 'primeicons/primeicons.css'
 
 const store = useProductionsStore();
-const { prdpList, prdpLoading, prdpError, prdpItems, allProducts, lines } = storeToRefs(store);
+const { wkoList, prdpList, prdpLoading, prdpError, prdpItems, allProducts, lines } = storeToRefs(store);
+
+// const potypes = ['정형', '비정형'];
 
 //날짜 자르기
 const convertDate = (d) => {
@@ -25,7 +28,8 @@ const convertDate = (d) => {
 
 const selectedPlan = ref(null); //모달에서 생산계획 하나 선택
 
-const form = ref({
+//초기 폼 (리셋에 사용)
+const emptyForm = {
   wko_code: '',
   prdp_code: '',
   prdp_date: '',
@@ -34,10 +38,18 @@ const form = ref({
   wko_qtt: '',
   start_date: '',
   end_date: '',
-  stat: '',
+  stat: 'v1',
   line_code: '',
-  po_type: ''
-});
+  wko_name:''
+};
+
+//초기폼 복제해서 값 채워질 용도 form 생성
+const form = ref({...emptyForm});
+
+const resetForm = ()=>{
+  form.value = {...emptyForm}
+  selectedPlan.value = null;
+}
 
 const prdpModalOpen = ref(false);
 
@@ -62,13 +74,11 @@ const applySelectedPlan = async () => {
     form.value.prod_code = items[0].prod_code;
     form.value.wko_qtt = items[0].planned_qtt;
     form.value.line_code = items[0].line_code;
-    form.value.po_type = items[0].po_type;
 
   } else {
     form.value.prod_code = '';
     form.value.wko_qtt = '';
     form.value.line_code = '';
-    form.value.po_type = '';
 
   }
 
@@ -90,13 +100,11 @@ const onProdChange = () => {
   if (found) {
     form.value.wko_qtt = found.planned_qtt;
     form.value.line_code = found.line_code;
-    form.value.po_type= found.po_type;
 
   } else {
     // 못 찾았으면 값 비우기(안전장치)
     form.value.wko_qtt = '';
     form.value.line_code = '';
-    form.value.po_type = '';
   }
 };
 
@@ -108,6 +116,62 @@ const productOptions = computed(() => {
 onMounted(() => {
   store.fetchAllPrdDistinct();
 });
+
+//wko_code 번호 자동으로 만들어 삽입하기 
+//저장버튼 누르는 순간 실행! 
+const saveWorkOrder = async () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  // 월, 일은 10보다 작으면 앞에'0을 붙여서 2자리로
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  
+  const todayDate = `${year}${month}${day}`; 
+  
+  const prefix = `WKO-${todayDate}`;
+
+  // 중복을 피하기 위해 DB에서 최신 목록을 한 번 더 - store에 fetchWorkOrders 실행
+  await store.fetchWorkOrders();
+
+  // wkoList에서 오늘 만든 번호만 골라냄
+  const todayOrders = wkoList.value.filter(item => {
+    return item.wko_code && item.wko_code.startsWith(prefix);
+  });
+
+  let nextNumber = 1; 
+
+  // 오늘 등록된 데이터가 있으면 젤 큰 번호를 찾아 +1
+  if (todayOrders.length > 0) {
+    const numbers = todayOrders.map(item => {
+      //- 기준으로 쪼개서 
+      const parts = item.wko_code.split('-');
+      // 3번째(인덱스 2번)를 숫자로 변환
+      return parseInt(parts[2]); 
+    });
+    
+    // 찾아낸 숫자들 중 가장 큰 값에 1 더함
+    nextNumber = Math.max(...numbers) + 1;
+  }
+
+  const finalSeq = String(nextNumber).padStart(3, '0');
+
+  form.value.wko_code = `${prefix}-${finalSeq}`;
+
+  // 백에 저장 요청을 보내기
+  try {
+    // 스토어에 새로 만든 insertWorkOrder 함수를 호출
+    await store.insertWorkOrder(form.value);
+    
+    alert(`저장이 완료되었습니다! 생성된 번호: ${form.value.wko_code}`);
+  
+    resetForm();
+    await store.fetchWorkOrders();
+    
+  } catch (error) {
+    console.error("저장 에러 발생:", error);
+    alert("저장에 실패했습니다.");
+  }
+};
 </script>
 
 <template>
@@ -117,21 +181,29 @@ onMounted(() => {
 
       <div class="flex gap-2">
         <button class="p-button p-button-danger">삭제</button>
-        <button class="p-button p-button-secondary">초기화</button>
-        <button class="p-button p-button-info">저장</button>
-        <button class="p-button p-button-success" @click="openPrdpModal">생산계획 불러오기</button>
+        <button class="p-button p-button-secondary" @click="resetForm">초기화</button>
+        <button class="p-button p-button-info" @click="saveWorkOrder">저장</button>
+        <button class="p-button p-button-success" @click="">작업지시서 불러오기</button>
+      
+        <!-- <button class="p-button p-button-success" @click="openPrdpModal">생산계획 불러오기</button> -->
+      
       </div>
     </div>
 
     <div class="grid grid-cols-12 gap-3">
       <div class="col-span-12 lg:col-span-6 flex items-center gap-3">
         <label class="w-28 shrink-0 text-lg font-semibold">작업지시번호</label>
-        <input type="text" class="p-inputtext w-full" />
+        <input type="text" class="p-inputtext w-full" readonly/>
       </div>
 
-      <div class="col-span-12 lg:col-span-6 flex items-center gap-3">
+      <div class="col-span-12 lg:col-span-5 flex items-center gap-3">
         <label class="w-28 shrink-0 text-lg font-semibold">생산계획번호</label>
         <input type="text" class="p-inputtext w-full" v-model="form.prdp_code" readonly />
+      </div>
+
+      
+      <div class="col-span-12 lg:col-span-1 flex items-center gap-3">
+        <button class="p-button p-button-success" @click="openPrdpModal">O</button>      
       </div>
 
       <div class="col-span-12 lg:col-span-6 flex items-center gap-3">
@@ -177,15 +249,10 @@ onMounted(() => {
         <label class="w-28 shrink-0 text-lg font-semibold">지시 상태</label>
         <select class="p-inputtext w-full" v-model="form.stat">
           <option value="">선택</option>
-          <option value="v1">진행중</option>
-          <option value="v2">작업완료</option>
-          <option value="v3">작업보류</option>
+          <option value="v1" selected>작업대기</option>
+          <option value="v2">작업보류</option>
+          <option value="v3">진행중</option>
         </select>
-      </div>
-
-      <div class="col-span-12 lg:col-span-6 flex items-center gap-3">
-        <label class="w-28 shrink-0 text-lg font-semibold">공정 유형</label>
-        <Dropdown v-model="form.po_type" :options="potypes" optionLabel= "po_type" optionValue="po_type" placeholder="공정유형 선택" class="w-full" />
       </div>
 
       <div class="col-span-12 lg:col-span-6 flex items-center gap-3">
@@ -193,7 +260,10 @@ onMounted(() => {
         <Dropdown v-model="form.line_code" :options="lines" optionLabel= "line_code" optionValue="line_code" placeholder="라인 선택" class="w-full" />
       </div>
 
-      <div class="col-span-12 lg:col-span-6 flex items-center gap-3"></div>
+      <div class="col-span-12 lg:col-span-12 flex items-center gap-3">        
+        <label class="w-28 shrink-0 text-lg font-semibold">작업이름</label>
+        <input type="text" class="p-inputtext w-full" v-model="form.wko_name"/>
+      </div>
     </div>
   </div>
 
@@ -231,5 +301,12 @@ font-weight: bold;
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
+}
+
+input[readonly] {
+  background-color: #f5f5f5;
+  border-color: #dcdcdc;
+  color: #666;
+  cursor: not-allowed;
 }
 </style>
