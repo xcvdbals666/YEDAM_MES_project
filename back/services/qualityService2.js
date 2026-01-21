@@ -5,7 +5,7 @@ const mysql = require("../database/mapper.js");
 //품질 검사 지시 목록 검색
 const findQiOrderList = async (qio_code) => {
   const params = qio_code ? [qio_code] : [""];
-  return await mysql.query("selectQiOrderList", params, "qi-order");
+  return await mysql.query("selectQiOrderList", params, "quality2");
 };
 
 module.exports = {

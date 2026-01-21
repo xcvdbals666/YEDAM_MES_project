@@ -13,7 +13,7 @@ export const useQualityStore = defineStore('quality2', {
   //action
   actions: {
     async fetchQiOrderList({ keyword }) {
-      const res = await axios.get(`/api/quality/qiorderlist`, { params: keyword });
+      const res = await axios.get(`/api/quality/qi-order`, { params: keyword });
       this.qiOrderList = res.data;
     }
   },

@@ -9,8 +9,7 @@ SELECT
     CASE
         WHEN q.prdr_code IS NOT NULL THEN '수입검사'
         WHEN q.po_code IS NOT NULL THEN '제품검사'
-        WHEN q.mpr_d_code IS NOT NULL THEN '자재검사'
-        ELSE '기타'
+        ELSE '자재검사'
     END AS inspect_type,
 
     CASE
@@ -21,7 +20,7 @@ SELECT
 
     bm.mat_name
 FROM qio_tbl q
-LEFT JOIN mpr_d_tbl md ON q.mpr_d_code = md.mpr_d_code
+LEFT JOIN mpo_d_tbl md ON q.mpo_d_code = md.mpo_d_code
 LEFT JOIN bom_mat bm ON md.mat_code = bm.mat_code
 WHERE q.qio_code LIKE CONCAT('%', ?, '%')
 ORDER BY q.qio_date DESC`;

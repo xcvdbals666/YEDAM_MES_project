@@ -5,21 +5,27 @@ import { ref, computed, onMounted } from 'vue';
 import { useQualityStore } from '@/stores/quality2.js';
 // import SelectQioModal from '@/components/material/modal/SelectQioModal.vue';
 
+import axios from 'axios';
+
 const qualityStore = useQualityStore();
 
 const displaQiomodal = ref(false);
 const searchKeyword = ref('');
 
-
 //검색
 const qio_code = ref('');
-const mat_name = ref('');
 const qio_date = ref('');
+const inspect_type = ref('');
+const mat_name = ref('');
+const qio_status = ref('');
+const insp_date = ref('');
 
 const headerData = ref({
   qio_code: '',
   mat_name: '',
-  qio_date: ''
+  qio_date: '',
+  inspect_type: '',
+  qio_status: ''
 });
 
 onMounted(async () => {
@@ -31,7 +37,7 @@ onMounted(async () => {
   }
 });
 
-const items = ref([]);
+const item = ref([]);
 
 const selectQio = (qio) => {
   headerData.value.qio_code = qio.qio_code;
@@ -42,18 +48,28 @@ const search = () => {
   qualityStore.fetchQiOrderList(qio_code.value);
 };
 
+//날짜 변경 형식
+const formatDate = (date) => {
+  if (!date) return '';
+  return date.slice(0, 10); // YYYY-MM-DD
+};
+
 const filteredOrders = computed(() => {
+  console.log('orders:', qualityStore.qiOrderList);
   return qualityStore.qiOrderList.filter((item) => {
-    return (!qio_code.value || item.qio_code.includes(qio_code.value)) && (!mat_name.value || item.mat_name?.includes(mat_name.value));
+    return (!qio_code.value || item.qio_code.includes(qio_code.value)) && (!inspect_type.value || item.inspect_type?.includes(inspect_type.value));
   });
 });
 </script>
+
+<!---->
 
 <template>
   <div class="card border border-gray-200 flex flex-col gap-6 p-fluid">
     <!--모달창-->
     <!-- <SelectQioModal v-model:visible="items" class="mt-4" /> -->
-
+    <!------------------------------------------------------------------------------------------------->
+    <!-- 검색이 되어야 하는 창-->
     <div class="text-2xl font-bold text-center">품질 검사 지시 조회</div>
 
     <!-- 검색 조건 영역 -->
@@ -61,13 +77,13 @@ const filteredOrders = computed(() => {
       <!-- 지시코드 -->
       <div class="flex flex-col gap-2">
         <label class="font-semibold">지시코드</label>
-        <InputText v-model="qio_code" placeholder="입력 하면 아래에 떠야 함" class="w-full" @select="selectQio" />
+        <InputText v-model="qio_code" placeholder="지시코드 검색" class="w-full" @select="selectQio" />
       </div>
 
-      <!-- 제품명 -->
+      <!-- 검사유형 -->
       <div class="flex flex-col gap-2">
-        <label class="font-semibold">제품명</label>
-        <InputText v-model="mat_name" placeholder="입력 하면 아래에 떠야 함" class="w-full" />
+        <label class="font-semibold">검사유형</label>
+        <InputText v-model="inspect_type" placeholder="검사유형 검색" class="w-full" />
       </div>
 
       <!-- 시작일 -->
@@ -87,8 +103,9 @@ const filteredOrders = computed(() => {
     <div class="flex items-center justify-between mt-2">
       <!-- 왼쪽 영역 -->
       <div class="flex gap-4">
-        <Button label="전체" severity="contrast" />
-        <Button label="조회" severity="warn" @click="search" />
+        <Button label="전체" severity="contrast" @click="search" />
+        <!--전체를 누르면 전체의 지시코드가 생김-->
+        <Button label="조회" severity="warn" />
       </div>
     </div>
   </div>
@@ -100,8 +117,10 @@ const filteredOrders = computed(() => {
         <span class="text-orange-500 font-bold">{{ filteredOrders.length }}</span> 건
       </div>
     </div>
+    <!------------------------------------------------------------------------------------------------->
 
     <!--수정해야함-->
+
     <div class="flex-1 overflow-auto rounded-lg border border-gray-200">
       <DataTable :value="filteredOrders">
         <template #empty>
@@ -110,7 +129,18 @@ const filteredOrders = computed(() => {
 
         <Column selectionMode="multiple" headerStyle="width:48px" />
         <Column header="지시코드" field="qio_code" headerClass="table-header" bodyClass="table-body" />
-        <Column header="지시일자" field="qio_date" headerClass="table-header" bodyClass="table-body" />
+        <Column header="지시일자" headerClass="table-header" bodyClass="table-body">
+          <!--날짜 형식 변경-->
+          <template #body="slotProps">
+            {{ formatDate(slotProps.data.qio_date) }}
+          </template>
+        </Column>
+        <!-- <Column header="검사유형">
+          <template #body="slotProps">
+            {{ slotProps.data }}
+          </template>
+        </Column> -->
+
         <Column header="검사유형" field="inspect_type" headerClass="table-header" bodyClass="table-body" />
         <Column header="제품명" field="mat_name" headerClass="table-header" bodyClass="table-body" />
         <Column header="상태" field="qio_status" headerClass="table-header" bodyClass="table-body" />
