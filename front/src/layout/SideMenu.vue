@@ -112,14 +112,14 @@ const model = ref([
         path: '/material',
         items: [
           {
-            label: '자재구매 요청',
+            label: '자재구매요청',
             icon: 'pi pi-fw pi-sign-in',
-            to: '/matRequest'
+            to: '/mprRequest'
           },
           {
-            label: '자재구매 요청목록',
+            label: '자재구매요청 목록',
             icon: 'pi pi-fw pi-sign-in',
-            to: '/matList'
+            to: '/mprList'
           },
           {
             label: '발주서관리',

@@ -93,54 +93,63 @@ const addMprTbl = async ({ request, requestDetail }) => {
   return { mprCode };
 };
 
-// 자재구매요청 정보 조회
+// 자재구매요청 조회
 const findByMprCodeMprTbl = async (keyword) => {
-  // console.log("[findByMprCodeMprTbl] keyword:", keyword);
-  let sql = `
-    select
-      concat(m.mpr_code, '-', d.mat_code) as row_key,
-      m.mpr_code,
-      mt.mat_name,
-      d.mat_code,
-      m.reqdate,
-      d.req_qtt,
-      d.unit,
-      c.client_name
-    from mpr_d_tbl d
-    join mpr_tbl m on d.mpr_code = m.mpr_code
-    join mat_tbl mt on d.mat_code = mt.mat_code
-    join client_tbl c on d.mat_sup = c.client_code
-    where 1=1
-  `;
+  let sql = `SELECT m.mpr_code, m.reqdate, m.deadline, m.mrp_code, m.mcode,
+                    CASE WHEN COUNT(d.mat_code) = 1 THEN MIN(mt.mat_name)
+                         ELSE CONCAT(MIN(mt.mat_name),' 외 ', COUNT(d.mat_code) - 1, '건')
+                    END AS mat_summary
+             FROM mpr_tbl m
+             LEFT JOIN mpr_d_tbl d ON d.mpr_code = m.mpr_code
+             LEFT JOIN mat_tbl mt ON mt.mat_code = d.mat_code
+             WHERE 1=1`;
 
   const params = [];
 
+  // 요청번호
   if (keyword.mprCode) {
-    sql += " and m.mpr_code = ?";
-    params.push(keyword.mprCode);
+    sql += " AND m.mpr_code LIKE ?";
+    params.push(`%${keyword.mprCode}%`);
   }
 
-  if (keyword.matName) {
-    sql += " and mt.mat_name like ?";
-    params.push(`%${keyword.matName}%`);
+  // 요청일자 기간
+  if (keyword.reqDateFrom && keyword.reqDateTo) {
+    sql += " AND m.reqdate BETWEEN ? AND ?";
+    params.push(keyword.reqDateFrom, keyword.reqDateTo);
+  } else if (keyword.reqDateFrom) {
+    sql += " AND m.reqdate >= ?";
+    params.push(keyword.reqDateFrom);
+  } else if (keyword.reqDateTo) {
+    sql += " AND m.reqdate <= ?";
+    params.push(keyword.reqDateTo);
   }
 
-  if (keyword.matCode) {
-    sql += " and d.mat_code = ?";
-    params.push(keyword.matCode);
+  // 납기일자 기간
+  if (keyword.deadlineFrom && keyword.deadlineTo) {
+    sql += " AND m.deadline BETWEEN ? AND ?";
+    params.push(keyword.deadlineFrom, keyword.deadlineTo);
+  } else if (keyword.deadlineFrom) {
+    sql += " AND m.deadline >= ?";
+    params.push(keyword.deadlineFrom);
+  } else if (keyword.deadlineTo) {
+    sql += " AND m.deadline <= ?";
+    params.push(keyword.deadlineTo);
   }
 
-  if (keyword.reqDate) {
-    sql += " and m.reqdate = ?";
-    params.push(keyword.reqDate);
+  // MRP
+  if (keyword.mrpCode) {
+    sql += " AND m.mrp_code LIKE ?";
+    params.push(`%${keyword.mrpCode}%`);
   }
 
-  if (keyword.clientCode) {
-    sql += " and d.mat_sup = ?";
-    params.push(keyword.clientCode);
+  // 요청자
+  if (keyword.mcode) {
+    sql += " AND m.mcode LIKE ?";
+    params.push(`%${keyword.mcode}%`);
   }
 
-  sql += " order by m.mpr_code desc, d.mpr_d_code asc";
+  sql +=
+    " GROUP BY m.mpr_code, m.reqdate, m.deadline, m.mrp_code, m.mcode ORDER BY m.mpr_code DESC";
 
   console.log("[SQL]", sql);
   console.log("[PARAMS]", params);
@@ -153,6 +162,16 @@ const findByMprCodeMprTbl = async (keyword) => {
     console.error("[DB ERROR]", err);
     throw err;
   }
+};
+
+// 자재구매요청 상세 정보 조회 - 요청자재상세
+const findByMprCodeMprDTbl = async (mprCode) => {
+  const list = await mysql.query(
+    "selectByMprCodeMprDTbl",
+    mprCode,
+    "material2",
+  );
+  return list;
 };
 
 // 자재구매요청서 전체 목록 조회
@@ -178,4 +197,5 @@ module.exports = {
   findByMprCodeMprTbl,
   findAllMprTbl,
   findAllClientTbl,
+  findByMprCodeMprDTbl,
 };

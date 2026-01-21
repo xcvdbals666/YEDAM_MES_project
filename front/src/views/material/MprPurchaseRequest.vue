@@ -44,22 +44,8 @@ const requestDetailInfo = ref([
   }
 ]);
 
-// 자재 단위 매핑
-const UNIT_MAP = {
-  h1: { label: 'kg' },
-  h2: { label: 't' },
-  h3: { label: 'L' },
-  h4: { label: 'ea' },
-  h5: { label: 'box' },
-  h6: { label: 'g' },
-  h7: { label: 'mm' },
-  h8: { label: '%' },
-  h9: { label: 'cm' },
-  ha: { label: 'N' }
-};
-
 //AutoComplete 관련
-const mrpList = ref([]);
+const mrpCode = ref([]);
 const selectedMrpValue = ref(null);
 const mrpFilteredValue = ref([]);
 
@@ -69,7 +55,7 @@ onMounted(async () => {
     requestInfo.value.mprCode = response.data.mprCode;
 
     // mrp 목록 불러오기
-    mrpList.value = await store.fetchMrpCode();
+    mrpCode.value = await store.fetchMrpCode();
   } catch (err) {
     console.error('요청번호 조회 실패', err);
   }
@@ -80,24 +66,22 @@ const showWriterModal = ref(false);
 const showMaterialModal = ref(false);
 
 // 선택된 작성자 input에 넣기
-const selectWriter = (emp) => {
-  requestInfo.value.mCode = emp.emp_code; // DB 저장용
-  requestInfo.value.writer = emp.emp_name;
-  requestInfo.value.department = emp.dept_name;
+const selectWriter = (e) => {
+  requestInfo.value.mCode = e.emp_code; // DB 저장용
+  requestInfo.value.writer = e.emp_name;
+  requestInfo.value.department = e.dept_name;
 };
 
 // 선택된 자재 input에 넣기
-const selectMaterial = (mat) => {
+const selectMaterial = (m) => {
   if (!selectedRow.value) return;
 
-  const unit = UNIT_MAP[mat.unit];
-
-  selectedRow.value.materialName = mat.mat_name;
-  selectedRow.value.unitCode = mat.unit;
-  selectedRow.value.unitLabel = unit?.label ?? '';
-  selectedRow.value.clientName = mat.client_name;
-  selectedRow.value.matSup = mat.client_code;
-  selectedRow.value.matCode = mat.mat_code;
+  selectedRow.value.materialName = m.mat_name;
+  selectedRow.value.unitCode = m.unit;
+  selectedRow.value.unitLabel = m.unit_label;
+  selectedRow.value.clientName = m.client_name;
+  selectedRow.value.matSup = m.client_code;
+  selectedRow.value.matCode = m.mat_code;
 
   showMaterialModal.value = false;
   selectedRow.value = null;
@@ -129,15 +113,15 @@ const initialDetailRow = () => ({
 // AutoComplete 검색 함수
 const searchMrp = (event) => {
   if (!event.query.trim().length) {
-    mrpFilteredValue.value = [...mrpList.value];
+    mrpFilteredValue.value = [...mrpCode.value];
   } else {
-    mrpFilteredValue.value = mrpList.value.filter((m) => m.mrp_code.toLowerCase().startsWith(event.query.toLowerCase()));
+    mrpFilteredValue.value = mrpCode.value.filter((m) => m.mrp_code.toLowerCase().startsWith(event.query.toLowerCase()));
   }
 };
 
 // AutoComplete 선택 결과 반영
-watch(selectedMrpValue, (v) => {
-  requestInfo.value.mrpCode = v ? v.mrp_code : null;
+watch(selectedMrpValue, (val) => {
+  requestInfo.value.mrpCode = val ? val.mrp_code : null;
 });
 
 // 자재 선택 모달 열렸을 때 값 세팅
@@ -176,7 +160,7 @@ const save = async () => {
     return;
   }
 
-  const validItems = requestDetailInfo.value.filter((mat) => mat.matCode);
+  const validItems = requestDetailInfo.value.filter((m) => m.matCode);
 
   if (validItems.length === 0) {
     alert('자재를 한 개 이상 선택하세요');
@@ -201,12 +185,12 @@ const save = async () => {
       mrpCode: requestInfo.value.mrpCode,
       mCode: requestInfo.value.mCode
     },
-    requestDetail: validItems.map((mat) => ({
-      reqQtt: mat.reqQtt,
-      unitCode: mat.unitCode,
-      note: mat.note,
-      matSup: mat.matSup,
-      matCode: mat.matCode
+    requestDetail: validItems.map((val) => ({
+      reqQtt: val.reqQtt,
+      unitCode: val.unitCode,
+      note: val.note,
+      matSup: val.matSup,
+      matCode: val.matCode
     }))
   };
 
@@ -234,7 +218,7 @@ const save = async () => {
       @save="save"
       @reset="reset"
     />
-    <MprRequestItem v-model="requestDetailInfo" @selected-material="(row) => openMaterialModal(row)" />
+    <MprRequestItem v-model="requestDetailInfo" @selecte-material="(row) => openMaterialModal(row)" />
   </div>
   <SelectModal v-model:visible="showWriterModal" type="employee" @select="selectWriter" />
   <SelectModal v-model:visible="showMaterialModal" type="material" @select="selectMaterial" />
