@@ -39,10 +39,15 @@ router.get(`/allProductsList`, async (req, res) => {
   res.send(list);
 });
 
-//공정유형 조회
-router.get(`/allPoTypeList`, async (req, res) => {
-  const list = await produceService.findAllPrdDistinct();
-  res.send(list);
+//작업지시서 등록하기
+router.post('/workorderInsert', async (req, res) => {
+  try {
+    const result = await produceService.updateWorkOrder(req.body);
+    res.status(200).json(result);
+  } catch (err) {
+    console.error("라우터 에러:", err);
+    res.status(500).json({ ok: false, message: err.message });
+  }
 });
 
 module.exports = router;
