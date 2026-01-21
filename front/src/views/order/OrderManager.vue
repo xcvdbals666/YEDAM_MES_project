@@ -37,6 +37,7 @@ const resetBtn = () => {
     note: '',
     ord_d_tbl: products.value
   };
+  products.value = [{ selected: false, prod_code: '', unit: 'ea', spec: '', ord_amount: '', prod_price: '', delivery_date: '', ord_priority: '', total_price: '', com_value: '' }];
 };
 //총액 계산식
 const calculateTotal = (product) => {
@@ -98,9 +99,14 @@ const searchProduct = (index) => {
   order.getProducts();
   prodVisible.value = true;
 };
-
+// rowClass 함수: 데이터 상태에 따라 클래스 문자열 반환
+const rowClass = (data) => {
+  // 빈 행(isEmpty: true)이면 클릭 방지 클래스 적용
+  return data.isEmpty ? 'empty-row pointer-events-none bg-transparent' : '';
+};
 // 모달에서 제품을 선택했을 때 실행될 함수
 const onRowSelect = (event) => {
+  if (event.data.isEmpty) return;
   const selectedProduct = event.data;
   const index = currentRowIndex.value;
 
@@ -131,6 +137,24 @@ const getOrderInfo = async () => {
   console.log(products.value);
   ordVisible.value = false;
 };
+
+// 저장버튼 이벤트 함수
+const saveBtn = () => {
+  if (orderInfo.value.ord_code.length == 0) {
+    // ord_code가 없으면(길이가 0임.) 신규등록
+    console.log(`ord_code's length 0`);
+    order.registerOrder(orderInfo.value);
+  } else {
+    // ord_code가 있으면 수정
+    console.log(`ord_code's length is not 0`);
+  }
+};
+// 삭제버튼 이벤트 함수
+const deleteBtn = () => {
+  if (orderInfo.value.ord_code.length == 0) {
+    confirm('delete?');
+  }
+};
 </script>
 
 <template>
@@ -142,6 +166,7 @@ const getOrderInfo = async () => {
         :globalFilterFields="['prod_code', 'prod_name', 'prod_type']"
         paginator
         :rows="10"
+        :rowClass="rowClass"
         selection-mode="single"
         @row-click="onRowSelect"
         :metaKeySelection="true"
@@ -158,20 +183,37 @@ const getOrderInfo = async () => {
         <Column field="prod_code" header="제품코드"></Column>
         <Column field="prod_name" header="제품명"></Column>
         <Column field="edate" header="유통기한"></Column>
-        <Column field="unit" header="단위">
-          <template #body="slotProps">
+        <Column field="unit_note" header="단위">
+          <!-- <template #body="slotProps">
             {{ order.converUnit(slotProps.data.unit) }}
-          </template>
+          </template> -->
         </Column>
-        <Column field="com_value" header="완제품 유형">
-          <template #body="slotProps">
-            {{ order.convertComVal(slotProps.data.com_value) }}
-          </template>
-        </Column>
+        <Column field="com_note" header="완제품 유형" />
       </DataTable>
     </BaseDialog>
     <BaseDialog v-model:visible="ordVisible" header="주문불러오기" width="60rem">
-      <DataTable v-model:selection="selectedOrder" :value="order.orders" dataKey="ord_code" tableStyle="min-width: 60rem" paginator="true" :rows="5">
+      <DataTable
+        :isDataSelectable="isRowSelectable"
+        v-model:filters="filters"
+        :globalFilterFields="['ord_code', 'ord_name', 'client_name']"
+        dataKey="ord_code"
+        v-model:selection="selectedOrder"
+        :value="order.orders"
+        tableStyle="min-width: 60rem"
+        paginator="true"
+        :rows="5"
+        selection-mode="single"
+        :rowClass="rowClass"
+        :metaKeySelection="false"
+      >
+        <template #header>
+          <div class="flex justify-end">
+            <IconField>
+              <InputIcon class="pi pi-search" />
+              <InputText v-model="filters['global'].value" placeholder="주문번호, 주문명, 거래처 검색" />
+            </IconField>
+          </div>
+        </template>
         <Column selectionMode="single" headerStyle="width: 3rem"></Column>
         <Column field="ord_code" header="주문코드"></Column>
         <Column field="ord_name" header="주문명"></Column>
@@ -190,9 +232,9 @@ const getOrderInfo = async () => {
           <div class="font-semibold text-xl flex justify-between items-center">
             <div>주문 기본 정보</div>
             <div class="flex items-center gap-2">
-              <Button label="삭제" severity="danger" variant="outlined" class="min-w-[65px]" />
+              <Button label="삭제" severity="danger" variant="outlined" class="min-w-[65px]" @click="deleteBtn" />
               <Button label="초기화" severity="contrast" variant="outlined" class="min-w-[65px]" @click="resetBtn" />
-              <Button label="저장" severity="info" variant="outlined" class="min-w-[65px]" />
+              <Button label="저장" severity="info" variant="outlined" class="min-w-[65px]" @click="saveBtn" />
               <Button label="주문정보 불러오기" severity="success" variant="outlined" class="min-w-[130px]" @click="openOrderList" />
             </div>
           </div>
@@ -279,12 +321,12 @@ const getOrderInfo = async () => {
                   </IconField>
                 </td>
                 <td class="min-w-[80px] border border-gray-200 p-3 text-center text-gray-700">
-                  <InputText :model-value="order.convertComVal(product.com_value)" placeholder="유형" class="w-full" readonly />
+                  <InputText v-model="product.com_note" placeholder="유형" class="w-full" readonly />
                 </td>
                 <td class="min-w-[10px] border border-gray-200 p-3 text-center text-gray-700">
                   <InputGroup>
-                    <InputNumber :model-value="order.convertSpec(product.spec)" placeholder="규격" class="w-full" readonly />
-                    <InputGroupAddon>{{ order.converUnit(product.unit) || 'ea' }}</InputGroupAddon>
+                    <InputNumber v-model="product.spec_note" placeholder="규격" class="w-full" readonly />
+                    <InputGroupAddon>{{ product.unit_note || 'ea' }}</InputGroupAddon>
                   </InputGroup>
                 </td>
                 <td class="min-w-[90px] border border-gray-200 p-3 text-center text-gray-700">
@@ -319,3 +361,15 @@ const getOrderInfo = async () => {
     </div>
   </Fluid>
 </template>
+<style scoped>
+/* 빈 행은 클릭 안 되게 처리 */
+:deep(.p-datatable-tbody > tr) {
+  height: 50px; /* 행 높이 강제 고정 (선택사항) */
+}
+/* 빈 행(empty-row) 안에 있는 라디오 버튼 영역 숨기기 */
+:deep(.empty-row .p-selection-column .p-radiobutton),
+:deep(.empty-row .p-selection-column .p-checkbox) {
+  visibility: hidden; /* 공간은 차지하되 눈에만 안 보이게 (정렬 유지) */
+  /* 또는 display: none; 아예 없애버리기 */
+}
+</style>

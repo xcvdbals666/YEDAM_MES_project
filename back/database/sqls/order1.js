@@ -18,7 +18,13 @@ order by 1 desc`;
 // 주문 상세 조회
 const selectOrderDetailByCode = `SELECT ord_d_code,
 		    unit,
+        (SELECT note
+        FROM common_code c
+        WHERE d.unit=c.com_value) AS unit_note,
         spec,
+        (SELECT note
+        FROM common_code c
+        WHERE d.spec=c.com_value) AS spec_note,
         ord_amount,
         prod_price,
         date_format(delivery_date,'%Y-%m-%d') AS delivery_date,
@@ -30,7 +36,11 @@ const selectOrderDetailByCode = `SELECT ord_d_code,
         WHERE p.prod_code = d.prod_code) AS prod_name,
         (SELECT com_value
         FROM prod_tbl p
-        WHERE p.prod_code = d.prod_code) AS com_value
+        WHERE p.prod_code = d.prod_code) AS com_value,
+        (SELECT c.note
+        FROM common_code c
+        JOIN prod_tbl p ON p.prod_code = d.prod_code
+        WHERE c.com_value=p.com_value) AS com_note
 FROM ord_d_tbl d
 WHERE ord_code = ?`;
 
@@ -46,8 +56,24 @@ WHERE dept_code='DEPT-1'
 ORDER BY 1 desc`;
 
 // 주문서 작성시 제품 목록 가져오기
-const selectAllProducts = `SELECT *
-FROM prod_tbl
+const selectAllProducts = `SELECT prod_code,
+        prod_name,
+        edate,
+        unit,
+        (SELECT note
+        FROM common_code c
+        WHERE p.unit=c.com_value) AS unit_note,
+        spec,
+        (SELECT note
+        FROM common_code c
+        WHERE p.spec=c.com_value) AS spec_note,
+        note,
+        com_value,
+        (SELECT note
+        FROM common_code c
+        WHERE p.com_value=c.com_value) AS com_note,
+        prod_type
+FROM prod_tbl p
 WHERE is_used = 'f2'
 AND prod_type = 'i1'`;
 
