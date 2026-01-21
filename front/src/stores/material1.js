@@ -44,6 +44,22 @@ export const useMaterialStore = defineStore('material', {
       this.mpoData.mprCode = mprCode;
       return this.materials;
     },
+    // 초기화 함수 추가
+    resetStore() {
+      this.mpoData = {
+        purchaseCode: '',
+        purchaseReqDate: new Date(),
+        mcode: '',
+        mcodeName: '',
+        stat: '요청완료',
+        mprCode: '',
+        note: ''
+      };
+      this.materials = [];
+      this.mprList = [];
+      this.matList = [];
+      this.mpoList = [];
+    },
 
     // MPR 목록 조회 (모달용)
     async fetchMprList() {

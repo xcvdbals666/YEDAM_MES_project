@@ -125,6 +125,11 @@ const model = ref([
             label: '발주서관리',
             icon: 'pi pi-fw pi-sign-in',
             to: '/mpotable'
+          },
+          {
+            label: '발주서목록',
+            icon: 'pi pi-fw pi-sign-in',
+            to: '/mpolist'
           }
         ]
       },

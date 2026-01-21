@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, onBeforeUnmount } from 'vue';
 import { useMaterialStore } from '@/stores/material1';
 import { useMaterialStore as useMaterialStore2 } from '@/stores/material2';
 import SelectMrpModal from '@/components/material/modal/SelectMrpModal.vue';
@@ -15,6 +15,11 @@ const showEmployee = ref(false);
 const empStore = useMaterialStore2();
 
 const selectedMaterials = ref([]);
+
+// 페이지를 떠날 때 초기화
+onBeforeUnmount(() => {
+  mpoStore.resetStore();
+});
 
 const unitMap = {
   h1: 'kg',
