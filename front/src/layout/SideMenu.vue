@@ -39,6 +39,11 @@ const model = ref([
             label: '출고 조회',
             icon: 'pi pi-fw pi-sign-in',
             to: '/outbound'
+          },
+          {
+            label: '출고 요청',
+            icon: 'pi pi-fw pi-sign-in',
+            to: '/outbound/request'
           }
         ]
       },
