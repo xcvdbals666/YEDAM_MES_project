@@ -33,4 +33,4 @@ router.get(`/productList`, async (req, res) => {
 });
 // // 주문등록
 // router.post(`/order`,async)
-// module.exports = router;
+module.exports = router;
