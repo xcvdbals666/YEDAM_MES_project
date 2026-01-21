@@ -168,7 +168,7 @@ const findByMprCodeMprTbl = async (keyword) => {
 const findByMprCodeMprDTbl = async (mprCode) => {
   const list = await mysql.query(
     "selectByMprCodeMprDTbl",
-    mprCode,
+    [mprCode],
     "material2",
   );
   return list;
