@@ -1,4 +1,3 @@
-<!--발주 관리-->
 <script setup>
 import { ref } from 'vue';
 import { useMaterialStore } from '@/stores/material1';
@@ -34,6 +33,7 @@ const getUnitName = (code) => unitMap[code] || code;
 // 사원 선택 시
 const handleSelectEmployee = (employee) => {
   mpoStore.mpoData.mcode = employee.emp_code;
+  mpoStore.mpoData.mcodeName = employee.emp_name;
 };
 
 // 자재 추가 함수 추가
@@ -80,12 +80,38 @@ const deleteMaterials = () => {
   selectedMaterials.value = [];
 };
 
+// 발주서 삭제
+const deleteMpo = async () => {
+  if (!mpoStore.mpoData.purchaseCode) {
+    alert('삭제할 발주서를 선택해주세요.');
+    return;
+  }
+
+  if (!confirm('정말 삭제하시겠습니까?')) {
+    return;
+  }
+
+  try {
+    const result = await mpoStore.deleteMpo(mpoStore.mpoData.purchaseCode);
+    if (result.status === 'success') {
+      alert('삭제되었습니다!');
+      resetForm();
+    } else {
+      alert('삭제 실패');
+    }
+  } catch (err) {
+    alert('삭제 실패');
+    console.error(err);
+  }
+};
+
 // 초기화
 const resetForm = () => {
   mpoStore.mpoData = {
     purchaseCode: '',
     purchaseReqDate: new Date(),
     mcode: '',
+    mcodeName: '',
     stat: '요청완료',
     mprCode: '',
     note: ''
@@ -109,12 +135,27 @@ const saveMpo = async () => {
   };
 
   try {
-    const result = await mpoStore.saveMpo(payload);
-    if (result.status === 'success') {
-      alert('저장되었습니다!');
-      mpoStore.mpoData.purchaseCode = result.poCode;
+    let result;
+
+    // 발주서번호가 있으면 수정, 없으면 신규
+    if (mpoStore.mpoData.purchaseCode) {
+      // 수정
+      payload.purchase_code = mpoStore.mpoData.purchaseCode;
+      result = await mpoStore.updateMpo(payload);
+      if (result.status === 'success') {
+        alert('수정되었습니다!');
+      } else {
+        alert('수정 실패');
+      }
     } else {
-      alert('저장 실패');
+      // 신규
+      result = await mpoStore.saveMpo(payload);
+      if (result.status === 'success') {
+        alert('저장되었습니다!');
+        mpoStore.mpoData.purchaseCode = result.no;
+      } else {
+        alert('저장 실패');
+      }
     }
   } catch (err) {
     alert('저장 실패');
@@ -130,7 +171,7 @@ const saveMpo = async () => {
       <div class="flex justify-between items-center mb-4">
         <div class="font-semibold text-xl">발주 기본정보</div>
         <div class="flex gap-2">
-          <Button label="삭제" severity="danger" size="small" />
+          <Button label="삭제" severity="danger" size="small" @click="deleteMpo" />
           <Button label="초기화" severity="contrast" size="small" @click="resetForm" />
           <Button label="저장" severity="info" size="small" @click="saveMpo" />
           <Button label="발주정보 불러오기" severity="success" size="small" @click="showMpoModal = true" />
@@ -142,11 +183,11 @@ const saveMpo = async () => {
         <div class="flex flex-col gap-3">
           <div>
             <label class="block mb-1 text-sm font-medium">발주서번호</label>
-            <InputText v-model="mpoStore.mpoData.purchaseCode" disabled placeholder="자동생성" class="w-full" />
+            <InputText v-model="mpoStore.mpoData.purchaseCode" disabled class="w-full" />
           </div>
           <div>
             <label class="block mb-1 text-sm font-medium">작성자</label>
-            <InputText v-model="mpoStore.mpoData.mcode" placeholder="작성자 선택" class="w-full" readonly @click="showEmployee = true" />
+            <InputText v-model="mpoStore.mpoData.mcodeName" placeholder="작성자 선택" class="w-full" readonly @click="showEmployee = true" />
           </div>
           <div>
             <label class="block mb-1 text-sm font-medium">자재구매요청서번호</label>
@@ -232,7 +273,7 @@ const saveMpo = async () => {
           </template>
         </Column>
 
-        <Column field="delivery_date" header="입고납기일" style="width: 130px">
+        <Column field="delivery_date" header="입고납기일" style="width: 200px">
           <template #body="{ data }">
             <DatePicker v-model="data.delivery_date" showIcon dateFormat="yy-mm-dd" class="w-full" />
           </template>

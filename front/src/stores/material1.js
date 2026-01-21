@@ -9,6 +9,7 @@ export const useMaterialStore = defineStore('material', {
       purchaseCode: '',
       purchaseReqDate: new Date(),
       mcode: '',
+      mcodeName: '',
       stat: '요청완료',
       mprCode: '',
       note: ''
@@ -102,6 +103,7 @@ export const useMaterialStore = defineStore('material', {
         purchaseCode: mpo.purchase_code,
         purchaseReqDate: mpo.purchase_req_date || '',
         mcode: mpo.mcode,
+        mcodeName: mpo.emp_name || '',
         stat: mpo.stat,
         mprCode: mpo.mpr_code || '',
         note: mpo.note || ''
@@ -118,6 +120,16 @@ export const useMaterialStore = defineStore('material', {
     // 발주서 저장
     async saveMpo(payload) {
       const response = await axios.post('/api/material/mpo', payload);
+      return response.data;
+    },
+    // 발주서 수정
+    async updateMpo(payload) {
+      const response = await axios.put(`/api/material/mpo/${payload.purchase_code}`, payload);
+      return response.data;
+    },
+    // 발주서 삭제
+    async deleteMpo(purchaseCode) {
+      const response = await axios.delete(`/api/material/mpo/${purchaseCode}`);
       return response.data;
     },
 

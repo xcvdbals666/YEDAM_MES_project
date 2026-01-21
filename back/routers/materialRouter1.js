@@ -42,6 +42,25 @@ router.post("/mpo", async (req, res) => {
   res.send(result);
 });
 
+// 발주서 수정
+router.put("/mpo/:purchaseCode", async (req, res) => {
+  const { purchaseCode } = req.params;
+  const result = await materialService.updateMpoTbl(purchaseCode, req.body);
+  res.send(result);
+});
+
+// 발주서 삭제
+router.delete("/mpo/:purchaseCode", async (req, res) => {
+  try {
+    const { purchaseCode } = req.params;
+    const result = await materialService.deleteMpoTbl(purchaseCode);
+    res.json(result);
+  } catch (err) {
+    console.error("발주서 삭제 에러:", err);
+    res.status(500).json({ status: "error", message: err.message });
+  }
+});
+
 // 발주서 검색
 router.get("/mpo/search/:keyword", async (req, res) => {
   const { keyword } = req.params;

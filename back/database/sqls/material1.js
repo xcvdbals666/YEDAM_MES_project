@@ -6,12 +6,15 @@ SELECT
   DATE_FORMAT(mpo.purchase_req_date, '%Y-%m-%d') AS purchase_req_date,  
   mpo.stat,
   mpo.mcode,
+  e.emp_name,
   GROUP_CONCAT(DISTINCT m.mat_name SEPARATOR ', ') AS material_names
 FROM mpo_tbl mpo
+LEFT JOIN emp_tbl e ON mpo.mcode = e.emp_code        -- 이 줄 추가!
 LEFT JOIN mpo_d_tbl d ON mpo.purchase_code = d.purchase_code
 LEFT JOIN mat_tbl m ON d.mat_code = m.mat_code
 GROUP BY mpo.purchase_code, mpo.purchase_req_date, mpo.stat, mpo.mcode
 ORDER BY mpo.purchase_code DESC
+
 `;
 
 // 발주서 기본정보 단건 조회
@@ -19,11 +22,13 @@ const selectByCodeMpoTbl = `
 SELECT 
   mpo.purchase_code,           
   DATE_FORMAT(mpo.purchase_req_date, '%Y-%m-%d') AS purchase_req_date,     
-  mpo.mcode,                   
+  mpo.mcode,
+  e.emp_name,                   
   mpo.stat,                    
   mpo.note,                    
   mpr.mpr_code                 
 FROM mpo_tbl mpo
+LEFT JOIN emp_tbl e ON mpo.mcode = e.emp_code
 LEFT JOIN mpr_mapp_tbl mapp ON mpo.purchase_code = mapp.purchase_code
 LEFT JOIN mpr_tbl mpr ON mapp.mpr_code = mpr.mpr_code
 WHERE mpo.purchase_code = ?
@@ -96,6 +101,23 @@ INSERT INTO mpo_d_tbl (
 ) VALUES (?, ?, ?, ?, ?, ?, ?)
 `;
 
+// 발주서 기본정보 수정
+const updateMpoTbl = `
+UPDATE mpo_tbl 
+SET stat = ?, mcode = ?, note = ?
+WHERE purchase_code = ?
+`;
+
+// 발주서 자재 상세 삭제
+const deleteMpoDetailTbl = `
+DELETE FROM mpo_d_tbl WHERE purchase_code = ?
+`;
+
+// 발주서 삭제 (기본정보)
+const deleteMpoTbl = `
+DELETE FROM mpo_tbl WHERE purchase_code = ?
+`;
+
 // 발주서 검색
 const selectSearchMpoTbl = `
 SELECT 
@@ -103,8 +125,10 @@ SELECT
   DATE_FORMAT(mpo.purchase_req_date, '%Y-%m-%d') AS purchase_req_date,
   mpo.stat,
   mpo.mcode,
+  e.emp_name,
   GROUP_CONCAT(DISTINCT m.mat_name SEPARATOR ', ') AS material_names
 FROM mpo_tbl mpo
+LEFT JOIN emp_tbl e ON mpo.mcode = e.emp_code        
 LEFT JOIN mpo_d_tbl d ON mpo.purchase_code = d.purchase_code
 LEFT JOIN mat_tbl m ON d.mat_code = m.mat_code
 WHERE mpo.purchase_code LIKE CONCAT('%', ?, '%')
@@ -119,10 +143,12 @@ SELECT
   m.mpr_code,
   DATE_FORMAT(m.reqdate, '%Y-%m-%d') AS reqdate,
   m.mcode,
+  e.emp_name,
   DATE_FORMAT(m.deadline, '%Y-%m-%d') AS deadline,
   m.mrp_code,
   GROUP_CONCAT(DISTINCT mat.mat_name SEPARATOR ', ') AS material_names
 FROM mpr_tbl m
+LEFT JOIN emp_tbl e ON m.mcode = e.emp_code          
 LEFT JOIN mpr_d_tbl md ON m.mpr_code = md.mpr_code
 LEFT JOIN mat_tbl mat ON md.mat_code = mat.mat_code
 GROUP BY m.mpr_code, m.reqdate, m.mcode, m.deadline, m.mrp_code
@@ -137,8 +163,10 @@ SELECT
   m.mcode,
   DATE_FORMAT(m.deadline, '%Y-%m-%d') AS deadline,
   m.mrp_code,
+  e.emp_name,
   GROUP_CONCAT(DISTINCT mat.mat_name SEPARATOR ', ') AS material_names
 FROM mpr_tbl m
+LEFT JOIN emp_tbl e ON m.mcode = e.emp_code          
 LEFT JOIN mpr_d_tbl md ON m.mpr_code = md.mpr_code
 LEFT JOIN mat_tbl mat ON md.mat_code = mat.mat_code
 WHERE m.mpr_code LIKE CONCAT('%', ?, '%')
@@ -232,6 +260,9 @@ module.exports = {
   insertMpoTbl,
   insertMpoDetailTbl,
   selectSearchMpoTbl,
+  updateMpoTbl,
+  deleteMpoDetailTbl,
+  deleteMpoTbl,
 
   // 자재구매요청서 (MPR)
   selectAllMprTbl,
