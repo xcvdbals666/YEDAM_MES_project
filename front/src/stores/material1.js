@@ -39,6 +39,7 @@ export const useMaterialStore = defineStore('material', {
       const response = await axios.get(`/api/material/mpr/${mprCode}`, { headers: { 'Cache-Control': 'no-cache' } });
       this.materials = response.data.map((item) => ({
         ...item,
+        delivery_date: item.delivery_date ? new Date(item.delivery_date) : new Date(),
         selected: false
       }));
       this.mpoData.mprCode = mprCode;
