@@ -55,10 +55,16 @@ export const useOrderStore = defineStore('order', {
       this.details = list.data;
     },
     // 주문 등록
-    async registerOrder(order) {
-      console.log(order);
-      let result = await axios.post(`${url}/order`, order);
+    async registerOrder(order, products) {
+      let result = await axios.post(`${url}/order`, { order: order, orderDetail: products });
       console.log(result.data);
+      return result.data;
+    },
+    // 주문수정
+    async updateOrder(order, products) {
+      let result = await axios.put(`${url}/order`, { order: order, orderDetail: products });
+      console.log(result.data);
+      return result.data;
     }
   },
   persist: true
