@@ -10,15 +10,28 @@ router.get(`/qiorder`, async (req, res) => {
   res.send(list);
 });
 
-// 재고목록 전체 불러오기
-router.get(`/minbndlist`, async (req, res) => {
-  let list = await qualityService.findAllMinbndList();
+// 검사지 전체 불러오기
+router.get(`/qiorderlist`, async (req, res) => {
+  let list = await qualityService.findAllQiOrderList();
+  res.send(list);
+});
+
+// 검사지에 해당하는 자재 및 검사항목 불러오기
+router.get(`/qiorderiteminfo/:id`, async (req, res) => {
+  let id = req.params.id;
+  let list = await qualityService.findQiOrderItemInfo(id);
   res.send(list);
 });
 
 // 검사지 전체 불러오기
-router.get(`/qiorderlist`, async (req, res) => {
-  let list = await qualityService.findAllQiOrderList();
+router.get(`/qiproducelist`, async (req, res) => {
+  let list = await qualityService.findQiProduceList();
+  res.send(list);
+});
+
+// 발주서상세 목록 불러오기
+router.get("/qimpolist", async (req, res) => {
+  let list = await qualityService.findQiMpoList();
   res.send(list);
 });
 module.exports = router;

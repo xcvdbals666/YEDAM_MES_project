@@ -4,19 +4,6 @@ const selectAllQiOrderCheckList = `SELECT q.qcr_code ,q.inspection_item, q.range
                                    FROM qcr_tbl q
                                    JOIN common_code c ON q.unit = c.com_value`;
 
-//검사지시서가 없는 재고목록 전체 불러오기
-const selectAllMinbndList = `SELECT * 
-                             FROM minbnd_tbl 
-                            WHERE qio_code = null`;
-
-// `SELECT q.qio_code, m.inbnd_date, b.mat_name, b.mat_code, sum(m.inbnd_qtt) sum, c.note, c2.com_value, c2.note
-//  FROM qio_tbl q
-//  JOIN minbnd_tbl m ON q.qio_code = m.qio_code
-//  JOIN bom_mat b ON m.mat_code = b.mat_code
-//  JOIN common_code c ON m.unit = c.com_value
-//  JOIN common_code c2 ON m.mat_type = c2.com_value
-//  GROUP BY q.qio_code, m.mat_code`;
-
 // qio_code 생성
 const createQioCode = `SELECT concat(
                               'QIO-', DATE_FORMAT(?, '%y%m%d'), '-',
@@ -32,9 +19,37 @@ const selectAllQiOrderList = `SELECT *
                               FROM qio_tbl q
                               JOIN emp_tbl e ON q.emp_code = e.emp_code`;
 
+// 검사지에 해당하는 자재 및 검사항목 불러오기
+const selectQiOrderItem = `SELECT q.qio_code, m.inbnd_date, b.mat_name, b.mat_code, b.mat_type, m.inbnd_qtt, c.note, c2.com_value, c2.note, q2.inspection_item    
+                           FROM qio_tbl q
+                           JOIN minbnd_tbl m ON q.qio_code = m.qio_code
+                           JOIN bom_mat b ON m.mat_code = b.mat_code
+                           JOIN common_code c ON m.unit = c.com_value
+                           JOIN common_code c2 ON m.mat_type = c2.com_value
+                           LEFT JOIN qcr_tbl q2 on b.mat_type = q2.com_value
+                           where q.qio_code = ?
+                           group by q.qio_code, q2.inspection_item`;
+
+// 생산실적 불러오기
+const selectQiProduceList = `SELECT p.prdr_code, p.end_date, p.production_qtt, c.note
+                             FROM prdr_tbl p 
+                             LEFT JOIN qio_tbl q ON p.prdr_code = q.prdr_code
+                             JOIN common_code c ON p.stat = c.com_value  
+                             WHERE q.prdr_code is null`;
+
+// 발주서상세 불러오기
+const selectQiMpoList = `SELECT m.mpo_d_code, b.mat_code, b.mat_name, m.req_qtt, c2.note 'mat_type' 
+                         FROM mpo_d_tbl m 
+                         LEFT JOIN qio_tbl q ON m.mpo_d_code = q.mpo_d_code 
+                         JOIN bom_mat b ON m.mat_code = b.mat_code
+                         JOIN common_code c2 ON b.mat_type = c2.com_value
+                         WHERE qio_code IS NULL`;
+
 module.exports = {
   selectAllQiOrderCheckList,
-  selectAllMinbndList,
   createQioCode,
   selectAllQiOrderList,
+  selectQiOrderItem,
+  selectQiProduceList,
+  selectQiMpoList,
 };

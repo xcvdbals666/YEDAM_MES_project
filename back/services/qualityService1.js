@@ -8,20 +8,34 @@ const findAllQiOrderCheckList = async () => {
   return list;
 };
 
-// 재고목록 전체 불러오기
-const findAllMinbndList = async () => {
-  let list = await mysql.query("selectAllMinbndList", [], "quality1");
-  return list;
-};
-
 // 검사지 전체 불러오기
 const findAllQiOrderList = async () => {
   let list = await mysql.query("selectAllQiOrderList", [], "quality1");
   return list;
 };
 
+// 검사지에 해당하는 자재 및 검사항목 불러오기
+const findQiOrderItemInfo = async (qio_code) => {
+  let list = await mysql.query("selectQiOrderItem", [qio_code], "quality1");
+  return list;
+};
+
+// 생산실적 불러오기
+const findQiProduceList = async () => {
+  let list = await mysql.query("selectQiProduceList", [], "quality1");
+  return list;
+};
+
+// 발주서상세 목록 불러오기
+const findQiMpoList = async () => {
+  let list = await mysql.query("selectQiMpoList", [], "quality1");
+  return list;
+};
+
 module.exports = {
   findAllQiOrderCheckList,
-  findAllMinbndList,
   findAllQiOrderList,
+  findQiOrderItemInfo,
+  findQiProduceList,
+  findQiMpoList,
 };
