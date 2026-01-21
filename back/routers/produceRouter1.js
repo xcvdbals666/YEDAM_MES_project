@@ -26,7 +26,7 @@ router.get(`/prdpListActive`, async (req, res) => {
   res.send(list);
 });
 
-//작업지시서 : 생산계획 상세 + 제품명 가져오기 (prdp_code로 가져오기)
+//작업지시서 : 생산계획 상세 + 제품명 + 공정유형 가져오기 (prdp_code로 가져오기)
 router.get(`/prdpDetail/:prdpCode`, async (req, res) => {
   const { prdpCode } = req.params;
   const list = await produceService.findPrdpDetail(prdpCode);
@@ -35,6 +35,12 @@ router.get(`/prdpDetail/:prdpCode`, async (req, res) => {
 
 //제품 목록 중복없이 조회
 router.get(`/allProductsList`, async (req, res) => {
+  const list = await produceService.findAllPrdDistinct();
+  res.send(list);
+});
+
+//공정유형 조회
+router.get(`/allPoTypeList`, async (req, res) => {
   const list = await produceService.findAllPrdDistinct();
   res.send(list);
 });

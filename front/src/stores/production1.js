@@ -7,12 +7,19 @@ export const useProductionsStore = defineStore('productions', () => {
   const wkoList = ref([]);
   const loading = ref(false);
   const error = ref(null);
-  const lines = ref([]); //라인 드롭다운으로 받아오게
+  const lines = ref([]); //라인 드롭다운으로 받음
+  const potypes = ref([]); //공정유형 드롭다운으로 받음
 
   //라인목록 조회
   const fetchLines = async () => {
     const res = await axios.get('/api/produce/allLineList');
     lines.value = res.data;
+  };
+
+  //라인 공정유형 조회
+  const fetchAllPoType = async () => {
+    const res = await axios.get('/api/produce/allPoTypeList');
+    potypes.value = res.data;
   };
 
   // 검색조건
@@ -64,10 +71,10 @@ export const useProductionsStore = defineStore('productions', () => {
     await fetchWorkOrders();
   };
 
+
   //##########################
   //모달 리스트띄우기
   //##########################
-
   //로딩중인지, 에러났는지 상태관리
   const prdpList = ref([]);
   const prdpLoading = ref(false);
@@ -93,7 +100,6 @@ export const useProductionsStore = defineStore('productions', () => {
     const res = await axios.get('/api/produce/allProductsList');
     allProducts.value = res.data;
   };
-
   //#########################
   //모달 끝
   //#########################
@@ -133,6 +139,8 @@ export const useProductionsStore = defineStore('productions', () => {
     wko,
     lines,
     fetchLines,
+    potypes,
+    fetchAllPoType,
     fetchWorkOrders,
     search,
     reset,

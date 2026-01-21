@@ -7,14 +7,17 @@
   생산 라인도 선택된 제품이 사용 가능한 라인만 조회됩니다.
   작업 지시서 불러오기 버튼으로 등록된 작업 지시서를 수정할 수 있습니다 
   -->
+
+<!-- 제품코드로 조인해서 prod_proc_tbl에서 정형/비정형 불러오기 -->
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { useProductionsStore } from '@/stores/production1';
 import { storeToRefs } from 'pinia';
 
 const store = useProductionsStore();
-const { prdpList, prdpLoading, prdpError, prdpItems, allProducts } = storeToRefs(store);
+const { prdpList, prdpLoading, prdpError, prdpItems, allProducts, lines } = storeToRefs(store);
 
+//날짜 자르기
 const convertDate = (d) => {
   if (!d) return '';
   return d.slice(0, 10);
@@ -33,7 +36,7 @@ const form = ref({
   end_date: '',
   stat: '',
   line_code: '',
-  line_type: ''
+  po_type: ''
 });
 
 const prdpModalOpen = ref(false);
@@ -51,6 +54,7 @@ const applySelectedPlan = async () => {
   form.value.prdp_date = convertDate(selectedPlan.value.prdp_date);
   form.value.start_date = convertDate(selectedPlan.value.start_date);
   form.value.end_date = convertDate(selectedPlan.value.end_date);
+
   // 선택한 생산계획의 d테이블 상세 품목 조회(by prdp_code), 드롭다운 옵션 생성
   const items = await store.fetchPrdpItems(form.value.prdp_code);
 
@@ -58,9 +62,14 @@ const applySelectedPlan = async () => {
     form.value.prod_code = items[0].prod_code;
     form.value.wko_qtt = items[0].planned_qtt;
     form.value.line_code = items[0].line_code;
+    form.value.po_type = items[0].po_type;
+
   } else {
     form.value.prod_code = '';
     form.value.wko_qtt = '';
+    form.value.line_code = '';
+    form.value.po_type = '';
+
   }
 
   prdpModalOpen.value = false;
@@ -68,18 +77,31 @@ const applySelectedPlan = async () => {
 
 //제품명 드롭다운
 const onProdChange = () => {
-  //생산계획 안불러오고 작업시 자동세팅
+  //생산계획 안불러오고 작업시 자동세팅X
   if (!form.value.prdp_code) return;
 
-  const found = (prdpItems.value ?? []).find((x) => x.prod_code === form.value.prod_code);
-  form.value.wko_qtt = found ? found.planned_qtt : '';
-  form.value.line_code = found ? found.line_code : '';
-  form.value.line_type = found ? found.line_type : '';
+  // 드롭다운에서 고른 생산계획
+  const selectedProdCode = form.value.prod_code;
+
+  // 생산계획 상세 목록(prdpItems)에서 같은 제품코드를 가진 항목을 찾기
+  const found = prdpItems.value.find((item) => item.prod_code === selectedProdCode);
+
+  // 결과가 있으면(found가 null/undefined가 아니면) 자동으로 값 채우기
+  if (found) {
+    form.value.wko_qtt = found.planned_qtt;
+    form.value.line_code = found.line_code;
+    form.value.po_type= found.po_type;
+
+  } else {
+    // 못 찾았으면 값 비우기(안전장치)
+    form.value.wko_qtt = '';
+    form.value.line_code = '';
+    form.value.po_type = '';
+  }
 };
 
 const productOptions = computed(() => {
   if (form.value.prdp_code) return prdpItems.value;
-
   return allProducts.value;
 });
 
@@ -163,12 +185,12 @@ onMounted(() => {
 
       <div class="col-span-12 lg:col-span-6 flex items-center gap-3">
         <label class="w-28 shrink-0 text-lg font-semibold">공정 유형</label>
-        <input type="text" v-model="form.line_type" class="p-inputtext w-full" readonly />
+        <Dropdown v-model="form.po_type" :options="potypes" optionLabel= "po_type" optionValue="po_type" placeholder="공정유형 선택" class="w-full" />
       </div>
 
       <div class="col-span-12 lg:col-span-6 flex items-center gap-3">
         <label class="w-28 shrink-0 text-lg font-semibold">라인 코드</label>
-        <input type="text" v-model="form.line_code" class="p-inputtext w-full" />
+        <Dropdown v-model="form.line_code" :options="lines" optionLabel= "line_code" optionValue="line_code" placeholder="라인 선택" class="w-full" />
       </div>
 
       <div class="col-span-12 lg:col-span-6 flex items-center gap-3"></div>
@@ -197,6 +219,14 @@ onMounted(() => {
 </template>
 
 <style scoped>
+
+:deep(.p-datatable-frozen-tbody) {
+font-weight: bold;
+}
+
+:deep(.p-datatable-scrollable .p-frozen-column) {
+  font-weight: bold;
+}
 .pf-grid {
   display: flex;
   flex-wrap: wrap;

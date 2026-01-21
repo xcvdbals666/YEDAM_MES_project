@@ -52,7 +52,7 @@ const findPrdpActive = async () => {
   return list;
 };
 
-//작업지시서 : 생산계획 상세 + 제품명 가져오기 (prdp_code로 가져오기)
+//작업지시서 : 생산계획 상세 + 제품명 + 공정유형 가져오기 (prdp_code로 가져오기)
 const findPrdpDetail = async (prdpCode) => {
   const list = await mysql.query("selectPrdpDetail", [prdpCode], "produce1");
   return list;
@@ -64,10 +64,17 @@ const findAllPrdDistinct = async () => {
   return list;
 };
 
+//공정유형 조회
+const findAllPoType = async () => {
+  const list = await mysql.query("selectAllPoType", [], "produce1");
+  return list;
+}
+
 module.exports = {
   searchWorkOrders,
   findAllLinesDJ,
   findPrdpActive,
   findPrdpDetail,
   findAllPrdDistinct,
+  findAllPoType,
 };
