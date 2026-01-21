@@ -53,9 +53,9 @@ const confirm = () => {
 
     <DataTable :value="store.mprList" v-model:selection="selectedMpr" selectionMode="single" dataKey="mpr_code" scrollable scrollHeight="400px">
       <Column selectionMode="single" style="width: 3rem" />
-      <Column field="mpr_code" header="요청서 번호" />
-      <Column field="reqdate" header="요청일" />
-      <Column field="mcode" header="요청자" />
+      <Column field="mpr_code" header="요청서 번호" style="width: 120px" />
+      <Column field="reqdate" header="요청일" style="width: 120px" />
+      <Column field="mcode" header="요청자" style="width: 120px" />
       <Column field="material_names" header="자재명" />
     </DataTable>
 
