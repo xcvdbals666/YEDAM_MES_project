@@ -78,7 +78,6 @@ const findAllPrdDistinct = async () => {
 
 //작업지시서 등록하기
 const updateWorkOrder = async (data) => {
-
   const {
     wko_code,
     start_date,
@@ -88,10 +87,18 @@ const updateWorkOrder = async (data) => {
     wko_qtt,
     end_date,
     line_code,
-    wko_name
+    wko_name,
   } = data;
 
-  if (!wko_code || !start_date || !stat || !prod_code || !wko_qtt || !line_code || !wko_name) {
+  if (
+    !wko_code ||
+    !start_date ||
+    !stat ||
+    !prod_code ||
+    !wko_qtt ||
+    !line_code ||
+    !wko_name
+  ) {
     throw new Error("필수값 누락");
   }
 
@@ -104,13 +111,21 @@ const updateWorkOrder = async (data) => {
     wko_qtt,
     end_date || null,
     line_code,
-    wko_name
+    wko_name,
   ];
 
   const result = await mysql.query("insertWorkOrder", params, "produce1");
   return { ok: true, wko_code, result };
 };
 
+//불러온 작업지시서 삭제하기
+const removeWorkOrder = async (wko_code) => {
+  if (!wko_code) throw new Error("해당 코드에 대한 작업지시서 없음");
+
+  const result = await mysql.query("deleteWorkOrder", [wko_code], "produce1");
+
+  return { ok: true, wko_code, result };
+};
 
 module.exports = {
   searchWorkOrders,
@@ -118,5 +133,6 @@ module.exports = {
   findPrdpActive,
   findPrdpDetail,
   findAllPrdDistinct,
-  updateWorkOrder
+  updateWorkOrder,
+  removeWorkOrder,
 };

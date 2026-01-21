@@ -52,10 +52,17 @@ VALUES
   (?, ?, ?, NULL, ?, ?, NULL, ?, NOW(), ?, ?, ?)
 `;
 
+//불러온 작업지시서 삭제하기
+const deleteWorkOrder = `
+DELETE FROM wko_tbl
+WHERE wko_code = ?
+`;
+
 module.exports = {
   selectAllLinesDJ,
   selectPrdpActive,
   selectPrdpDetail,
   selectAllPrdDistinct,
   insertWorkOrder,
+  deleteWorkOrder,
 };

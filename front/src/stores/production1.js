@@ -64,7 +64,6 @@ export const useProductionsStore = defineStore('productions', () => {
     await fetchWorkOrders();
   };
 
-
   //###################################
   //모달 생산계획서 리스트 띄우기
   //###################################
@@ -97,7 +96,6 @@ export const useProductionsStore = defineStore('productions', () => {
   //생산계획서 리스트 모달 끝
   //###################################
 
-
   //생산계획서에 딸린 계획서 디테일 테이블에서 데이터 가져오기
   const prdpItems = ref([]);
   const prdpItemsLoading = ref(false);
@@ -127,9 +125,15 @@ export const useProductionsStore = defineStore('productions', () => {
       const res = await axios.post('/api/produce/workorderInsert', formData);
       return res.data;
     } catch (e) {
-      console.error("작업지시서 저장 중 에러 발생:", e);
+      console.error('작업지시서 저장 중 에러 발생:', e);
       throw e;
     }
+  };
+
+  //불러온 작업지시서 삭제하기
+  const deleteWorkOrderByWkoCode = async (wkoCode) => {
+    const res = await axios.delete(`api/produce/workOrderRemove/${wkoCode}`);
+    return res.data;
   };
 
   return {
@@ -157,6 +161,7 @@ export const useProductionsStore = defineStore('productions', () => {
     prdpItemsLoading,
     prdpItemsError,
     fetchPrdpItems,
-    insertWorkOrder
+    insertWorkOrder,
+    deleteWorkOrderByWkoCode
   };
 });

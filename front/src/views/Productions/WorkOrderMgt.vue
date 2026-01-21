@@ -13,7 +13,7 @@
 import { ref, onMounted, computed } from 'vue';
 import { useProductionsStore } from '@/stores/production1';
 import { storeToRefs } from 'pinia';
-import 'primeicons/primeicons.css'
+import 'primeicons/primeicons.css';
 
 const store = useProductionsStore();
 const { wkoList, prdpList, prdpLoading, prdpError, prdpItems, allProducts, lines } = storeToRefs(store);
@@ -31,7 +31,6 @@ const statusMap = {
   v4: '작업취소'
 };
 
-
 const selectedPlan = ref(null); //모달에서 생산계획 하나 선택
 
 //초기 폼 (리셋에 사용)
@@ -46,16 +45,16 @@ const emptyForm = {
   end_date: '',
   stat: 'v1',
   line_code: '',
-  wko_name:''
+  wko_name: ''
 };
 
 //초기폼 복제해서 값 채워질 용도 form 생성
-const form = ref({...emptyForm});
+const form = ref({ ...emptyForm });
 
-const resetForm = ()=>{
-  form.value = {...emptyForm}
+const resetForm = () => {
+  form.value = { ...emptyForm };
   selectedPlan.value = null;
-}
+};
 
 const prdpModalOpen = ref(false);
 
@@ -79,7 +78,6 @@ const openWkoListModal = async () => {
   });
 };
 
-
 //생산계획 선택
 const applySelectedPlan = async () => {
   if (!selectedPlan.value) return;
@@ -96,12 +94,10 @@ const applySelectedPlan = async () => {
     form.value.prod_code = items[0].prod_code;
     form.value.wko_qtt = items[0].planned_qtt;
     form.value.line_code = items[0].line_code;
-
   } else {
     form.value.prod_code = '';
     form.value.wko_qtt = '';
     form.value.line_code = '';
-
   }
 
   prdpModalOpen.value = false;
@@ -122,7 +118,6 @@ const onProdChange = () => {
   if (found) {
     form.value.wko_qtt = found.planned_qtt;
     form.value.line_code = found.line_code;
-
   } else {
     // 못 찾았으면 값 비우기(안전장치)
     form.value.wko_qtt = '';
@@ -139,34 +134,34 @@ onMounted(() => {
   store.fetchAllPrdDistinct();
 });
 
-//wko_code 번호 자동으로 만들어 삽입하기 
-//저장버튼 누르는 순간 실행! 
+//wko_code 번호 자동으로 만들어 삽입하기
+//저장버튼 누르는 순간 실행!
 const saveWorkOrder = async () => {
   const now = new Date();
   const year = now.getFullYear();
   // 월, 일은 10보다 작으면 앞에'0을 붙여서 2자리로
   const month = String(now.getMonth() + 1).padStart(2, '0');
   const day = String(now.getDate()).padStart(2, '0');
-  const todayDate = `${year}${month}${day}`; 
+  const todayDate = `${year}${month}${day}`;
   const prefix = `WKO-${todayDate}`;
 
   // 중복 피하기 위해 DB에서 최신 목록을 한 번 더 - store에 fetchWorkOrders 실행
   await store.fetchWorkOrders();
 
   // wkoList에서 오늘 만든 번호만 골라냄
-  const todayOrders = wkoList.value.filter(item => {
+  const todayOrders = wkoList.value.filter((item) => {
     return item.wko_code && item.wko_code.startsWith(prefix);
   });
 
-  let nextNumber = 1; 
+  let nextNumber = 1;
 
   // 오늘 등록된 데이터가 있으면 젤 큰 번호를 찾아 +1
   if (todayOrders.length > 0) {
-    const numbers = todayOrders.map(item => {
-      //- 기준으로 쪼개서 
+    const numbers = todayOrders.map((item) => {
+      //- 기준으로 쪼개서
       const parts = item.wko_code.split('-');
       // 3번째(인덱스 2번)를 숫자로 변환
-      return parseInt(parts[2]); 
+      return parseInt(parts[2]);
     });
     // 찾아낸 숫자들 중 가장 큰 값에 1 더함
     nextNumber = Math.max(...numbers) + 1;
@@ -180,13 +175,12 @@ const saveWorkOrder = async () => {
     // 스토어에 새로 만든 insertWorkOrder 함수를 호출
     await store.insertWorkOrder(form.value);
     alert(`저장이 완료되었습니다! 생성된 번호: ${form.value.wko_code}`);
-  
+
     resetForm();
     await store.fetchWorkOrders();
-    
   } catch (error) {
-    console.error("저장 에러 발생:", error);
-    alert("저장에 실패했습니다.");
+    console.error('저장 에러 발생:', error);
+    alert('저장에 실패했습니다.');
   }
 };
 
@@ -212,6 +206,22 @@ const applySelectedWko = async () => {
 
   wkoListModalOpen.value = false;
 };
+
+//불러온 작업지시서 삭제하기
+const deleteCurrentWko = async () => {
+  const code = form.value.wko_code;
+
+  if (!code) {
+    alert('삭제할 작업 지시서를 먼저 불러오세요');
+    return;
+  }
+
+  if (!confirm(`[${code}] 작업지시서를 삭제할까요?`)) return;
+
+  await store.deleteWorkOrderByWkoCode(code);
+  alert(`${code}를 삭제했습니다`);
+  resetForm();
+};
 </script>
 
 <template>
@@ -220,17 +230,17 @@ const applySelectedWko = async () => {
       <div class="font-semibold text-xl">기본정보</div>
 
       <div class="flex gap-2">
-        <button class="p-button p-button-danger">삭제</button>
+        <button class="p-button p-button-danger" @click="deleteCurrentWko">삭제</button>
         <button class="p-button p-button-secondary" @click="resetForm">초기화</button>
         <button class="p-button p-button-info" @click="saveWorkOrder">저장</button>
-        <button class="p-button p-button-success" @click="openWkoListModal">작업지시서 불러오기</button>      
+        <button class="p-button p-button-success" @click="openWkoListModal">작업지시서 불러오기</button>
       </div>
     </div>
 
     <div class="grid grid-cols-12 gap-3">
       <div class="col-span-12 lg:col-span-6 flex items-center gap-3">
         <label class="w-28 shrink-0 text-lg font-semibold">작업지시번호</label>
-        <input type="text" class="p-inputtext w-full" readonly/>
+        <input type="text" class="p-inputtext w-full" v-model="form.wko_code" readonly />
       </div>
 
       <div class="col-span-12 lg:col-span-5 flex items-center gap-3">
@@ -238,13 +248,8 @@ const applySelectedWko = async () => {
         <input type="text" class="p-inputtext w-full" v-model="form.prdp_code" readonly />
       </div>
 
-      
       <div class="col-span-12 lg:col-span-1 flex items-center gap-3">
-        <Button 
-          icon="pi pi-search"
-          class="p-button-success custom-btn"
-          @click="openPrdpModal"
-        />      
+        <Button icon="pi pi-search" class="p-button-success custom-btn" @click="openPrdpModal" />
       </div>
 
       <div class="col-span-12 lg:col-span-6 flex items-center gap-3">
@@ -298,12 +303,12 @@ const applySelectedWko = async () => {
 
       <div class="col-span-12 lg:col-span-6 flex items-center gap-3">
         <label class="w-28 shrink-0 text-lg font-semibold">라인 코드</label>
-        <Dropdown v-model="form.line_code" :options="lines" optionLabel= "line_code" optionValue="line_code" placeholder="라인 선택" class="w-full" />
+        <Dropdown v-model="form.line_code" :options="lines" optionLabel="line_code" optionValue="line_code" placeholder="라인 선택" class="w-full" />
       </div>
 
-      <div class="col-span-12 lg:col-span-12 flex items-center gap-3">        
+      <div class="col-span-12 lg:col-span-12 flex items-center gap-3">
         <label class="w-28 shrink-0 text-lg font-semibold">작업이름</label>
-        <input type="text" class="p-inputtext w-full" v-model="form.wko_name"/>
+        <input type="text" class="p-inputtext w-full" v-model="form.wko_name" />
       </div>
     </div>
   </div>
@@ -330,16 +335,7 @@ const applySelectedWko = async () => {
 
   <!-- 모달창에 작업지시서 리스트 띄우기 -->
   <Dialog v-model:visible="wkoListModalOpen" modal header="작업지시서 불러오기" :style="{ width: '70vw' }">
-    <DataTable
-      :value="wkoList"
-      scrollable
-      scrollHeight="400px"
-      dataKey="wko_code"
-      v-model:selection="selectedWko"
-      selectionMode="single"
-    >
-
-    
+    <DataTable :value="wkoList" scrollable scrollHeight="400px" dataKey="wko_code" v-model:selection="selectedWko" selectionMode="single">
       <Column selectionMode="single" headerStyle="width:3rem" />
       <Column field="wko_code" header="작업지시번호" />
       <Column field="prdp_code" header="생산계획번호" />
@@ -349,18 +345,18 @@ const applySelectedWko = async () => {
         <template #body="{ data }">
           {{ convertDate(data.start_date) }}
         </template>
-      </Column>    
+      </Column>
       <Column field="line_code" header="라인" />
       <Column header="완료예정일">
         <template #body="{ data }">
           {{ convertDate(data.end_date) }}
         </template>
-      </Column>        
+      </Column>
       <Column header="상태">
         <template #body="{ data }">
           {{ statusMap[data.stat] ?? data.stat }}
         </template>
-      </Column>      
+      </Column>
       <Column field="line_code" header="라인" />
     </DataTable>
 
@@ -372,9 +368,8 @@ const applySelectedWko = async () => {
 </template>
 
 <style scoped>
-
 :deep(.p-datatable-frozen-tbody) {
-font-weight: bold;
+  font-weight: bold;
 }
 
 :deep(.p-datatable-scrollable .p-frozen-column) {
