@@ -25,8 +25,9 @@ const findByCodeOrNamePrdp = async (data) => {
 };
 
 // 생산계획 상세 제품 조회
-const findPrdpDetail = async (prdpCode) => {
-  let list = await mysql.query("selectPrdpDetail", [prdpCode], "produce2");
+const findPrdpDetail = async (data) => {
+  const { prdp_code } = data;
+  let list = await mysql.query("selectPrdpDetail", [prdp_code], "produce2");
   return list;
 };
 
@@ -64,10 +65,126 @@ const findByCodeOrNameLine = async (data) => {
   return list;
 };
 
+// 생산계획 저장
+const modifyPrdp = async (data) => {
+  const { prod, info } = data;
+  let prdpCode = info.prdpCode;
+  let resObj = { status: "success", prdpCode: "" };
+  // 생산계획 저장
+  try {
+    let prdpResult = null;
+    if (info.prdpCode.startsWith("PRDP")) {
+      prdpResult = await mysql.query(
+        "updatePrdp",
+        [
+          info.prdpName,
+          info.startDate.slice(0, 10),
+          info.endDate.slice(0, 10),
+          info.ordCode,
+          info.dueDate.slice(0, 10),
+          info.note,
+          info.prdpCode,
+        ],
+        "produce2",
+      );
+    } else {
+      const month = `${info.prdpDate.slice(0, 4)}${info.prdpDate.slice(5, 7)}`;
+      const number =
+        Number(
+          (await mysql.query("selectMaxCodePrdp", [month], "produce2"))[0]
+            .number,
+        ) + 1;
+      prdpCode = `PRDP-${month}-${String(number).padStart(4, "0")}`;
+      prdpResult = await mysql.query(
+        "insertPrdp",
+        [
+          prdpCode,
+          info.prdpName,
+          info.prdpDate.slice(0, 10),
+          info.startDate.slice(0, 10),
+          info.endDate.slice(0, 10),
+          info.dueDate.slice(0, 10),
+          info.note,
+          info.ordCode,
+          info.reg,
+        ],
+        "produce2",
+      );
+    }
+    resObj.prdpCode = prdpCode;
+    // 생산계획 상세 제품 목록 저장
+    for (const data of prod) {
+      let result = null;
+      if (data.is_delete) {
+        // 행 삭제
+        result = await mysql.query(
+          "deletePrdpDetail",
+          [data.prdp_d_code],
+          "produce2",
+        );
+      } else if (data.prdp_d_code.startsWith("PRDP")) {
+        // 행 수정
+        result = await mysql.query(
+          "updatePrdpDetail",
+          [
+            data.prod_code,
+            data.planned_qtt,
+            data.priority,
+            data.line_code,
+            data.prdp_d_code,
+          ],
+          "produce2",
+        );
+      } else {
+        // 행 추가
+        const number =
+          Number(
+            (await mysql.query("selectMaxCodePrdpDetail", null, "produce2"))[0]
+              .number,
+          ) + 1;
+        const prdp_d_code = `PRDP-D-${String(number).padStart(4, "0")}`;
+        result = await mysql.query(
+          "insertPrdpDetail",
+          [
+            prdp_d_code,
+            data.planned_qtt,
+            data.priority,
+            data.prod_code,
+            info.reg,
+            prdpCode,
+            data.line_code,
+          ],
+          "produce2",
+        );
+      }
+    }
+  } catch (err) {
+    resObj.status = "fail";
+    console.log(err);
+  }
+  return resObj;
+};
+
+const removePrdp = async (data) => {
+  const { code } = data; // prdp_code
+  const resObj = { status: "success" };
+  try {
+    await mysql.query("deleteDetailPrdp", [code], "produce2");
+    await mysql.query("deletePrdp", [code], "produce2");
+  } catch (err) {
+    resObj.status = "fail";
+    console.log(err);
+  }
+  return resObj;
+};
+
 module.exports = {
   findAllPrdp,
   findByCodeOrNamePrdp,
+  findPrdpDetail,
   findByCodeOrNameOrd,
   findByCodeOrNameProd,
   findByCodeOrNameLine,
+  modifyPrdp,
+  removePrdp,
 };
