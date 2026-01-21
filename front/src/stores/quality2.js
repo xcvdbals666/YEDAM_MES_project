@@ -22,8 +22,8 @@ export const useQualityStore2 = defineStore('quality2', {
     async fetchOrderList() {
       const response = await axios.get('/api/quality/qiorderlist');
       response.data.forEach((data) => {
-        let date = new Date(data.qio_date);
-        data.qio_date = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+        let date = data.qio_date;
+        data.qio_date = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
       });
       this.qiOrderList = response.data;
       console.log('qiOrderList: ', this.qiOrderList);
