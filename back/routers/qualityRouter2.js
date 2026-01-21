@@ -3,6 +3,8 @@ const express = require("express");
 const router = express.Router();
 const qualityService2 = require("../services/qualityService2.js");
 
+// /api/quality/qi-order
+
 router.get("/qi-order", async (req, res) => {
   try {
     const { qio_code } = req.query;
