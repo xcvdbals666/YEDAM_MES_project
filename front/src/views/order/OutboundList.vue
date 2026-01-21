@@ -6,6 +6,7 @@ import SelectManagerModal from '@/components/order/SelectManagerModal.vue';
 import SelectOutModal from '@/components/order/SelectOutModal.vue';
 import SelectProductModal from '@/components/order/SelectProductModal.vue';
 import SelectVendorModal from '@/components/order/SelectVendorModal.vue';
+import { downloadExcel } from '@/utils/excel';
 
 const orderStore = useOrderStore2();
 
@@ -132,7 +133,18 @@ const resetSearch = async () => {
     vendorCode: '',
     vendorName: ''
   };
-  await orderStore.fetchOutbound();
+  errors.value = {
+    outQty: '',
+    date: ''
+  };
+
+  // 초기화 후 전체 조회
+  try {
+    await orderStore.fetchOutbound();
+    page.value = 1;
+  } catch (error) {
+    console.error('전체 조회 실패:', error);
+  }
 };
 
 // 조회 버튼 클릭 시
@@ -181,6 +193,23 @@ const formatDate = (v) => {
   const m = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
   return `${y}.${m}.${day}`;
+};
+
+/**
+ * 엑셀 다운로드
+ * 현재 조회된 출고 목록을 엑셀 파일로 다운로드
+ * 파일명: 출고조회_YYYY-MM-DD.xlsx
+ */
+const handleExcelDownload = () => {
+  // 엑셀 파일의 컬럼명 (순서 중요)
+  const headers = ['출고번호', '출고제품', '요청수량', '실출고 수량', '미출고 수량', '출고요청일', '출고담당자', '거래처', '상태'];
+
+  // 각 출고 데이터를 엑셀 행으로 변환
+  // 주의: headers 배열 순서와 동일하게 매핑해야 함
+  const mapFunction = (item) => [item.out_req_code, item.prod_name, item.req_qtt, item.outbnd_qtt, item.un_qtt, formatDate(item.out_req_date), item.emp_name, item.client_name, statusMap[item.stat]?.label || item.stat];
+
+  // 엑셀 다운로드 실행
+  downloadExcel(orderStore.outboundList, headers, mapFunction, '출고조회');
 };
 </script>
 <template>
@@ -250,7 +279,7 @@ const formatDate = (v) => {
       <p class="text-lg font-bold text-gray-800">검색 결과</p>
 
       <div class="flex gap-2 pb-6">
-        <Button label="엑셀 다운로드" raised icon="pi pi-file-excel" />
+        <Button label="엑셀 다운로드" raised icon="pi pi-file-excel" @click="handleExcelDownload" />
       </div>
     </div>
 

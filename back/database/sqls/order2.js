@@ -59,6 +59,12 @@ WHERE (? IS NULL OR r.out_req_code = ?)
 ORDER BY r.out_req_date DESC
 `;
 
+// 출고 상세페이지(주문정보)
+
+// 출고 상세페이지(출고정보)
+
+// 출고 상세페이지(제품내역)
+
 module.exports = {
   selectAllOutreqtbl,
   searchOutreqtbl,
