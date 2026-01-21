@@ -18,13 +18,9 @@ order by 1 desc`;
 // 주문 상세 조회
 const selectOrderDetailByCode = `SELECT ord_d_code,
 		    unit,
-        (SELECT note
-        FROM common_code c
-        WHERE d.unit=c.com_value) AS unit_note,
+        com_note(unit) AS unit_note,
         spec,
-        (SELECT note
-        FROM common_code c
-        WHERE d.spec=c.com_value) AS spec_note,
+        com_note(spec) AS spec_note,
         ord_amount,
         prod_price,
         date_format(delivery_date,'%Y-%m-%d') AS delivery_date,
@@ -37,10 +33,9 @@ const selectOrderDetailByCode = `SELECT ord_d_code,
         (SELECT com_value
         FROM prod_tbl p
         WHERE p.prod_code = d.prod_code) AS com_value,
-        (SELECT c.note
-        FROM common_code c
-        JOIN prod_tbl p ON p.prod_code = d.prod_code
-        WHERE c.com_value=p.com_value) AS com_note
+        (SELECT com_note(com_value)
+        FROM prod_tbl p
+        WHERE p.prod_code = d.prod_code) AS com_note
 FROM ord_d_tbl d
 WHERE ord_code = ?`;
 
@@ -60,27 +55,41 @@ const selectAllProducts = `SELECT prod_code,
         prod_name,
         edate,
         unit,
-        (SELECT note
-        FROM common_code c
-        WHERE p.unit=c.com_value) AS unit_note,
+        com_note(unit) AS unit_note,
         spec,
-        (SELECT note
-        FROM common_code c
-        WHERE p.spec=c.com_value) AS spec_note,
+        com_note(spec) AS spec_note,
         note,
         com_value,
-        (SELECT note
-        FROM common_code c
-        WHERE p.com_value=c.com_value) AS com_note,
+        com_note(com_value) AS com_note,
         prod_type
 FROM prod_tbl p
 WHERE is_used = 'f2'
 AND prod_type = 'i1'`;
 
+const insertOrder = `INSERT INTO ord_tbl 
+                      SET ?`;
+
+const insertOrderDetail = `INSERT INTO ord_d_tbl (
+        unit,
+        spec,
+        ord_amount,
+        prod_price,
+        delivery_date,
+        ord_priority,
+        total_price,
+        ord_code,  
+        prod_code  
+      ) 
+VALUES ?`;
+const selectOrderCode = `SELECT create_ord_code() as ord_code
+FROM dual`;
 module.exports = {
   selectAllOrder,
   selectAllClient,
   selectAllEmployees,
   selectAllProducts,
   selectOrderDetailByCode,
+  insertOrder,
+  insertOrderDetail,
+  selectOrderCode,
 };

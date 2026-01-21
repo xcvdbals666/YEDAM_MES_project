@@ -14,8 +14,7 @@ const orderInfo = ref({
   ord_stat: null,
   client_code: null,
   mcode: '',
-  note: '',
-  ord_d_tbl: products.value
+  note: ''
 });
 // //우선순위 배열
 // const priority = computed(() => {
@@ -34,8 +33,7 @@ const resetBtn = () => {
     ord_stat: null,
     client_code: null,
     mcode: '',
-    note: '',
-    ord_d_tbl: products.value
+    note: ''
   };
   products.value = [{ selected: false, prod_code: '', unit: 'ea', spec: '', ord_amount: '', prod_price: '', delivery_date: '', ord_priority: '', total_price: '', com_value: '' }];
 };
@@ -131,22 +129,32 @@ const openOrderList = async () => {
 };
 // 모달에서 주문 선택 후 불러오는 함수
 const getOrderInfo = async () => {
-  orderInfo.value = selectedOrder.value;
+  orderInfo.value = { ...selectedOrder.value };
   await order.getOrderDetail(orderInfo.value.ord_code);
-  products.value = order.details;
+  products.value = JSON.parse(JSON.stringify(order.details));
   console.log(products.value);
   ordVisible.value = false;
 };
 
 // 저장버튼 이벤트 함수
-const saveBtn = () => {
+
+const saveBtn = async () => {
   if (orderInfo.value.ord_code.length == 0) {
     // ord_code가 없으면(길이가 0임.) 신규등록
     console.log(`ord_code's length 0`);
-    order.registerOrder(orderInfo.value);
+    let result = await order.registerOrder(orderInfo.value, products.value);
+    orderInfo.value.ord_code = result;
+    await order.getOrderDetail(orderInfo.value.ord_code);
+    products.value = order.details;
   } else {
     // ord_code가 있으면 수정
     console.log(`ord_code's length is not 0`);
+    if (JSON.stringify(orderInfo.value) == JSON.stringify(selectedOrder.value) && JSON.stringify(products.value) == JSON.stringify(order.details)) {
+      alert('수정된게 없음.');
+    } else {
+      let result = await order.updateOrder(orderInfo.value, products.value);
+      console.log(result);
+    }
   }
 };
 // 삭제버튼 이벤트 함수

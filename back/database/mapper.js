@@ -22,6 +22,7 @@ const sqlList = {
 
 const pool = mysql.createPool({
   connectionLimit: 10,
+  namedPlaceholders: true,
   host: process.env.DATABASE_HOST,
   port: process.env.DATABASE_PORT,
   user: process.env.DATABASE_USER,

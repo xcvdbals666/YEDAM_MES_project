@@ -26,10 +26,46 @@ const findAllProducts = async () => {
   let list = await mysql.query("selectAllProducts", [], "order1");
   return list;
 };
+const addOrder = async (order, orderDetail) => {
+  console.log(order);
+  console.log(orderDetail);
+  let result = await mysql.query("selectOrderCode", [], "order1");
+  let ordCode = result[0].ord_code;
+  // ord_code 받아오기
+  order.ord_code = ordCode;
+  order.ord_stat = "a1";
+  // 주문 등록
+  let rows = await mysql.query("insertOrder", [order], "order1");
+  // 주문상세 데이터 정리
+  const detailValues = orderDetail.map((item) => [
+    item.unit,
+    item.spec,
+    item.ord_amount,
+    item.prod_price,
+    item.delivery_date,
+    item.ord_priority,
+    item.total_price,
+    ordCode,
+    item.prod_code,
+  ]);
+  console.log(detailValues);
+  // 주문상세 등록
+  let detailResult = await mysql.query(
+    "insertOrderDetail",
+    [detailValues],
+    "order1",
+  );
+  return ordCode;
+};
+const modifyOrder = async (order, orderDetail) => {
+  let orderResult = await mysql.query("updateOrder", [order], "order1");
+  let detailResult = await mysql.query("updateDetail", [orderDetail]);
+};
 module.exports = {
   findAllOrder,
   findAllClient,
   findAllEmployees,
   findAllProducts,
   findOrderDetailByCode,
+  addOrder,
 };
