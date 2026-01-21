@@ -19,6 +19,15 @@ const store = useMaterialStore();
 const selected = ref(null);
 const keyword = ref('');
 
+// 날짜 포맷
+const formatDate = (val) => {
+  const d = new Date(val);
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+};
+
 const CONFIG = {
   employee: {
     title: '작성자 선택',
@@ -56,15 +65,24 @@ const CONFIG = {
     dataKey: 'mpr_code',
     columns: [
       { field: 'mpr_code', header: '요청서 번호' },
-      { field: 'reqdate', header: '요청일' },
+      { field: 'reqdate', header: '요청일', formatter: (row) => formatDate(row.reqdate) },
       { field: 'mcode', header: '요청자' },
-      { field: 'mpr_code', header: '자재명' }
+      { field: 'material_names', header: '자재명' }
+    ]
+  },
+
+  client: {
+    title: '공급업체 선택',
+    placeholder: '공급업체명을 입력해주세요',
+    fetch: (keyword) => store.fetchClientList({ keyword }),
+    list: () => store.clientList,
+    dataKey: 'client_code',
+    columns: [
+      { field: 'client_code', header: '공급업체 번호' },
+      { field: 'client_name', header: '공급업체명' },
+      { field: 'note', header: '거래처유형' }
     ]
   }
-
-  // 필요하면 여기 계속 추가
-  // mpr: { ... }
-  // client: { ... }
 };
 
 const config = computed(() => CONFIG[props.type]);
@@ -115,7 +133,11 @@ const confirm = () => {
 
       <Column selectionMode="single" style="width: 3rem" />
 
-      <Column v-for="col in config.columns" :key="col.field" :field="col.field" :header="col.header" />
+      <Column v-for="col in config.columns" :key="col.field" :header="col.header"
+        ><template #body="{ data }">
+          {{ col.formatter ? col.formatter(data) : data[col.field] }}
+        </template>
+      </Column>
     </DataTable>
 
     <template #footer>

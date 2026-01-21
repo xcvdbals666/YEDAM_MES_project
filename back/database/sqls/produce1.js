@@ -62,10 +62,12 @@ FROM prod_tbl
 ORDER BY prod_code
 `;
 
-//공정유형 조회
-const selectAllPoType = `
-SELECT DISTINCT po_type
-FROM prod_proc_tbl
+//작업지시서 등록하기
+const insertWorkOrder = `
+INSERT INTO wko_tbl
+  (wko_code, start_date, stat, note, prdp_code, prod_code, emp_code, wko_qtt, reg_date, end_date, line_code, wko_name)
+VALUES
+  (?, ?, ?, NULL, ?, ?, NULL, ?, NOW(), ?, ?, ?)
 `;
 
 module.exports = {
@@ -74,5 +76,5 @@ module.exports = {
   selectPrdpActive,
   selectPrdpDetail,
   selectAllPrdDistinct,
-  selectAllPoType,
+  insertWorkOrder,
 };

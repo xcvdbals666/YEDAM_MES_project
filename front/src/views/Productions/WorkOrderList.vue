@@ -9,16 +9,19 @@ const store = useProductionsStore();
 const { wkoList, loading, error, from, to, stat, line, name, wko, lines } = storeToRefs(store);
 
 const statusOptions = [
-  { label: '진행중', value: 'v1' },
-  { label: '작업완료', value: 'v2' },
-  { label: '작업보류', value: 'v3' }
+  { label: '작업대기', value: 'v1' },
+  { label: '작업보류', value: 'v2' },
+  { label: '진행중', value: 'v3' },
+  { label: '작업취소', value: 'v4' }
+
 ];
 
 //
 const statusMap = {
-  v1: '진행중',
-  v2: '작업완료',
-  v3: '작업보류'
+  v1: '작업대기',
+  v2: '작업보류',
+  v3: '진행중',
+  v4: '작업취소'
 };
 
 onMounted(() => {
@@ -83,7 +86,7 @@ onMounted(() => {
 
     <DataTable :value="wkoList" :loading="loading" paginator :rows="10" showGridlines>
       <Column field="wko_code" header="지시서번호" />
-      <Column field="wko_name" header="제품명" />
+      <Column field="prod_name" header="제품명" />
       <Column field="line_code" header="라인코드" />
       <Column field="start_date" header="시작시간" />
       <Column field="end_date" header="완료예정일" />

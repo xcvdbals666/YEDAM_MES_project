@@ -31,6 +31,17 @@ router.get(`/productList`, async (req, res) => {
   let list = await orderService.findAllProducts();
   res.send(list);
 });
-// // 주문등록
-// router.post(`/order`,async)
+
+// 주문등록
+router.post(`/order`, async (req, res) => {
+  let { order, orderDetail } = req.body;
+  let result = await orderService.addOrder(order, orderDetail);
+  res.send(result);
+});
+// 주문등록
+router.put(`/order`, async (req, res) => {
+  let { order, orderDetail } = req.body;
+  let result = await orderService.modifyOrder(order, orderDetail);
+  res.send(result);
+});
 module.exports = router;

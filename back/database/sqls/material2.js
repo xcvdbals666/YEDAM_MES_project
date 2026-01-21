@@ -11,7 +11,7 @@ const selectMaxMprDCode = `SELECT IFNULL(MAX(mpr_d_code), 'MPR-D-000') AS last_c
 const selectAllMrpCodeMrpTbl = `SELECT mrp_code, plan_date FROM mrp_tbl order by plan_date desc`;
 
 // 자재 선택 - 자재 정보 조회
-const selectByMatCodeMatTbl = `SELECT m.mat_code, m.mat_name, m.unit,
+const selectByMatCodeMatTbl = `SELECT m.mat_code, m.mat_name, m.unit, c2.note as unit_label,
 	                                    IFNULL(s.current_qty, 0) AS current_qty,
                                       CASE
                                         WHEN IFNULL(d.req_qtt, 0) - (IFNULL(s.current_qty, 0) 
@@ -24,6 +24,7 @@ const selectByMatCodeMatTbl = `SELECT m.mat_code, m.mat_name, m.unit,
                                       c.client_name
                                FROM mat_tbl m
                                LEFT JOIN client_tbl c ON c.client_code = m.sup
+                               LEFT JOIN common_code c2 ON c2.com_value = m.unit
                                LEFT JOIN (SELECT mat_code, IFNULL(SUM(inbnd_qtt), 0) - IFNULL(SUM(outbnd_qtt), 0) AS current_qty
                                           FROM (SELECT mat_code, inbnd_qtt, 0 AS outbnd_qtt
                                                 FROM minbnd_tbl
@@ -60,13 +61,26 @@ const selectAllMprTbl = `SELECT m.mpr_code, m.reqdate, m.mcode, m.deadline, m.mr
                          GROUP BY m.mpr_code,m.reqdate, m.mcode, m.deadline,m.mrp_code
                          ORDER BY m.mpr_code DESC`;
 
+// 자재구매요청 상세 정보 조회 - 요청자재상세
+const selectByMprCodeMprDTbl = `SELECT m.mpr_code, mt.mat_name, d.mat_code, m.reqdate,
+                                       d.req_qtt, d.unit, d.note, c.client_name,
+                                       c2.note as unit_label
+                                FROM mpr_d_tbl d
+                                JOIN mpr_tbl m ON d.mpr_code = m.mpr_code
+                                JOIN mat_tbl mt ON d.mat_code = mt.mat_code
+                                JOIN client_tbl c ON d.mat_sup = c.client_code
+                                JOIN common_code c2 ON c2.com_value = d.unit
+                                WHERE m.mpr_code = ?`;
+
 // 공급업체 목록 조회
-const selectAllClientTbl = `SELECT client_code, client_name, client_type
-                            FROM client_tbl
+const selectAllClientTbl = `SELECT client_code, client_name, client_type, c2.note
+                            FROM client_tbl c
+                            JOIN common_code c2 ON c2.com_value = c.client_type
                             WHERE client_name like ?`;
 
 module.exports = {
   selectByMatCodeMatTbl,
+  selectByMprCodeMprDTbl,
   selectMaxMprCode,
   selectMaxMprDCode,
   selectAllMrpCodeMrpTbl,

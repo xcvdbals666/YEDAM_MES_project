@@ -56,7 +56,7 @@ const data = computed({
 
           <th>납기일자</th>
           <td>
-            <DatePicker v-model="data.deadline" dateFormat="yy-mm-dd" :showIcon="true" :showButtonBar="true" placeholder="날짜 선택" class="w-full" />
+            <DatePicker v-model="data.deadline" dateFormat="yy-mm-dd" :showIcon="true" :showButtonBar="true" placeholder="납기일자 선택" class="w-full" />
           </td>
         </tr>
 
