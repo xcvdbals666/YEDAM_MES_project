@@ -4,7 +4,7 @@ import Header from '@/layout/Header.vue';
 import Sidebar from '@/layout/Sidebar.vue';
 import { RouterView } from 'vue-router';
 import { useLayout } from '@/layout/composables/layout';
-import { computed } from 'vue';
+import { computed, onMounted } from 'vue';
 
 const { layoutConfig, layoutState, hideMobileMenu } = useLayout();
 
@@ -16,6 +16,10 @@ const containerClass = computed(() => {
     'layout-mobile-active': layoutState.mobileMenuActive,
     'layout-static-inactive': layoutState.staticMenuInactive
   };
+});
+
+onMounted(() => {
+  localStorage.setItem('user', JSON.stringify({ emp_code: 'EMP-10001', emp_name: '김영업' }));
 });
 </script>
 

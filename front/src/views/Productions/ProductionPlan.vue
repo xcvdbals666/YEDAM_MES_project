@@ -4,26 +4,62 @@ import { reactive, ref } from 'vue';
 
 const store = useProductionStore();
 
-const displayOrderModal = ref(false);
-const displayProdModal = ref(false);
-const displayLineModal = ref(false);
-const searchKeyword = ref('');
-const selectedOrder = ref({});
-const selectedProd = ref({});
-const selectedLine = ref({});
-const selectedProdList = ref([]);
-const orderList = ref([]);
-const prodList = ref([]);
-const lineList = ref([]);
-const planProdList = ref([]);
-const idx = ref(null);
-let rownum = 0;
+// 공통코드 번역
+const type = {
+  j1: '봉지라면',
+  j2: '컵라면'
+};
+const unit = {
+  h1: '킬로그램(kg)',
+  h2: '톤(t)',
+  h3: '리터(L)',
+  h4: '개(ea)',
+  h5: '박스(box)',
+  h6: '그램(g)',
+  h7: '밀리미터(mm)',
+  h8: '퍼센트(%)',
+  h9: '센티미터(cm)',
+  ha: '뉴턴(N)'
+};
+const spec = {
+  o1: '47cm x 30cm x 30cm',
+  o2: '40ea',
+  o3: '45cm x 35cm x 30cm',
+  o4: '16ea',
+  o5: '40cm x 30cm x 30cm',
+  o6: '12ea',
+  o7: '120g',
+  o8: '65g',
+  o9: '110g',
+  oa: '20ea'
+};
 
+const displayPrdpModal = ref(false); // 생산계획 모달
+const displayOrderModal = ref(false); // 주문 모달
+const displayProdModal = ref(false); // 제품 모달
+const displayLineModal = ref(false); // 라인 모달
+const searchKeyword = ref(''); // 검색어
+const selectedPrdp = ref({}); // 생산계획 모달에서 선택한 데이터
+const selectedOrder = ref({}); // 주문 모달에서 선택한 데이터
+const selectedProd = ref({}); // 제품 모달에서 선택한 데이터
+const selectedLine = ref({}); // 라인 모달에서 선택한 데이터
+const selectedProdList = ref([]); // 제품목록에서 선택한 데이터
+const prdpList = ref([]); // 검색한 생산계획 목록
+const orderList = ref([]); // 검색한 주문 목록
+const prodList = ref([]); // 검색한 제품 목록
+const lineList = ref([]); // 검색한 라인 목록
+const planProdList = ref([]); // 행으로 추가한 제품 목록
+const idx = ref(null); // 선택한 인덱스(제품 및 라인 검색 결과 적용 용도)
+let rownum = 0; // 데이터테이블 인덱스 컨트롤러
+const user = JSON.parse(localStorage.getItem('user'));
+
+// 생산계획 정보
 const planInfo = reactive({
   prdpCode: '',
-  prdpName: '',
+  prdpName: '', // 추후에 세션에서 가져오게
   prdpDate: new Date(),
-  reg: '',
+  reg: user.emp_code,
+  empName: user.emp_name,
   startDate: '',
   endDate: '',
   ordCode: '',
@@ -37,9 +73,10 @@ const remove = () => {};
 // 생산계획 초기화
 const reset = () => {
   planInfo.prdpCode = '';
-  planInfo.prdpName = '';
-  planInfo.prdpDate = '';
-  planInfo.reg = '';
+  planInfo.prdpName = ''; // 추후에 세션에서 가져오게
+  planInfo.prdpDate = new Date();
+  planInfo.reg = user.emp_code;
+  planInfo.empName = user.emp_name;
   planInfo.startDate = '';
   planInfo.endDate = '';
   planInfo.ordCode = '';
@@ -50,13 +87,53 @@ const reset = () => {
 // 생산계획 저장
 const save = () => {};
 
-// 생산계획 불러오기
-const load = () => {};
+// 생산계획 모달 열기
+const openPrdpModal = () => {
+  displayPrdpModal.value = true;
+};
+
+// 생산계획 모달 닫기
+const closePrdpModal = () => {
+  displayPrdpModal.value = false;
+};
+
+// 생산계획 선택
+const selectPrdp = async () => {
+  planInfo.prdpCode = selectedPrdp.value.prdp_code;
+  planInfo.prdpName = selectedPrdp.value.prdp_name;
+  planInfo.prdpDate = new Date(selectedPrdp.value.prdp_date);
+  planInfo.reg = selectedPrdp.value.reg;
+  planInfo.empName = selectedPrdp.value.emp_name;
+  planInfo.startDate = new Date(selectedPrdp.value.start_date);
+  planInfo.endDate = new Date(selectedPrdp.value.end_date);
+  planInfo.ordCode = selectedPrdp.value.ord_code;
+  planInfo.dueDate = new Date(selectedPrdp.value.due_date);
+  planInfo.note = selectedPrdp.value.note;
+  prdpList.value = [];
+  searchKeyword.value = '';
+
+  // 생산계획 제품목록 가져오기
+  const list = await store.fetchPlanProds(prdpCode);
+  planProdList.value = list;
+
+  closePrdpModal();
+};
+
+// 생산계획 검색
+const searchPrdp = async () => {
+  const list = await store.fetchPrdps({ q: searchKeyword.value });
+  prdpList.value = list.map((item, idx) => ({
+    idx: idx,
+    ...item
+  }));
+  console.log(prdpList.value);
+};
 
 // 주문 검색 모달 열기
 const openOrderModal = () => {
   displayOrderModal.value = true;
 };
+
 // 주문 검색 모달 닫기
 const closeOrderModal = () => {
   displayOrderModal.value = false;
@@ -82,7 +159,7 @@ const searchOrder = async () => {
 
 // 행 추가
 const addList = () => {
-  const row = reactive({
+  const row = {
     idx: rownum,
     prodCode: '',
     prodName: '',
@@ -92,10 +169,11 @@ const addList = () => {
     plannedQtt: 0,
     priority: 0,
     lineCode: ''
-  });
+  };
   rownum += 1;
   planProdList.value.push(row);
 };
+
 // 선택 제품 삭제
 const deleteList = () => {
   if (!selectedProdList.value || selectedProdList.value.length === 0) {
@@ -105,10 +183,10 @@ const deleteList = () => {
   if (confirm('정말 삭제하시겠습니까?')) {
     planProdList.value = planProdList.value.filter((row) => !selectedProdList.value.includes(row));
     selectedProdList.value = [];
+    alert('삭제되었습니다.');
   } else {
     return;
   }
-  // 선택 초기화
 };
 
 // 라인 검색 모달 열기
@@ -133,6 +211,7 @@ const selectLine = () => {
 // 라인 검색
 const searchLine = async () => {
   const list = await store.fetchLines({ q: searchKeyword.value });
+  console.log(list);
   lineList.value = list.map((item, idx) => ({
     idx: idx,
     ...item
@@ -155,6 +234,10 @@ const selectProd = () => {
   searchKeyword.value = '';
   prodList.value = [];
   planProdList.value[idx.value].prodCode = selectedProd.value.prod_code;
+  planProdList.value[idx.value].prodName = selectedProd.value.prod_name;
+  planProdList.value[idx.value].comValue = selectedProd.value.com_value;
+  planProdList.value[idx.value].unit = selectedProd.value.unit;
+  planProdList.value[idx.value].spec = selectedProd.value.spec;
   closeProdModal();
 };
 
@@ -176,7 +259,7 @@ const searchProd = async () => {
           <Button icon="pi pi-trash" label="삭제" severity="danger" @click="remove"></Button>
           <Button icon="pi pi-undo" label="초기화" severity="secondary" @click="reset"></Button>
           <Button icon="pi pi-save" label="저장" @click="save"></Button>
-          <Button icon="pi pi-plus" label="생산계획 불러오기" severity="info" @click="load"></Button>
+          <Button icon="pi pi-plus" label="생산계획 불러오기" severity="info" @click="openPrdpModal"></Button>
         </div>
       </div>
       <Fluid>
@@ -198,7 +281,7 @@ const searchProd = async () => {
               <th>계획일자</th>
               <td><DatePicker :showIcon="true" :showButtonBar="true" v-model="planInfo.prdpDate" disabled></DatePicker></td>
               <th>작성자</th>
-              <td><InputText v-model="planInfo.reg" disabled></InputText></td>
+              <td><InputText v-model="planInfo.empName" disabled></InputText></td>
             </tr>
             <tr>
               <th>계획시작일</th>
@@ -226,6 +309,53 @@ const searchProd = async () => {
           </tbody>
         </table>
       </Fluid>
+
+      <!-- 생산계획 검색 모달 -->
+      <Dialog header="생산계획 검색" v-model:visible="displayPrdpModal" :breakpoints="{ '960px': '75vw' }" :style="{ width: '90vw' }" :modal="true">
+        <Fluid class="pb-4">
+          <IconField iconPosition="left">
+            <InputText type="text" placeholder="생산계획 코드 또는 계획명 검색" v-model="searchKeyword" @keyup.enter="searchPrdp" />
+            <InputIcon class="pi pi-search" @click="searchPrdp" />
+          </IconField>
+        </Fluid>
+        <DataTable :value="prdpList" v-model:selection="selectedPrdp" :paginator="true" :rows="10" dataKey="idx" :rowHover="true" showGridlines>
+          <template #empty>
+            <div class="text-center py-6 text-gray-400">데이터 없음</div>
+          </template>
+          <Column selectionMode="single" style="width: 4px; text-align: center" />
+          <Column field="prdp_code" header="생산계획코드" headerClass="table-header" bodyClass="table-body" style="width: 140px" />
+          <Column field="prdp_name" header="계획명" headerClass="table-header" bodyClass="table-body" style="width: 140px" />
+          <Column field="prdp_date" header="계획일자" headerClass="table-header" bodyClass="table-body" style="width: 95px">
+            <template #body="{ data }">
+              {{ data.prdp_date.slice(0, 10) }}
+            </template>
+          </Column>
+          <Column field="start_date" header="계획시작일" headerClass="table-header" bodyClass="table-body" style="width: 95px">
+            <template #body="{ data }">
+              {{ data.start_date.slice(0, 10) }}
+            </template>
+          </Column>
+          <Column field="end_date" header="계획종료일" headerClass="table-header" bodyClass="table-body" style="width: 95px">
+            <template #body="{ data }">
+              {{ data.end_date.slice(0, 10) }}
+            </template>
+          </Column>
+          <Column field="due_date" header="납기일자" headerClass="table-header" bodyClass="table-body" style="width: 95px">
+            <template #body="{ data }">
+              {{ data.due_date.slice(0, 10) }}
+            </template>
+          </Column>
+          <Column field="emp_name" header="작성자" headerClass="table-header" bodyClass="table-body" style="width: 60px" />
+          <Column field="ord_code" header="주문코드" headerClass="table-header" bodyClass="table-body" style="width: 140px" />
+          <Column field="note" header="비고" headerClass="table-header" bodyClass="table-body" style="width: 100px" />
+        </DataTable>
+        <template #footer>
+          <div class="flex gap-2 justify-center">
+            <Button label="확인" @click="selectPrdp" />
+            <Button label="취소" @click="closePrdpModal" />
+          </div>
+        </template>
+      </Dialog>
 
       <!-- 주문 검색 모달 -->
       <Dialog header="주문코드 검색" v-model:visible="displayOrderModal" :breakpoints="{ '960px': '75vw' }" :style="{ width: '80vw' }" :modal="true">
@@ -279,11 +409,19 @@ const searchProd = async () => {
         <Column field="prodName" header="제품명" headerClass="table-header" bodyClass="table-body" style="width: 120px"></Column>
         <Column field="comValue" header="제품유형" headerClass="table-header" bodyClass="table-body" style="width: 120px">
           <template #body="{ data }">
-            {{ data.comValue == 'J1' ? '봉지라면' : data.comValue == 'J2' ? '컵라면' : '' }}
+            {{ type[data.comValue] }}
           </template>
         </Column>
-        <Column field="unit" header="단위" headerClass="table-header" bodyClass="table-body" style="width: 120px"></Column>
-        <Column field="spec" header="규격" headerClass="table-header" bodyClass="table-body" style="width: 120px"></Column>
+        <Column field="unit" header="단위" headerClass="table-header" bodyClass="table-body" style="width: 120px">
+          <template #body="{ data }">
+            {{ unit[data.unit] }}
+          </template>
+        </Column>
+        <Column field="spec" header="규격" headerClass="table-header" bodyClass="table-body" style="width: 120px">
+          <template #body="{ data }">
+            {{ spec[data.spec] }}
+          </template>
+        </Column>
         <Column field="planedQtt" header="목표수량" headerClass="table-header" bodyClass="table-body" style="width: 80px">
           <template #body="{ data }">
             <InputNumber v-model="data.plannedQtt" showButtons mode="decimal" inputClass="w-30" :min="0"></InputNumber>
@@ -317,11 +455,23 @@ const searchProd = async () => {
             <div class="text-center py-6 text-gray-400">데이터 없음</div>
           </template>
           <Column selectionMode="single" style="width: 4px; text-align: center" />
-          <Column field="prod_code" header="제품코드" headerClass="table-header" bodyClass="table-body" style="width: 140px" />
-          <Column field="prod_name" header="제품명" headerClass="table-header" bodyClass="table-body" style="width: 120px" />
-          <Column field="com_value" header="유형" headerClass="table-header" bodyClass="table-body" style="width: 60px" />
-          <Column field="unit" header="단위" headerClass="table-header" bodyClass="table-body" style="width: 140px" />
-          <Column field="spec" header="규격" headerClass="table-header" bodyClass="table-body" style="width: 95px" />
+          <Column field="prod_code" header="제품코드" headerClass="table-header" bodyClass="table-body" style="width: 140px"></Column>
+          <Column field="prod_name" header="제품명" headerClass="table-header" bodyClass="table-body" style="width: 120px"></Column>
+          <Column field="com_value" header="유형" headerClass="table-header" bodyClass="table-body" style="width: 60px">
+            <template #body="{ data }">
+              {{ type[data.com_value] }}
+            </template>
+          </Column>
+          <Column field="unit" header="단위" headerClass="table-header" bodyClass="table-body" style="width: 140px">
+            <template #body="{ data }">
+              {{ unit[data.unit] }}
+            </template>
+          </Column>
+          <Column field="spec" header="규격" headerClass="table-header" bodyClass="table-body" style="width: 95px">
+            <template #body="{ data }">
+              {{ spec[data.spec] }}
+            </template>
+          </Column>
         </DataTable>
         <template #footer>
           <div class="flex gap-2 justify-center">
