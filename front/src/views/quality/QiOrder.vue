@@ -1,17 +1,15 @@
 <!-- QiOrder.vue -->
 <!-- 검사지시서 관리 페이지-->
 <script setup>
-import QiOrderHeader from '../../components/quality1/QiOrderHeader.vue'; // 검사지시서 불러오기
-import QiOrderItem from '../../components/quality1/QiOrderItem.vue'; // 검사지시서 재고불러오기, 생산실적 불렁괴
-import QiOrderMain from '../../components/quality1/QiOrderMain.vue'; // 검사 항목 테이블
-import SelectMinbndModal from '../../components/quality1/modal/SelectMinbndModal.vue'; // 자재 불러오기 모달창
-import SelectQiOrderModal from '../../components/quality1/modal/SelectQiOrderModal.vue'; // 지시서 불러오기 모달창
-import SelectQiProduceModal from '../../components/quality1/modal/SelectQiProduceModal.vue'; // 생산실적 불러오기 모달창
+import QiOrderHeader from '../../components/quality/QiOrderHeader.vue'; // 검사지시서 불러오기
+import QiOrderItem from '../../components/quality/QiOrderItem.vue'; // 검사지시서 재고불러오기, 생산실적 불렁괴
+import QiOrderMain from '../../components/quality/QiOrderMain.vue'; // 검사 항목 테이블
+import SelectMinbndModal from '../../components/quality/modal/SelectMinbndModal.vue'; // 자재 불러오기 모달창
+import SelectQiOrderModal from '../../components/quality/modal/SelectQiOrderModal.vue'; // 지시서 불러오기 모달창
+import SelectQiProduceModal from '../../components/quality/modal/SelectQiProduceModal.vue'; // 생산실적 불러오기 모달창
 import { useQuality1Store } from '../../stores/quality1';
 
 import { onBeforeMount, ref } from 'vue';
-import axios from 'axios';
-
 const quality1 = useQuality1Store();
 
 onBeforeMount(async () => {
@@ -27,12 +25,9 @@ let minbndList = ref([{ qio_code: '', mat_code: '', mat_name: '', inspection_ite
 let display = ref(false); // 모달창 오픈 위해서
 
 const searchMinbndList = async () => {
-  await axios //
-    .get('quality/minbndlist')
-    .then((res) => {
-      minbndList.value = res.data;
-      console.log(minbndList.value);
-    });
+  await quality1.fetchQiMpoList();
+  minbndList.value = quality1.qiMpoList;
+
   display.value = true;
 };
 
@@ -63,8 +58,8 @@ const selectComp = (data) => {
   }
 };
 
-// QiOrderItem의 항목 채우기(모달창 선택값)
-let seletedMinbnd = ref({ note: '', mat_code: '', mat_name: '', inbnd_qtt: '' });
+// QiOrderItem의 항목 채우기(검사지 불러오기 모달창 선택값)
+let seletedMinbnd = ref({ mpo_d_code: '', mat_code: '', mat_name: '', req_qtt: '', mat_type: '' });
 
 // QiOrderMain의 값 선택하기(모달창 선택값)
 let selectedQcrList = ref([]);

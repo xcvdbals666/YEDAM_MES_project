@@ -10,12 +10,6 @@ router.get(`/qiorder`, async (req, res) => {
   res.send(list);
 });
 
-// 재고목록 전체 불러오기
-router.get(`/minbndlist`, async (req, res) => {
-  let list = await qualityService.findAllMinbndList();
-  res.send(list);
-});
-
 // 검사지 전체 불러오기
 router.get(`/qiorderlist`, async (req, res) => {
   let list = await qualityService.findAllQiOrderList();
@@ -32,6 +26,12 @@ router.get(`/qiorderiteminfo/:id`, async (req, res) => {
 // 검사지 전체 불러오기
 router.get(`/qiproducelist`, async (req, res) => {
   let list = await qualityService.findQiProduceList();
+  res.send(list);
+});
+
+// 발주서상세 목록 불러오기
+router.get("/qimpolist", async (req, res) => {
+  let list = await qualityService.findQiMpoList();
   res.send(list);
 });
 module.exports = router;

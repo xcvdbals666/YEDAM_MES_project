@@ -10,7 +10,7 @@ const props = defineProps({
 </script>
 <template>
   <Dialog v-model:visible="props.display" :breakpoints="{ '960px': '75vw' }" :style="{ width: '50vw' }" :modal="true">
-    <DataTable ref="dt" v-model:selection="selectedProducts" :value="props.produceList" dataKey="qio_code">
+    <DataTable ref="dt" v-model:selection="selectedProducts" :value="props.produceList" dataKey="prdr_code">
       <template #header>
         <div class="flex flex-wrap gap-2 items-center justify-between">
           <h4 class="m-0">생산실적 불러오기</h4>

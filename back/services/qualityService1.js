@@ -8,12 +8,6 @@ const findAllQiOrderCheckList = async () => {
   return list;
 };
 
-// 재고목록 전체 불러오기
-const findAllMinbndList = async () => {
-  let list = await mysql.query("selectAllMinbndList", [], "quality1");
-  return list;
-};
-
 // 검사지 전체 불러오기
 const findAllQiOrderList = async () => {
   let list = await mysql.query("selectAllQiOrderList", [], "quality1");
@@ -32,10 +26,16 @@ const findQiProduceList = async () => {
   return list;
 };
 
+// 발주서상세 목록 불러오기
+const findQiMpoList = async () => {
+  let list = await mysql.query("selectQiMpoList", [], "quality1");
+  return list;
+};
+
 module.exports = {
   findAllQiOrderCheckList,
-  findAllMinbndList,
   findAllQiOrderList,
   findQiOrderItemInfo,
   findQiProduceList,
+  findQiMpoList,
 };

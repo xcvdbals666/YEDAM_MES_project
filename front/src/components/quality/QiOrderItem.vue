@@ -8,7 +8,7 @@ const props = defineProps({
 const emit = defineEmits();
 
 // 항목에 채울 내용
-let QiOrderItemInput = ref({ note: '', mat_code: '', mat_name: '', inbnd_qtt: '' });
+let QiOrderItemInput = ref({ qio_code: '', mat_code: '', mat_name: '', inspection_item: '', com_value: '', note: '', sum: '' });
 QiOrderItemInput.value = props.selectedMinbnd;
 </script>
 <template>
