@@ -13,16 +13,38 @@ export const useOrderStore2 = defineStore('order2', {
     employees: []
   }),
   actions: {
-    // 출고 조회
-    async fetchOutbound() {
+    // 출고 조회 + 검색
+    async fetchOutbound(searchParams = {}) {
       try {
-        const res = await axios.get(`/api${url}/outbounds`);
+        // 날짜 포맷 함수
+        const formatDateForAPI = (date) => {
+          if (!date) return null;
+          const d = new Date(date);
+          const y = d.getFullYear();
+          const m = String(d.getMonth() + 1).padStart(2, '0');
+          const day = String(d.getDate()).padStart(2, '0');
+          return `${y}-${m}-${day}`;
+        };
+
+        // 검색 파라미터 구성
+        const params = {};
+
+        if (searchParams?.outCode) params.out_req_code = searchParams.outCode;
+        if (searchParams?.prodCode) params.prod_code = searchParams.prodCode;
+        if (searchParams?.outQtyStart) params.req_qtt_min = searchParams.outQtyStart;
+        if (searchParams?.outQtyEnd) params.req_qtt_max = searchParams.outQtyEnd;
+        if (searchParams?.empCode) params.emp_code = searchParams.empCode;
+        if (searchParams?.vendorCode) params.client_code = searchParams.vendorCode;
+        if (searchParams?.dateStart) params.date_start = formatDateForAPI(searchParams.dateStart);
+        if (searchParams?.dateEnd) params.date_end = formatDateForAPI(searchParams.dateEnd);
+
+        const res = await axios.get(`/api${url}/outbounds`, { params });
         // console.log('api 응답: ', res.data);
 
         this.outboundList = res.data;
         // console.log('Pinia state: ', this.outboundList);
       } catch (err) {
-        console.error(err);
+        console.error('출고 조회 실패: ', err);
         throw err;
       }
     },

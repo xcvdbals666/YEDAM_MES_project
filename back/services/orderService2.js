@@ -104,10 +104,36 @@ const findByEmpcodeEmpTbl = async (keyword) => {
   return mysql.rquery(sql, params);
 };
 
+// 출고 조회 검색
+const findSearchOutreqtbl = async (params) => {
+  const queryParams = [
+    params.out_req_code || null,
+    params.out_req_code || null,
+    params.prod_code || null,
+    params.prod_code || null,
+    params.emp_code || null,
+    params.emp_code || null,
+    params.client_code || null,
+    params.client_code || null,
+    params.req_qtt_min || null,
+    params.req_qtt_min || null,
+    params.req_qtt_max || null,
+    params.req_qtt_max || null,
+    params.date_start || null,
+    params.date_start || null,
+    params.date_end || null,
+    params.date_end || null,
+  ];
+
+  let list = await mysql.query("searchOutreqtbl", queryParams, "order2");
+  return list;
+};
+
 module.exports = {
   findAllOutreqtbl,
   findByOutcodeOutTbl,
   findByCodeProdTbl,
   findByCodeClientTbl,
   findByEmpcodeEmpTbl,
+  findSearchOutreqtbl,
 };
