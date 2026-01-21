@@ -4,36 +4,6 @@ import { reactive, ref } from 'vue';
 
 const store = useProductionStore();
 
-// 공통코드 번역
-const type = {
-  j1: '봉지라면',
-  j2: '컵라면'
-};
-const unit = {
-  h1: '킬로그램(kg)',
-  h2: '톤(t)',
-  h3: '리터(L)',
-  h4: '개(ea)',
-  h5: '박스(box)',
-  h6: '그램(g)',
-  h7: '밀리미터(mm)',
-  h8: '퍼센트(%)',
-  h9: '센티미터(cm)',
-  ha: '뉴턴(N)'
-};
-const spec = {
-  o1: '47cm x 30cm x 30cm',
-  o2: '40ea',
-  o3: '45cm x 35cm x 30cm',
-  o4: '16ea',
-  o5: '40cm x 30cm x 30cm',
-  o6: '12ea',
-  o7: '120g',
-  o8: '65g',
-  o9: '110g',
-  oa: '20ea'
-};
-
 const displayPrdpModal = ref(false); // 생산계획 모달
 const displayOrderModal = ref(false); // 주문 모달
 const displayProdModal = ref(false); // 제품 모달
@@ -50,13 +20,13 @@ const prodList = ref([]); // 검색한 제품 목록
 const lineList = ref([]); // 검색한 라인 목록
 const planProdList = ref([]); // 행으로 추가한 제품 목록
 const idx = ref(null); // 선택한 인덱스(제품 및 라인 검색 결과 적용 용도)
-let rownum = 0; // 데이터테이블 인덱스 컨트롤러
+let rownum = 0; // 임시 인덱스
 const user = JSON.parse(localStorage.getItem('user'));
 
 // 생산계획 정보
 const planInfo = reactive({
   prdpCode: '',
-  prdpName: '', // 추후에 세션에서 가져오게
+  prdpName: '',
   prdpDate: new Date(),
   reg: user.emp_code,
   empName: user.emp_name,
@@ -73,7 +43,7 @@ const remove = () => {};
 // 생산계획 초기화
 const reset = () => {
   planInfo.prdpCode = '';
-  planInfo.prdpName = ''; // 추후에 세션에서 가져오게
+  planInfo.prdpName = '';
   planInfo.prdpDate = new Date();
   planInfo.reg = user.emp_code;
   planInfo.empName = user.emp_name;
@@ -82,10 +52,41 @@ const reset = () => {
   planInfo.ordCode = '';
   planInfo.dueDate = '';
   planInfo.note = '';
+  planProdList.value = [];
 };
 
 // 생산계획 저장
-const save = () => {};
+const save = async () => {
+  if (!planInfo.prdpName) {
+    alert('계획명을 입력해 주십시오.');
+    return;
+  }
+
+  if (!planInfo.startDate) {
+    alert('계획 시작일을 입력해 주십시오.');
+    return;
+  }
+
+  if (!planInfo.endDate) {
+    alert('계획 종료일을 입력해 주십시오.');
+    return;
+  }
+
+  if (!planInfo.dueDate) {
+    alert('납기일자를 입력해 주십시오.');
+    return;
+  }
+
+  if (confirm('저장하시겠습니까?')) {
+    const result = await store.savePrdp(planProdList.value, planInfo);
+    if (result.status == 'success') {
+      planInfo.prdpCode = result.prdpCode;
+      alert('저장되었습니다!');
+    } else {
+      alert('저장에 실패하였습니다.');
+    }
+  }
+};
 
 // 생산계획 모달 열기
 const openPrdpModal = () => {
@@ -111,10 +112,14 @@ const selectPrdp = async () => {
   planInfo.note = selectedPrdp.value.note;
   prdpList.value = [];
   searchKeyword.value = '';
+  selectedPrdp.value = {};
 
   // 생산계획 제품목록 가져오기
-  const list = await store.fetchPlanProds(prdpCode);
-  planProdList.value = list;
+  const list = await store.fetchPlanProds(planInfo.prdpCode);
+  planProdList.value = list.map((item) => ({
+    ...item,
+    is_delete: false
+  }));
 
   closePrdpModal();
 };
@@ -122,11 +127,7 @@ const selectPrdp = async () => {
 // 생산계획 검색
 const searchPrdp = async () => {
   const list = await store.fetchPrdps({ q: searchKeyword.value });
-  prdpList.value = list.map((item, idx) => ({
-    idx: idx,
-    ...item
-  }));
-  console.log(prdpList.value);
+  prdpList.value = list;
 };
 
 // 주문 검색 모달 열기
@@ -142,8 +143,24 @@ const closeOrderModal = () => {
 // 주문 선택
 const selectOrder = () => {
   planInfo.ordCode = selectedOrder.value.ord_code;
+  const row = {
+    prdp_d_code: `TEMP-${rownum}`, // 임시 code 부여 백에서 실제 코드 처리
+    prod_code: selectedOrder.value.prod_code,
+    prod_name: selectedOrder.value.prod_name,
+    emp_code: planInfo.reg,
+    com_value: selectedOrder.value.com_value,
+    unit: selectedOrder.value.unit,
+    spec: selectedOrder.value.spec,
+    planned_qtt: selectedOrder.value.ord_amount,
+    priority: 0,
+    line_code: '',
+    is_delete: false
+  };
+  rownum += 1;
+  planProdList.value.push(row);
   orderList.value = [];
   searchKeyword.value = '';
+  selectedOrder.value = {};
   closeOrderModal();
 };
 
@@ -160,15 +177,17 @@ const searchOrder = async () => {
 // 행 추가
 const addList = () => {
   const row = {
-    idx: rownum,
-    prodCode: '',
-    prodName: '',
-    comValue: '',
+    prdp_d_code: `TEMP-${rownum}`, // 임시 code 부여 백에서 처리
+    prod_code: '',
+    prod_name: '',
+    emp_code: planInfo.reg,
+    com_value: '',
     unit: '',
     spec: '',
-    plannedQtt: 0,
+    planned_qtt: 0,
     priority: 0,
-    lineCode: ''
+    line_code: '',
+    is_delete: false
   };
   rownum += 1;
   planProdList.value.push(row);
@@ -181,7 +200,9 @@ const deleteList = () => {
     return;
   }
   if (confirm('정말 삭제하시겠습니까?')) {
-    planProdList.value = planProdList.value.filter((row) => !selectedProdList.value.includes(row));
+    selectedProdList.value.forEach((row) => {
+      row.is_delete = true;
+    });
     selectedProdList.value = [];
     alert('삭제되었습니다.');
   } else {
@@ -202,16 +223,16 @@ const closeLineModal = () => {
 
 // 라인 선택
 const selectLine = () => {
+  planProdList.value[idx.value].line_code = selectedLine.value.line_code;
   searchKeyword.value = '';
   lineList.value = [];
-  planProdList.value[idx.value].lineCode = selectedLine.value.line_code;
+  selectedLine.value = {};
   closeLineModal();
 };
 
 // 라인 검색
 const searchLine = async () => {
   const list = await store.fetchLines({ q: searchKeyword.value });
-  console.log(list);
   lineList.value = list.map((item, idx) => ({
     idx: idx,
     ...item
@@ -231,13 +252,15 @@ const closeProdModal = () => {
 
 // 제품 선택
 const selectProd = () => {
-  searchKeyword.value = '';
-  prodList.value = [];
-  planProdList.value[idx.value].prodCode = selectedProd.value.prod_code;
-  planProdList.value[idx.value].prodName = selectedProd.value.prod_name;
-  planProdList.value[idx.value].comValue = selectedProd.value.com_value;
+  planProdList.value[idx.value].prod_code = selectedProd.value.prod_code;
+  planProdList.value[idx.value].prod_name = selectedProd.value.prod_name;
+  planProdList.value[idx.value].com_value = selectedProd.value.com_value;
   planProdList.value[idx.value].unit = selectedProd.value.unit;
   planProdList.value[idx.value].spec = selectedProd.value.spec;
+
+  searchKeyword.value = '';
+  prodList.value = [];
+  selectedProd.value = {};
   closeProdModal();
 };
 
@@ -318,7 +341,7 @@ const searchProd = async () => {
             <InputIcon class="pi pi-search" @click="searchPrdp" />
           </IconField>
         </Fluid>
-        <DataTable :value="prdpList" v-model:selection="selectedPrdp" :paginator="true" :rows="10" dataKey="idx" :rowHover="true" showGridlines>
+        <DataTable :value="prdpList" v-model:selection="selectedPrdp" :paginator="true" :rows="10" dataKey="prdp_code" :rowHover="true" showGridlines>
           <template #empty>
             <div class="text-center py-6 text-gray-400">데이터 없음</div>
           </template>
@@ -393,38 +416,26 @@ const searchProd = async () => {
           <Button icon="pi pi-plus" label="행 추가" @click="addList"></Button>
         </div>
       </div>
-      <DataTable v-model:selection="selectedProdList" :value="planProdList" :paginator="true" :rows="8" dataKey="idx" :rowHover="true" showGridlines>
+      <DataTable v-model:selection="selectedProdList" :value="planProdList.filter((row) => !row.is_delete)" :paginator="true" :rows="8" dataKey="prdp_d_code" :rowHover="true" showGridlines>
         <template #empty>
           <div class="text-center py-6 text-gray-400">데이터 없음</div>
         </template>
         <Column selectionMode="multiple" style="width: 20px" />
-        <Column field="prodCode" header="제품코드" headerClass="table-header" bodyClass="table-body" style="width: 120px">
+        <Column field="prod_code" header="제품코드" headerClass="table-header" bodyClass="table-body" style="width: 120px">
           <template #body="{ data, index }">
             <IconField iconPosition="left" class="w-60" @click="openProdModal(index)">
-              <InputText type="text" v-model="data.prodCode" class="w-60" readonly />
+              <InputText type="text" v-model="data.prod_code" class="w-60" readonly />
               <InputIcon class="pi pi-search" />
             </IconField>
           </template>
         </Column>
-        <Column field="prodName" header="제품명" headerClass="table-header" bodyClass="table-body" style="width: 120px"></Column>
-        <Column field="comValue" header="제품유형" headerClass="table-header" bodyClass="table-body" style="width: 120px">
+        <Column field="prod_name" header="제품명" headerClass="table-header" bodyClass="table-body" style="width: 120px"></Column>
+        <Column field="com_value" header="제품유형" headerClass="table-header" bodyClass="table-body" style="width: 120px"> </Column>
+        <Column field="unit" header="단위" headerClass="table-header" bodyClass="table-body" style="width: 120px"> </Column>
+        <Column field="spec" header="규격" headerClass="table-header" bodyClass="table-body" style="width: 120px"> </Column>
+        <Column field="planed_qtt" header="목표수량" headerClass="table-header" bodyClass="table-body" style="width: 80px">
           <template #body="{ data }">
-            {{ type[data.comValue] }}
-          </template>
-        </Column>
-        <Column field="unit" header="단위" headerClass="table-header" bodyClass="table-body" style="width: 120px">
-          <template #body="{ data }">
-            {{ unit[data.unit] }}
-          </template>
-        </Column>
-        <Column field="spec" header="규격" headerClass="table-header" bodyClass="table-body" style="width: 120px">
-          <template #body="{ data }">
-            {{ spec[data.spec] }}
-          </template>
-        </Column>
-        <Column field="planedQtt" header="목표수량" headerClass="table-header" bodyClass="table-body" style="width: 80px">
-          <template #body="{ data }">
-            <InputNumber v-model="data.plannedQtt" showButtons mode="decimal" inputClass="w-30" :min="0"></InputNumber>
+            <InputNumber v-model="data.planned_qtt" showButtons mode="decimal" inputClass="w-30" :min="0"></InputNumber>
           </template>
         </Column>
         <Column field="priority" header="우선순위" headerClass="table-header" bodyClass="table-body" style="width: 80px">
@@ -432,10 +443,10 @@ const searchProd = async () => {
             <InputNumber v-model="data.priority" showButtons mode="decimal" inputClass="w-20" :min="0"></InputNumber>
           </template>
         </Column>
-        <Column field="lineCode" header="생산라인" headerClass="table-header" bodyClass="table-body" style="width: 120px">
+        <Column field="line_code" header="생산라인" headerClass="table-header" bodyClass="table-body" style="width: 120px">
           <template #body="{ data, index }">
             <IconField iconPosition="left" class="w-50" @click="openLineModal(index)">
-              <InputText type="text" v-model="data.lineCode" class="w-50" readonly />
+              <InputText type="text" v-model="data.line_code" class="w-50" readonly />
               <InputIcon class="pi pi-search" />
             </IconField>
           </template>
@@ -455,23 +466,11 @@ const searchProd = async () => {
             <div class="text-center py-6 text-gray-400">데이터 없음</div>
           </template>
           <Column selectionMode="single" style="width: 4px; text-align: center" />
-          <Column field="prod_code" header="제품코드" headerClass="table-header" bodyClass="table-body" style="width: 140px"></Column>
+          <Column field="prod_code" header="제품코드" headerClass="table-header" bodyClass="table-body" style="width: 120px"></Column>
           <Column field="prod_name" header="제품명" headerClass="table-header" bodyClass="table-body" style="width: 120px"></Column>
-          <Column field="com_value" header="유형" headerClass="table-header" bodyClass="table-body" style="width: 60px">
-            <template #body="{ data }">
-              {{ type[data.com_value] }}
-            </template>
-          </Column>
-          <Column field="unit" header="단위" headerClass="table-header" bodyClass="table-body" style="width: 140px">
-            <template #body="{ data }">
-              {{ unit[data.unit] }}
-            </template>
-          </Column>
-          <Column field="spec" header="규격" headerClass="table-header" bodyClass="table-body" style="width: 95px">
-            <template #body="{ data }">
-              {{ spec[data.spec] }}
-            </template>
-          </Column>
+          <Column field="com_value" header="유형" headerClass="table-header" bodyClass="table-body" style="width: 60px"> </Column>
+          <Column field="unit" header="단위" headerClass="table-header" bodyClass="table-body" style="width: 60px"> </Column>
+          <Column field="spec" header="규격" headerClass="table-header" bodyClass="table-body" style="width: 60px"> </Column>
         </DataTable>
         <template #footer>
           <div class="flex gap-2 justify-center">

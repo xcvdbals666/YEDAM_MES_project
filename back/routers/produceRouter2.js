@@ -18,9 +18,9 @@ router.get(`/prdpList`, async (req, res) => {
 });
 
 // 생산계획 상세 제품 조회
-router.get(`/api/produce/planProd/:prdp_code`, async (req, res) => {
-  const prdpCode = req.params;
-  let list = await produceService.findPrdpDetail(prdpCode);
+router.get(`/planProd/:prdp_code`, async (req, res) => {
+  const data = req.params;
+  let list = await produceService.findPrdpDetail(data);
   res.send(list);
 });
 
@@ -43,6 +43,20 @@ router.get(`/lineList`, async (req, res) => {
   const data = req.query;
   let list = await produceService.findByCodeOrNameLine(data);
   res.send(list);
+});
+
+// 생산계획 저장
+router.put(`/prdp`, async (req, res) => {
+  const data = req.body;
+  let result = await produceService.modifyPrdp(data);
+  res.send(result);
+});
+
+// 생산계획 삭제
+router.delete(`/prdp`, async (req, res) => {
+  const data = req.body;
+  let result = await produceService.removePrdp(data);
+  res.send(result);
 });
 
 module.exports = router;

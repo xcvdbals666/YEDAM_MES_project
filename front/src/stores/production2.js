@@ -89,6 +89,26 @@ export const useProductionStore = defineStore('production', {
       } catch (err) {
         console.log(err);
       }
+    },
+
+    // 생산계획 저장
+    async savePrdp(prodList, planInfo) {
+      try {
+        const response = await axios.put('/api/produce/prdp', { prod: prodList, info: planInfo });
+        return response.data;
+      } catch (err) {
+        console.log(err);
+      }
+    },
+
+    // 생산계획 삭제
+    async deletePrdp(prdpCode) {
+      try {
+        const response = await axios.delete('/api/produce/prdp', { code: prdpCode });
+        return response.data;
+      } catch (err) {
+        console.log(err);
+      }
     }
   },
   persist: true
