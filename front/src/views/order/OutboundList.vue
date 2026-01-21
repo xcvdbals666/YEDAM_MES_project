@@ -2,15 +2,16 @@
 <script setup>
 import { onMounted, ref, watch } from 'vue';
 import { useOrderStore2 } from '@/stores/order2';
-import SelectEmployeeModal from '@/components/order/SelectEmployeeModal.vue';
+import SelectManagerModal from '@/components/order/SelectManagerModal.vue';
 import SelectOutModal from '@/components/order/SelectOutModal.vue';
 import SelectProductModal from '@/components/order/SelectProductModal.vue';
 import SelectVendorModal from '@/components/order/SelectVendorModal.vue';
 
 const orderStore = useOrderStore2();
 
+// 전체 조회
 onMounted(async () => {
-  await orderStore.fetchOutbound();
+  await orderStore.fetchOutbound(); // 파라미터 없으면 전체 조회
   console.log('store :', orderStore.outboundList);
 });
 
@@ -117,7 +118,7 @@ const selectVendor = (vendor) => {
 };
 
 // 초기화
-const resetSearch = () => {
+const resetSearch = async () => {
   searchParams.value = {
     outCode: '',
     prodCode: '',
@@ -131,9 +132,10 @@ const resetSearch = () => {
     vendorCode: '',
     vendorName: ''
   };
+  await orderStore.fetchOutbound();
 };
 
-// 조회
+// 조회 버튼 클릭 시
 const handleSearch = async () => {
   // 에러가 있으면 조회 중단
   if (errors.value.outQty || errors.value.date) {
@@ -142,7 +144,7 @@ const handleSearch = async () => {
 
   // 검증 통과 후 API 호출
   try {
-    await orderStore.fetchOutboundWithParams(searchParams.value);
+    await orderStore.fetchOutbound(searchParams.value);
     page.value = 1;
   } catch (error) {
     console.error('검색 실패:', error);
@@ -162,6 +164,13 @@ const onPageChange = (e) => {
 
 // checkbox
 const selectedRows = ref([]);
+
+// 출고 상태 변환
+const statusMap = {
+  q1: { label: '출고 대기', severity: 'danger' },
+  q2: { label: '부분 출고', severity: 'warn' },
+  q3: { label: '출고 완료', severity: 'success' }
+};
 
 // 날짜 포맷
 const formatDate = (v) => {
@@ -279,7 +288,7 @@ const formatDate = (v) => {
 
         <Column header="미출고 수량" headerClass="table-header" bodyClass="table-body" style="width: 100px">
           <template #body="{ data }">
-            {{ data.real_qtt }}
+            {{ data.un_qtt }}
           </template>
         </Column>
 
@@ -303,7 +312,7 @@ const formatDate = (v) => {
 
         <Column header="상태" headerClass="table-header" bodyClass="table-body" style="width: 100px">
           <template #body="{ data }">
-            <Tag :value="data.ord_stat === 'a1' ? '출고완료' : '출고 대기'" :severity="data.ord_stat === 'a1' ? 'success' : 'warning'" rounded />
+            <Tag :value="statusMap[data.stat]?.label || '알수없음'" :severity="statusMap[data.stat]?.severity || 'info'" rounded />
           </template>
         </Column>
       </DataTable>
@@ -311,7 +320,7 @@ const formatDate = (v) => {
   </Fluid>
   <SelectOutModal v-model:visible="showOutModal" @select="selectOut" />
   <SelectProductModal v-model:visible="showProductModal" @select="selectProduct" />
-  <SelectEmployeeModal v-model:visible="showEmpModal" @select="selectEmployee" />
+  <SelectManagerModal v-model:visible="showEmpModal" @select="selectEmployee" />
   <SelectVendorModal v-model:visible="showVendorModal" @select="selectVendor" />
 </template>
 <style scoped>
