@@ -56,9 +56,9 @@ const CONFIG = {
     dataKey: 'mpr_code',
     columns: [
       { field: 'mpr_code', header: '요청서 번호' },
-      { field: 'mpr_code', header: '요청서 번호' },
-      { field: 'mpr_code', header: '요청서 번호' },
-      { field: 'mpr_code', header: '요청서 번호' }
+      { field: 'reqdate', header: '요청일' },
+      { field: 'mcode', header: '요청자' },
+      { field: 'mpr_code', header: '자재명' }
     ]
   }
 
