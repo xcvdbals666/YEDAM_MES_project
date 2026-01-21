@@ -2,14 +2,20 @@
 
 const materialRoutes2 = [
   {
-    path: '/matRequest',
-    name: 'materialRequest',
+    path: '/mprRequest',
+    name: 'mprRequest',
     component: () => import('@/views/material/MprPurchaseRequest.vue')
   },
   {
-    path: '/matList',
-    name: 'materialList',
-    component: () => import('@/views/material/MprCheckRequest.vue')
+    path: '/mprList',
+    name: 'mprRequestList',
+    component: () => import('@/views/material/MprRequestList.vue')
+  },
+  {
+    path: '/mprList/:mprCode',
+    name: 'mprRequestDetail',
+    component: () => import('@/views/material/MprRequestDetail.vue'),
+    props: true
   }
 ];
 

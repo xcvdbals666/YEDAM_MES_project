@@ -2,17 +2,19 @@
 import { ref, onMounted } from 'vue';
 import { useMaterialStore } from '@/stores/material2';
 import MprRequestSearch from '@/components/material/MprRequestSearch.vue';
-import MprRequestList from '@/components/material/MprRequestList.vue';
+import MprRequestHeaderList from '@/components/material/MprRequestHeaderList.vue';
 
 const store = useMaterialStore();
 
-// 검색 조건
+// 검색
 const searchValue = ref({
   mprCode: '',
-  matName: '',
-  matCode: '',
-  reqDate: '',
-  clientCode: ''
+  reqDateFrom: null,
+  reqDateTo: null,
+  deadlineFrom: null,
+  deadlineTo: null,
+  mrpCode: '',
+  mcode: ''
 });
 
 // 날짜 포맷
@@ -29,14 +31,19 @@ const requestList = ref([]);
 
 // 조회(검색)
 const search = async () => {
-  // 값이 있는것만 params로 보냄
+  // 값이 있는 것만 params로 보냄
   const keyword = Object.fromEntries(
     Object.entries({
-      ...searchValue.value,
-      reqDate: searchValue.value.reqDate ? formatDate(searchValue.value.reqDate) : null
+      mprCode: searchValue.value.mprCode || null,
+      reqDateFrom: searchValue.value.reqDateFrom ? formatDate(searchValue.value.reqDateFrom) : null,
+      reqDateTo: searchValue.value.reqDateTo ? formatDate(searchValue.value.reqDateTo) : null,
+      deadlineFrom: searchValue.value.deadlineFrom ? formatDate(searchValue.value.deadlineFrom) : null,
+      deadlineTo: searchValue.value.deadlineTo ? formatDate(searchValue.value.deadlineTo) : null,
+      mrpCode: searchValue.value.mrpCode || null,
+      mcode: searchValue.value.mcode || null
     }).filter(([_, v]) => v)
   );
-  console.log('🔥 부모 keyword:', keyword);
+
   await store.fetchRequest(keyword);
   requestList.value = store.requestList;
 };
@@ -49,10 +56,12 @@ const reset = async (askConfirm = true) => {
 
   searchValue.value = {
     mprCode: '',
-    matName: '',
-    matCode: '',
-    reqDate: '',
-    clientCode: ''
+    reqDateFrom: null,
+    reqDateTo: null,
+    deadlineFrom: null,
+    deadlineTo: null,
+    mrpCode: '',
+    mcode: ''
   };
 
   await search();
@@ -66,5 +75,5 @@ onMounted(() => {
 
 <template>
   <MprRequestSearch v-model="searchValue" @search="search" @reset="reset" />
-  <MprRequestList :list="requestList" />
+  <MprRequestHeaderList :list="requestList" />
 </template>

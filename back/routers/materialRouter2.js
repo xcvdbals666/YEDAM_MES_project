@@ -36,30 +36,47 @@ router.post(`/mat-request`, async (req, res) => {
   res.send(result);
 });
 
-// 자재구매요청 정보 조회
-router.get("/mat-request", async (req, res) => {
-  const { mprCode, matName, matCode, reqDate, clientCode } = req.query;
+// 자재구매요청 조회
+router.get("/mpr-request", async (req, res) => {
+  const {
+    mprCode,
+    reqDateFrom,
+    reqDateTo,
+    deadlineFrom,
+    deadlineTo,
+    mrpCode,
+    mcode,
+  } = req.query;
 
   const list = await materialService2.findByMprCodeMprTbl({
     mprCode,
-    matName,
-    matCode,
-    reqDate,
-    clientCode,
+    reqDateFrom,
+    reqDateTo,
+    deadlineFrom,
+    deadlineTo,
+    mrpCode,
+    mcode,
   });
 
   res.send(list);
 });
 
-// 자재구매요청서 전체 목록 조회
-router.get("/mprList", async (req, res) => {
+// 자재구매요청 상세 정보 조회 - 요청자재상세
+router.get("/mpr-request/:mprCode/items", async (req, res) => {
+  const mprCode = req.params.mprCode;
+  const list = await materialService2.findByMprCodeMprDTbl(mprCode);
+  res.send(list);
+});
+
+// 자재구매요청서 목록 조회
+router.get("/mpr-list", async (req, res) => {
   const { keyword = "" } = req.query;
   const list = await materialService2.findAllMprTbl(keyword);
   res.send(list);
 });
 
 // 공급업체 목록 조회
-router.get("/clientList", async (req, res) => {
+router.get("/client-list", async (req, res) => {
   const { keyword = "" } = req.query;
   const list = await materialService2.findAllClientTbl(keyword);
   res.send(list);

@@ -12,13 +12,14 @@ const data = computed({
   set: (val) => emit('update:modelValue', val)
 });
 </script>
+
 <template>
   <Fluid class="card">
     <div class="flex justify-between items-center pb-4">
       <h4 class="m-0">요청 검색</h4>
       <div class="flex items-center gap-2">
-        <Button label="초기화" severity="contrast" class="px-3 py-1 h-[35px] text-sm gap-2 whitespace-nowrap" @click="emit('reset')" />
-        <Button label="조회" class="px-3 py-1 h-[35px] text-sm gap-2" @click="emit('search')" />
+        <Button label="초기화" severity="contrast" class="whitespace-nowrap px-3 py-1 h-[35px] text-sm" @click="emit('reset')" />
+        <Button label="조회" class="px-3 py-1 h-[35px] text-sm" @click="emit('search')" />
       </div>
     </div>
 
@@ -34,33 +35,37 @@ const data = computed({
         <tr>
           <th>요청번호</th>
           <td>
-            <InputText v-model="data.mprCode" placeholder="요청서 선택" readonly class="flex-1" />
+            <InputText v-model="data.mprCode" placeholder="요청번호 입력" class="w-full" />
           </td>
 
-          <th>자재명</th>
+          <th>MRP 계획번호</th>
+          <td>
+            <InputText v-model="data.mrpCode" placeholder="MRP 계획번호 입력" class="w-full" />
+          </td>
+        </tr>
+
+        <tr>
+          <th>요청일자</th>
           <td>
             <div class="flex gap-2">
-              <InputText v-model="data.matName" placeholder="자재 선택" readonly class="flex-1" />
+              <DatePicker v-model="data.reqDateFrom" dateFormat="yy-mm-dd" placeholder="시작일 선택" class="w-full" />
+              <DatePicker v-model="data.reqDateTo" dateFormat="yy-mm-dd" placeholder="종료일 선택" class="w-full" />
+            </div>
+          </td>
+
+          <th>납기일자</th>
+          <td>
+            <div class="flex gap-2">
+              <DatePicker v-model="data.deadlineFrom" dateFormat="yy-mm-dd" placeholder="시작일 선택" class="w-full" />
+              <DatePicker v-model="data.deadlineTo" dateFormat="yy-mm-dd" placeholder="종료일 선택" class="w-full" />
             </div>
           </td>
         </tr>
 
         <tr>
-          <th>자재코드</th>
+          <th>요청자</th>
           <td>
-            <InputText v-model="data.matCode" placeholder="자재 선택" readonly class="flex-1" />
-          </td>
-
-          <th>요청일자</th>
-          <td>
-            <DatePicker v-model="data.reqDate" dateFormat="yy-mm-dd" :showIcon="true" :showButtonBar="true" placeholder="날짜 선택" class="w-full" />
-          </td>
-        </tr>
-
-        <tr>
-          <th>거래처</th>
-          <td>
-            <InputText v-model="data.clientCode" placeholder="공급업체 선택" readonly class="flex-1" />
+            <InputText v-model="data.mcode" placeholder="요청자 코드 입력" class="w-full" />
           </td>
           <th></th>
           <td></td>
