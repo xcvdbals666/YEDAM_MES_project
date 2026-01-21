@@ -10,9 +10,9 @@ const props = defineProps({
       <div class="font-semibold text-xl flex justify-between">
         <div>기본 정보</div>
         <div class="flex flex-row gap-2">
-          <Button label="삭제" severity="danger" />
+          <Button type="button" label="삭제" @click="$emit('delQiOrder', orderInput.qio_code)" severity="danger" />
           <Button type="button" label="초기화" @click="$emit('resetQiOrder')" severity="secondary" />
-          <Button type="button" label="저장" severity="success" />
+          <Button type="button" label="저장" @click="$emit('submitQiOrder')" severity="success" />
           <Button type="button" label="검사지 불러오기" @click="$emit('searchOrderList')" />
         </div>
       </div>

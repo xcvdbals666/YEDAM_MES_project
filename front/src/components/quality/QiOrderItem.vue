@@ -8,7 +8,7 @@ const props = defineProps({
 const emit = defineEmits();
 
 // 항목에 채울 내용
-let QiOrderItemInput = ref({ qio_code: '', mat_code: '', mat_name: '', inspection_item: '', com_value: '', note: '', sum: '' });
+let QiOrderItemInput = ref({ mpo_d_code: '', mat_code: '', mat_name: '', req_qtt: '', note: '', mat_type: '' });
 QiOrderItemInput.value = props.selectedMinbnd;
 </script>
 <template>
@@ -46,7 +46,7 @@ QiOrderItemInput.value = props.selectedMinbnd;
         <div class="col-span-2">
           <div class="grid grid-cols-3">
             <label for="checkNum" class="col-span-1">검사수량</label>
-            <InputText id="checkNum" type="text" class="col-span-2" v-model="QiOrderItemInput.inbnd_qtt" readonly />
+            <InputText id="checkNum" type="text" class="col-span-2" v-model="QiOrderItemInput.req_qtt" readonly />
           </div>
         </div>
       </div>

@@ -4,31 +4,21 @@ const selectAllQiOrderCheckList = `SELECT q.qcr_code ,q.inspection_item, q.range
                                    FROM qcr_tbl q
                                    JOIN common_code c ON q.unit = c.com_value`;
 
-// qio_code 생성
-const createQioCode = `SELECT concat(
-                              'QIO-', DATE_FORMAT(?, '%y%m%d'), '-',
-                               LPAD(ifnull((SELECT MAX(SUBSTR(qio_code, -3))
-                                            FROM qio_tbl
-                                            where SUBSTR(qio_code, 5, 8) = DATE_FORMAT(?,'%y%m%d')
-                                            FOR UPDATE),0) + 1
-                               , 3
-                       , '0'))`;
-
 // 검사지 전체 불러오기
 const selectAllQiOrderList = `SELECT *
                               FROM qio_tbl q
                               JOIN emp_tbl e ON q.emp_code = e.emp_code`;
 
 // 검사지에 해당하는 자재 및 검사항목 불러오기
-const selectQiOrderItem = `SELECT q.qio_code, m.inbnd_date, b.mat_name, b.mat_code, b.mat_type, m.inbnd_qtt, c.note, c2.com_value, c2.note, q2.inspection_item    
+const selectQiOrderItem = `SELECT q.qio_code, m.deadline, b.mat_name, b.mat_code, b.mat_type, m.req_qtt, c.note, c2.com_value, c2.note, q2.inspection_item    
                            FROM qio_tbl q
-                           JOIN minbnd_tbl m ON q.qio_code = m.qio_code
+                           JOIN mpo_d_tbl m ON q.mpo_d_code = m.mpo_d_code
                            JOIN bom_mat b ON m.mat_code = b.mat_code
-                           JOIN common_code c ON m.unit = c.com_value
-                           JOIN common_code c2 ON m.mat_type = c2.com_value
-                           LEFT JOIN qcr_tbl q2 on b.mat_type = q2.com_value
-                           where q.qio_code = ?
-                           group by q.qio_code, q2.inspection_item`;
+                           JOIN common_code c ON b.unit = c.com_value
+                           JOIN common_code c2 ON b.mat_type = c2.com_value
+                           LEFT JOIN qcr_tbl q2 ON b.mat_type = q2.com_value
+                           WHERE q.qio_code = ?
+                           GROUP BY q.qio_code, q2.inspection_item`;
 
 // 생산실적 불러오기
 const selectQiProduceList = `SELECT p.prdr_code, p.end_date, p.production_qtt, c.note
@@ -38,12 +28,35 @@ const selectQiProduceList = `SELECT p.prdr_code, p.end_date, p.production_qtt, c
                              WHERE q.prdr_code is null`;
 
 // 발주서상세 불러오기
-const selectQiMpoList = `SELECT m.mpo_d_code, b.mat_code, b.mat_name, m.req_qtt, c2.note 'mat_type' 
+const selectQiMpoList = `SELECT m.mpo_d_code, m.deadline, b.mat_code, b.mat_name, b.mat_type, m.req_qtt, c2.note,  m.req_qtt - q.insp_vol 'remaining_amount'
                          FROM mpo_d_tbl m 
                          LEFT JOIN qio_tbl q ON m.mpo_d_code = q.mpo_d_code 
                          JOIN bom_mat b ON m.mat_code = b.mat_code
                          JOIN common_code c2 ON b.mat_type = c2.com_value
-                         WHERE qio_code IS NULL`;
+                         WHERE qio_code IS NULL OR m.req_qtt - q.insp_vol > 0
+                          `;
+
+// qio_code 생성
+const createQioCode = `SELECT concat(
+                              'QIO-', DATE_FORMAT(?, '%Y%m%d'), '-',
+                               LPAD(ifnull((SELECT MAX(SUBSTR(qio_code, -3))
+                                            FROM qio_tbl
+                                            where SUBSTR(qio_code, 5, 8) = DATE_FORMAT(?,'%Y%m%d')
+                                            FOR UPDATE),0) + 1
+                               , 3
+                       , '0')) AS newQio `;
+
+// 검사지시서 등록(자재)
+const insertQio_tbl = `INSERT INTO qio_tbl SET qio_code = ?,
+                                               qio_date = current_timestamp(),
+                                               insp_date = DATE_FORMAT(replace(?, 'Z',''), '%Y%m%d'),
+                                               emp_code = 'EMP-10005',
+                                               insp_vol = ?,
+                                               mpo_d_code = ?`;
+
+// 검사지시서 삭제
+const deleteQiOrder = `DELETE FROM qio_tbl
+                       WHERE qio_code = ?`;
 
 module.exports = {
   selectAllQiOrderCheckList,
@@ -52,4 +65,6 @@ module.exports = {
   selectQiOrderItem,
   selectQiProduceList,
   selectQiMpoList,
+  insertQio_tbl,
+  deleteQiOrder,
 };

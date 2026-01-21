@@ -34,4 +34,20 @@ router.get("/qimpolist", async (req, res) => {
   let list = await qualityService.findQiMpoList();
   res.send(list);
 });
+
+// 검사지시서 등록
+router.post("/submitqiorderform", async (req, res) => {
+  let data = req.body;
+  console.log(data);
+  let list = await qualityService.addQiOrderForm(data);
+  res.send(list);
+});
+
+// 검사지시서 삭제
+router.delete("/removeqiorder/:id", async (req, res) => {
+  let id = req.params.id;
+  console.log(id);
+  let list = await qualityService.removeqiorder(id);
+  res.send(list);
+});
 module.exports = router;
