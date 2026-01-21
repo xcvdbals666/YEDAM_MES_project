@@ -28,12 +28,14 @@ const selectQiProduceList = `SELECT p.prdr_code, p.end_date, p.production_qtt, c
                              WHERE q.prdr_code is null`;
 
 // 발주서상세 불러오기
-const selectQiMpoList = `SELECT m.mpo_d_code, m.deadline, b.mat_code, b.mat_name, b.mat_type, m.req_qtt, c2.note,  m.req_qtt - q.insp_vol 'remaining_amount'
+const selectQiMpoList = `SELECT m.mpo_d_code, m.deadline, sum(q.insp_vol) sum, b.mat_code, b.mat_name, b.mat_type, m.req_qtt, c2.note
                          FROM mpo_d_tbl m 
                          LEFT JOIN qio_tbl q ON m.mpo_d_code = q.mpo_d_code 
                          JOIN bom_mat b ON m.mat_code = b.mat_code
                          JOIN common_code c2 ON b.mat_type = c2.com_value
-                         WHERE qio_code IS NULL OR m.req_qtt - q.insp_vol > 0
+                         WHERE qio_code IS NULL or m.req_qtt - q.insp_vol > 0
+                         group by m.mpo_d_code
+                         HAVING  m.req_qtt > sum
                           `;
 
 // qio_code 생성

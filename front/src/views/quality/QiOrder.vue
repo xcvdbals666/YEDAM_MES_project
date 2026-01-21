@@ -29,9 +29,11 @@ let display = ref(false); // 모달창 오픈 위해서
 const searchMinbndList = async () => {
   await quality1.fetchQiMpoList();
   minbndList.value = quality1.qiMpoList;
-  if (quality1.qiMpoList[0].remaining_amount > 0) {
-    console.log('adsfafd');
-    minbndList.value[0].req_qtt = quality1.qiMpoList[0].remaining_amount;
+  if (quality1.qiMpoList.length > 0) {
+    if (quality1.qiMpoList[0].remaining_amount > 0) {
+      console.log('adsfafd');
+      minbndList.value[0].req_qtt = quality1.qiMpoList[0].remaining_amount;
+    }
   }
 
   display.value = true;
@@ -68,8 +70,9 @@ const selectComp = (data) => {
     });
   } else {
     alert('값을 선택해주세요');
-    display.value = false;
+    return;
   }
+  display.value = false;
 };
 
 // QiOrderItem의 항목 채우기(검사지 불러오기 모달창 선택값)
