@@ -21,14 +21,20 @@ const selectQiOrderItem = `SELECT q.qio_code, m.deadline, b.mat_name, b.mat_code
                            GROUP BY q.qio_code, q2.inspection_item`;
 
 // 생산실적 불러오기
-const selectQiProduceList = `SELECT p.prdr_code, p.end_date, p.production_qtt, c.note
+const selectQiProduceList = `SELECT w.prdp_code, p.end_date, p.production_qtt, c.note
                              FROM prdr_tbl p 
                              LEFT JOIN qio_tbl q ON p.prdr_code = q.prdr_code
                              JOIN common_code c ON p.stat = c.com_value  
-                             WHERE q.prdr_code is null`;
+                             JOIN  wko_tbl w ON p.work_order_code = w.wko_code
+                             JOIN prdr_d_tbl p2 ON p.prdr_code = p2.prdr_code
+                             JOIN line_d_tbl l ON p2.line_eq_code = l.line_eq_code
+                             JOIN prod_proc_d_tbl p3 ON l.pp_code = p3.pp_code
+                             JOIN po_tbl p4 ON p3.po_code = p4.po_code
+                             WHERE q.prdr_code is null
+                             group by prdp_code`;
 
 // 발주서상세 불러오기
-const selectQiMpoList = `SELECT m.mpo_d_code, m.deadline, sum(q.insp_vol) sum, b.mat_code, b.mat_name, b.mat_type, m.req_qtt, c2.note
+const selectQiMpoList = `SELECT m.mpo_d_code, m.deadline, sum(q.insp_vol) sum, b.mat_code, b.mat_name, b.mat_type, m.req_qtt, c2.note, m.req_qtt - sum(q.insp_vol) as remaining_amount
                          FROM mpo_d_tbl m 
                          LEFT JOIN qio_tbl q ON m.mpo_d_code = q.mpo_d_code 
                          JOIN bom_mat b ON m.mat_code = b.mat_code

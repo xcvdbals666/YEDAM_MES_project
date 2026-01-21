@@ -136,6 +136,13 @@ const searchProduceList = async () => {
   produceList.value = quality1.qiProduceList;
 };
 
+// 생산실적 선택값 가져오기
+const selectProd = (data) => {
+  console.log(data);
+  produceDisplay.value = false;
+  seletedMinbnd = { mpo_d_code: '', mat_code: '', mat_name: '', req_qtt: '', mat_type: '' };
+};
+
 // 작업지시서 등록
 const submitQiOrder = async () => {
   if (seletedMinbnd.value.mpo_d_code != undefined) {
@@ -182,5 +189,5 @@ const delQiOrder = async (data) => {
   <QiOrderMain :all-qi-list="allQiList" :selected-qcr-list="selectedQcrList" :key="selectedQcrList"></QiOrderMain>
   <SelectQiOrderModal :display="orderDisplay" :qi-order-list="quality1.qiOrderList" @close="closeMOdal" @selected-order="selectedOrder"></SelectQiOrderModal>
   <SelectMinbndModal :display="display" :minbnd="minbndList" @close="closeMOdal" @select-comp="selectComp"></SelectMinbndModal>
-  <SelectQiProduceModal :display="produceDisplay" :produce-list="produceList" :key="produceList" @close="closeMOdal"></SelectQiProduceModal>
+  <SelectQiProduceModal :display="produceDisplay" :produce-list="produceList" :key="produceList" @select-prod="selectProd" @close="closeMOdal"></SelectQiProduceModal>
 </template>
