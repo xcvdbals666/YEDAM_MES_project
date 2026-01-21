@@ -1,108 +1,182 @@
-//발주서 전체 모달 조회
+// 발주서 (MPO) 관련
+// 발주서 전체 목록 조회
 const selectAllMpoTbl = `
-SELECT
+SELECT 
   mpo.purchase_code,
-  mpo.purchase_req_date,
+  DATE_FORMAT(mpo.purchase_req_date, '%Y-%m-%d') AS purchase_req_date,  
   mpo.stat,
-  mpo.regdate,
   mpo.mcode,
-  mpo.note
+  e.emp_name,
+  GROUP_CONCAT(DISTINCT m.mat_name SEPARATOR ', ') AS material_names
 FROM mpo_tbl mpo
-ORDER BY mpo.purchase_code DESC;`;
+LEFT JOIN emp_tbl e ON mpo.mcode = e.emp_code        -- 이 줄 추가!
+LEFT JOIN mpo_d_tbl d ON mpo.purchase_code = d.purchase_code
+LEFT JOIN mat_tbl m ON d.mat_code = m.mat_code
+GROUP BY mpo.purchase_code, mpo.purchase_req_date, mpo.stat, mpo.mcode
+ORDER BY mpo.purchase_code DESC
 
-// 자재구매요청서 전체 목록 조회
-const selectAllMprTbl = `
+`;
+
+// 발주서 기본정보 단건 조회
+const selectByCodeMpoTbl = `
 SELECT 
-  m.mpr_code,
-  m.reqdate,
-  m.mcode,
-  m.deadline,
-  m.mrp_code,
-  GROUP_CONCAT(DISTINCT mat.mat_name SEPARATOR ', ') AS material_names
-FROM mpr_tbl m
-LEFT JOIN mpr_d_tbl md ON m.mpr_code = md.mpr_code
-LEFT JOIN mat_tbl mat ON md.mat_code = mat.mat_code
-GROUP BY m.mpr_code,m.reqdate, m.mcode, m.deadline,m.mrp_code
-ORDER BY m.mpr_code DESC`;
+  mpo.purchase_code,           
+  DATE_FORMAT(mpo.purchase_req_date, '%Y-%m-%d') AS purchase_req_date,     
+  mpo.mcode,
+  e.emp_name,                   
+  mpo.stat,                    
+  mpo.note,                    
+  mpr.mpr_code                 
+FROM mpo_tbl mpo
+LEFT JOIN emp_tbl e ON mpo.mcode = e.emp_code
+LEFT JOIN mpr_mapp_tbl mapp ON mpo.purchase_code = mapp.purchase_code
+LEFT JOIN mpr_tbl mpr ON mapp.mpr_code = mpr.mpr_code
+WHERE mpo.purchase_code = ?
+`;
 
-// 자재구매요청서 검색 조회
-const selectSearchMprTbl = `
-SELECT 
-  m.mpr_code,
-  m.reqdate,
-  m.mcode,
-  m.deadline,
-  m.mrp_code,
-  GROUP_CONCAT(DISTINCT mat.mat_name SEPARATOR ', ') AS material_names
-FROM mpr_tbl m
-LEFT JOIN mpr_d_tbl md ON m.mpr_code = md.mpr_code
-LEFT JOIN mat_tbl mat ON md.mat_code = mat.mat_code
-WHERE m.mpr_code LIKE CONCAT('%', ?, '%')
-   OR m.mcode LIKE CONCAT('%', ?, '%')
-   OR mat.mat_name LIKE CONCAT('%', ?, '%')
-GROUP BY m.mpr_code, m.reqdate, m.mcode, m.deadline,m.mrp_code,
-ORDER BY m.mpr_code DESC`;
-
-//발주서 기본정보 단건 조회
+// 발주서 자재 상세 조회
 const selectByCodeMpoDTbl = `
 SELECT 
-    mpod.mat_code,
-    m.mat_name,
-    m.material_type_code,
-    mpod.unit,
-    mpod.req_qtt,
-    mpod.deadline,
-    c.client_name,
-    mpod.client_code
+  mpod.mat_code,
+  m.mat_name,
+  m.material_type_code,
+  mpod.unit,
+  mpod.req_qtt,
+  IFNULL(s.current_qty, 0) AS current_stock,
+  CASE
+    WHEN mpod.req_qtt - IFNULL(s.current_qty, 0) > 0
+    THEN mpod.req_qtt - IFNULL(s.current_qty, 0)
+    ELSE 0
+  END AS shortage_qtt,
+  DATE_FORMAT(mpod.deadline, '%Y-%m-%d') AS deadline,
+  c.client_name AS supplier_name,
+  mpod.client_code
 FROM mpo_d_tbl mpod
 JOIN mat_tbl m ON mpod.mat_code = m.mat_code
 LEFT JOIN client_tbl c ON mpod.client_code = c.client_code
-WHERE mpod.purchase_code = ?`;
+LEFT JOIN (
+  SELECT mat_code,
+         IFNULL(SUM(inbnd_qtt), 0) - IFNULL(SUM(outbnd_qtt), 0) AS current_qty
+  FROM (
+    SELECT mat_code, inbnd_qtt, 0 AS outbnd_qtt FROM minbnd_tbl
+    UNION ALL
+    SELECT mat_code, 0 AS inbnd_qtt, outbnd_qtt FROM moutbnd_tbl
+  ) x
+  GROUP BY mat_code
+) s ON s.mat_code = mpod.mat_code
+WHERE mpod.purchase_code = ?
+`;
 
-//발주서 자재 상세 조회
-const selectByCodeMpoTbl = `
+// 발주서번호 자동생성
+const selectNextMpoCode = `
 SELECT 
-    mpo.purchase_code,           
-    mpo.purchase_req_date,       
-    mpo.mcode,                   
-    mpo.stat,                    
-    mpo.note,                    
-    mpr.mpr_code                 
-FROM mpo_tbl mpo
-LEFT JOIN mpr_mapp_tbl mapp ON mpo.purchase_code = mapp.purchase_code
-LEFT JOIN mpr_tbl mpr ON mapp.mpr_code = mpr.mpr_code
-WHERE mpo.purchase_code = ?`;
-
-//발주서 정보 자동생성
-const selectNextMpoCode = `SELECT 
-CONCAT('MPO-', DATE_FORMAT(NOW(), '%Y%m%d'), '-', 
-  LPAD(IFNULL(MAX(CAST(SUBSTRING(purchase_code, 16) AS UNSIGNED)), 0) + 1, 3, '0')) 
+  CONCAT('BJ', LPAD(IFNULL(MAX(CAST(SUBSTRING(purchase_code, 3) AS UNSIGNED)), 0) + 1, 4, '0')) 
   AS next_code
 FROM mpo_tbl
-WHERE purchase_code LIKE CONCAT('MPO-', DATE_FORMAT(NOW(), '%Y%m%d'), '%')`;
+WHERE purchase_code LIKE 'BJ%'
+`;
 
-//발주서 기본정보 등록
-const insertMpoTbl = `INSERT INTO mpo_tbl (  
+// 발주서 기본정보 등록
+const insertMpoTbl = `
+INSERT INTO mpo_tbl (  
   purchase_code,
   purchase_req_date,
   stat,
   regdate,
   mcode,
   note
-) VALUES (?, NOW(),?,NOW(),?,? )`;
+) VALUES (?, NOW(), ?, NOW(), ?, ?)
+`;
 
-//발주 자재 상세 등록
+// 발주서 자재 상세 등록
 const insertMpoDetailTbl = `
 INSERT INTO mpo_d_tbl (
+  mpo_d_code,
   purchase_code,
   mat_code,
   unit,
   req_qtt,
   deadline,
   client_code
-) VALUES (?, ?, ?, ?, ?, ?)`;
+) VALUES (?, ?, ?, ?, ?, ?, ?)
+`;
 
-//발주 자재 상세목록
+// 발주서 기본정보 수정
+const updateMpoTbl = `
+UPDATE mpo_tbl 
+SET stat = ?, mcode = ?, note = ?
+WHERE purchase_code = ?
+`;
+
+// 발주서 자재 상세 삭제
+const deleteMpoDetailTbl = `
+DELETE FROM mpo_d_tbl WHERE purchase_code = ?
+`;
+
+// 발주서 삭제 (기본정보)
+const deleteMpoTbl = `
+DELETE FROM mpo_tbl WHERE purchase_code = ?
+`;
+
+// 발주서 검색
+const selectSearchMpoTbl = `
+SELECT 
+  mpo.purchase_code,
+  DATE_FORMAT(mpo.purchase_req_date, '%Y-%m-%d') AS purchase_req_date,
+  mpo.stat,
+  mpo.mcode,
+  e.emp_name,
+  GROUP_CONCAT(DISTINCT m.mat_name SEPARATOR ', ') AS material_names
+FROM mpo_tbl mpo
+LEFT JOIN emp_tbl e ON mpo.mcode = e.emp_code        
+LEFT JOIN mpo_d_tbl d ON mpo.purchase_code = d.purchase_code
+LEFT JOIN mat_tbl m ON d.mat_code = m.mat_code
+WHERE mpo.purchase_code LIKE CONCAT('%', ?, '%')
+GROUP BY mpo.purchase_code, mpo.purchase_req_date, mpo.stat, mpo.mcode
+ORDER BY mpo.purchase_code DESC
+`;
+
+// 자재구매요청서 (MPR) 관련
+// 자재구매요청서 전체 목록 조회
+const selectAllMprTbl = `
+SELECT 
+  m.mpr_code,
+  DATE_FORMAT(m.reqdate, '%Y-%m-%d') AS reqdate,
+  m.mcode,
+  e.emp_name,
+  DATE_FORMAT(m.deadline, '%Y-%m-%d') AS deadline,
+  m.mrp_code,
+  GROUP_CONCAT(DISTINCT mat.mat_name SEPARATOR ', ') AS material_names
+FROM mpr_tbl m
+LEFT JOIN emp_tbl e ON m.mcode = e.emp_code          
+LEFT JOIN mpr_d_tbl md ON m.mpr_code = md.mpr_code
+LEFT JOIN mat_tbl mat ON md.mat_code = mat.mat_code
+GROUP BY m.mpr_code, m.reqdate, m.mcode, m.deadline, m.mrp_code
+ORDER BY m.mpr_code DESC
+`;
+
+// 자재구매요청서 검색 조회
+const selectSearchMprTbl = `
+SELECT 
+  m.mpr_code,
+  DATE_FORMAT(m.reqdate, '%Y-%m-%d') AS reqdate,
+  m.mcode,
+  DATE_FORMAT(m.deadline, '%Y-%m-%d') AS deadline,
+  m.mrp_code,
+  e.emp_name,
+  GROUP_CONCAT(DISTINCT mat.mat_name SEPARATOR ', ') AS material_names
+FROM mpr_tbl m
+LEFT JOIN emp_tbl e ON m.mcode = e.emp_code          
+LEFT JOIN mpr_d_tbl md ON m.mpr_code = md.mpr_code
+LEFT JOIN mat_tbl mat ON md.mat_code = mat.mat_code
+WHERE m.mpr_code LIKE CONCAT('%', ?, '%')
+   OR m.mcode LIKE CONCAT('%', ?, '%')
+   OR mat.mat_name LIKE CONCAT('%', ?, '%')
+GROUP BY m.mpr_code, m.reqdate, m.mcode, m.deadline, m.mrp_code
+ORDER BY m.mpr_code DESC
+`;
+
+// 자재구매요청서 상세 조회 (발주용)
 const selectByMrpCodeMrpDetailTbl = `
 SELECT *
 FROM (
@@ -115,43 +189,21 @@ FROM (
     rd.req_qtt,
     IFNULL(p.plan_in_qty, 0) AS plan_in_qty,
     CASE
-      WHEN rd.req_qtt
-           - (
-               IFNULL(s.current_qty, 0)
-               + IFNULL(p.plan_in_qty, 0)
-               - IFNULL(m.save_inven, 0)
-             ) > 0
-      THEN rd.req_qtt
-           - (
-               IFNULL(s.current_qty, 0)
-               + IFNULL(p.plan_in_qty, 0)
-               - IFNULL(m.save_inven, 0)
-             )
+      WHEN rd.req_qtt - (IFNULL(s.current_qty, 0) + IFNULL(p.plan_in_qty, 0) - IFNULL(m.save_inven, 0)) > 0
+      THEN rd.req_qtt - (IFNULL(s.current_qty, 0) + IFNULL(p.plan_in_qty, 0) - IFNULL(m.save_inven, 0))
       ELSE 0
     END AS shortage_qtt,
     CASE
-      WHEN rd.req_qtt
-           - (
-               IFNULL(s.current_qty, 0)
-               + IFNULL(p.plan_in_qty, 0)
-               - IFNULL(m.save_inven, 0)
-             ) > 0
-      THEN rd.req_qtt
-           - (
-               IFNULL(s.current_qty, 0)
-               + IFNULL(p.plan_in_qty, 0)
-               - IFNULL(m.save_inven, 0)
-             )
+      WHEN rd.req_qtt - (IFNULL(s.current_qty, 0) + IFNULL(p.plan_in_qty, 0) - IFNULL(m.save_inven, 0)) > 0
+      THEN rd.req_qtt - (IFNULL(s.current_qty, 0) + IFNULL(p.plan_in_qty, 0) - IFNULL(m.save_inven, 0))
       ELSE 0
     END AS order_qtt,
-
     DATE_FORMAT(DATE_ADD(CURDATE(), INTERVAL 7 DAY), '%Y-%m-%d') AS delivery_date,
-    c.client_name AS supplier_name
-
+    c.client_name AS supplier_name,
+    m.sup AS client_code
   FROM mpr_d_tbl rd
   JOIN mat_tbl m ON rd.mat_code = m.mat_code
   LEFT JOIN client_tbl c ON c.client_code = m.sup
-
   LEFT JOIN (
     SELECT mat_code,
            IFNULL(SUM(inbnd_qtt), 0) - IFNULL(SUM(outbnd_qtt), 0) AS current_qty
@@ -162,20 +214,18 @@ FROM (
     ) x
     GROUP BY mat_code
   ) s ON s.mat_code = rd.mat_code
-
   LEFT JOIN (
-    SELECT
-      d.mat_code,
-      SUM(d.req_qtt) AS plan_in_qty
+    SELECT d.mat_code, SUM(d.req_qtt) AS plan_in_qty
     FROM mpo_d_tbl d
-    JOIN mpr_mapp_tbl map
-      ON d.purchase_code = map.purchase_code
+    JOIN mpr_mapp_tbl map ON d.purchase_code = map.purchase_code
     GROUP BY d.mat_code
   ) p ON p.mat_code = rd.mat_code
-
   WHERE rd.mpr_code = ?
-) t`;
-//자재 추가 목록
+) t
+`;
+
+// 자재 (MAT) 관련
+// 자재 전체 목록 조회 (모달용)
 const selectAllMatTbl = `
 SELECT
   m.mat_code,
@@ -186,8 +236,7 @@ SELECT
   c.client_name AS supplier_name,
   m.sup AS client_code
 FROM mat_tbl m
-LEFT JOIN client_tbl c
-  ON m.sup = c.client_code
+LEFT JOIN client_tbl c ON m.sup = c.client_code
 LEFT JOIN (
   SELECT mat_code,
          IFNULL(SUM(inbnd_qtt), 0) - IFNULL(SUM(outbnd_qtt), 0) AS current_qty
@@ -201,15 +250,25 @@ LEFT JOIN (
 WHERE m.is_used = 'f2'
 ORDER BY m.mat_code
 `;
+
 module.exports = {
+  // 발주서 (MPO)
   selectAllMpoTbl,
-  selectAllMprTbl,
-  selectSearchMprTbl,
   selectByCodeMpoTbl,
   selectByCodeMpoDTbl,
   selectNextMpoCode,
   insertMpoTbl,
   insertMpoDetailTbl,
+  selectSearchMpoTbl,
+  updateMpoTbl,
+  deleteMpoDetailTbl,
+  deleteMpoTbl,
+
+  // 자재구매요청서 (MPR)
+  selectAllMprTbl,
+  selectSearchMprTbl,
   selectByMrpCodeMrpDetailTbl,
+
+  // 자재 (MAT)
   selectAllMatTbl,
 };
