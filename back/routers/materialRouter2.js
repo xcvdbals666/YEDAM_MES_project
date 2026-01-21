@@ -50,4 +50,18 @@ router.get("/mat-request", async (req, res) => {
 
   res.send(list);
 });
+
+// 자재구매요청서 전체 목록 조회
+router.get("/mprList", async (req, res) => {
+  const { keyword = "" } = req.query;
+  const list = await materialService2.findAllMprTbl(keyword);
+  res.send(list);
+});
+
+// 공급업체 목록 조회
+router.get("/clientList", async (req, res) => {
+  const { keyword = "" } = req.query;
+  const list = await materialService2.findAllClientTbl(keyword);
+  res.send(list);
+});
 module.exports = router;

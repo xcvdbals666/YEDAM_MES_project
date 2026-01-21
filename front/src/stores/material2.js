@@ -7,7 +7,9 @@ export const useMaterialStore = defineStore('material2', {
     employees: [],
     materials: [],
     mrpCode: [],
-    requestList: []
+    requestList: [],
+    clientList: [],
+    mprList: []
   }),
   // getters
   // actions
@@ -43,6 +45,18 @@ export const useMaterialStore = defineStore('material2', {
     async fetchRequest(keyword) {
       const response = await axios.get('/api/material/mat-request', { params: keyword });
       this.requestList = response.data;
+    },
+
+    // 자재구매요청서 전체 목록 조회
+    async fetchMprList({ keyword }) {
+      const response = await axios.get('/api/material/mprList', { params: { keyword: keyword || '' } });
+      this.mprList = response.data;
+    },
+
+    // 공급업체 목록 조회
+    async fetchClientList({ keyword }) {
+      const response = await axios.get('/api/material/clientList', { params: { keyword: keyword || '' } });
+      this.clientList = response.data;
     }
   },
   persist: true

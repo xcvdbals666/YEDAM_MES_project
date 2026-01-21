@@ -46,6 +46,20 @@ const CONFIG = {
       { field: 'lack_qty', header: '부족수량' },
       { field: 'client_name', header: '공급업체' }
     ]
+  },
+
+  mpr: {
+    title: '자재구매요청서 선택',
+    placeholder: '자재구매요청번호를 입력해주세요',
+    fetch: (keyword) => store.fetchMprList({ keyword }),
+    list: () => store.mprList,
+    dataKey: 'mpr_code',
+    columns: [
+      { field: 'mpr_code', header: '요청서 번호' },
+      { field: 'mpr_code', header: '요청서 번호' },
+      { field: 'mpr_code', header: '요청서 번호' },
+      { field: 'mpr_code', header: '요청서 번호' }
+    ]
   }
 
   // 필요하면 여기 계속 추가

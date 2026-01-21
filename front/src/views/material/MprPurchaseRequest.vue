@@ -5,8 +5,6 @@ import axios from 'axios';
 import MprRequestHeader from '@/components/material/MprRequestHeader.vue';
 import MprRequestItem from '@/components/material/MprRequestItem.vue';
 import SelectModal from '@/components/material/modal/SelectModal.vue';
-// import SelectEmployeeModal from '@/components/material/modal/SelectEmployeeModal.vue';
-// import SelectMaterialModal from '@/components/material/modal/SelectMaterialModal.vue';
 
 const store = useMaterialStore();
 
@@ -238,8 +236,6 @@ const save = async () => {
     />
     <MprRequestItem v-model="requestDetailInfo" @selected-material="(row) => openMaterialModal(row)" />
   </div>
-  <!-- <SelectEmployeeModal v-model:visible="showWriterModal" @select="selectWriter" />
-  <SelectMaterialModal v-model:visible="showMaterialModal" @select="selectMaterial" /> -->
   <SelectModal v-model:visible="showWriterModal" type="employee" @select="selectWriter" />
   <SelectModal v-model:visible="showMaterialModal" type="material" @select="selectMaterial" />
 </template>
