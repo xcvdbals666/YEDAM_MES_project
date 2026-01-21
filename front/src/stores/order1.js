@@ -26,58 +26,39 @@ export const useOrderStore = defineStore('order', {
     // 완제품 목록 불러오기
     async getProducts() {
       let list = await axios.get(`${url}/productList`);
-      this.products = list.data;
+      let productList = list.data;
+      // 수정된 로직: 리스트 길이의 나머지가 0이 될 때까지 반복
+      while (productList.length % 5 !== 0) {
+        productList.push({
+          isEmpty: true,
+          emptycode: `empty-${productList.length}` // v-for key 에러 방지용
+        });
+      }
+      this.products = productList;
     },
     // 주문 목록 불러오기
     async getOrders() {
       let list = await axios.get(`${url}/orders`);
-      this.orders = list.data;
+      let orderList = list.data;
+      while (orderList.length % 5 !== 0) {
+        orderList.push({
+          isEmpty: true,
+          or_code: `empty-${orderList.length}` // v-for key 에러 방지용
+        });
+      }
+      console.log(orderList);
+      this.orders = orderList;
     },
     // 주문 상세 불러오기
     async getOrderDetail(ordCode) {
       let list = await axios.get(`${url}/details/${ordCode}`);
       this.details = list.data;
     },
-    converUnit(unit) {
-      if (unit == 'h1') {
-        return 'kg';
-      } else if (unit == 'h2') {
-        return 't';
-      } else if (unit == 'h3') {
-        return 'L';
-      } else if (unit == 'h4') {
-        return 'ea';
-      } else if (unit == 'h5') {
-        return 'box';
-      } else if (unit == 'h6') {
-        return 'g';
-      } else if (unit == 'h7') {
-        return 'mm';
-      } else if (unit == 'h8') {
-        return '%';
-      } else if (unit == 'h9') {
-        return 'cm';
-      } else if (unit == 'ha') {
-        return 'N';
-      }
-    },
-    convertSpec(spec) {
-      if (spec == 'o2') {
-        return '40';
-      } else if (spec == 'o4') {
-        return '20';
-      } else if (spec == 'o6') {
-        return '16';
-      } else if (spec == 'oa') {
-        return '20';
-      }
-    },
-    convertComVal(val) {
-      if (val == 'j1') {
-        return '봉지라면';
-      } else if (val == 'j2') {
-        return '컵라면';
-      } else return null;
+    // 주문 등록
+    async registerOrder(order) {
+      console.log(order);
+      let result = await axios.post(`${url}/order`, order);
+      console.log(result.data);
     }
   },
   persist: true
