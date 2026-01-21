@@ -7,12 +7,19 @@ export const useProductionsStore = defineStore('productions', () => {
   const wkoList = ref([]);
   const loading = ref(false);
   const error = ref(null);
-  const lines = ref([]); //라인 드롭다운으로 받아오게
+  const lines = ref([]); //라인 드롭다운으로 받음
+  const potypes = ref([]); //공정유형 드롭다운으로 받음
 
   //라인목록 조회
   const fetchLines = async () => {
-    const res = await axios.get('/produce/allLineList');
+    const res = await axios.get('/api/produce/allLineList');
     lines.value = res.data;
+  };
+
+  //라인 공정유형 조회
+  const fetchAllPoType = async () => {
+    const res = await axios.get('/api/produce/allPoTypeList');
+    potypes.value = res.data;
   };
 
   // 검색조건
@@ -38,7 +45,7 @@ export const useProductionsStore = defineStore('productions', () => {
         wko: wko.value || undefined
       };
 
-      const res = await axios.get('/produce/workorderList', { params });
+      const res = await axios.get('/api/produce/workorderList', { params });
       wkoList.value = res.data;
     } catch (e) {
       console.error(e);
@@ -64,21 +71,22 @@ export const useProductionsStore = defineStore('productions', () => {
     await fetchWorkOrders();
   };
 
+
   //##########################
   //모달 리스트띄우기
   //##########################
-
   //로딩중인지, 에러났는지 상태관리
   const prdpList = ref([]);
   const prdpLoading = ref(false);
   const prdpError = ref(null);
+  const allProducts = ref([]);
 
   const fetchPrdpActive = async () => {
     prdpLoading.value = true; // = 리스트 로딩중
     prdpError.value = null;
 
     try {
-      const res = await axios.get('/produce/prdpListActive');
+      const res = await axios.get('/api/produce/prdpListActive');
       prdpList.value = res.data;
     } catch (e) {
       prdpError.value = e; //에러발생시
@@ -87,9 +95,37 @@ export const useProductionsStore = defineStore('productions', () => {
     }
   };
 
+  //제품명 드롭다운 목록에 가져오기
+  const fetchAllPrdDistinct = async () => {
+    const res = await axios.get('/api/produce/allProductsList');
+    allProducts.value = res.data;
+  };
   //#########################
   //모달 끝
   //#########################
+
+  //생산계획서에 딸린 계획서 디테일 테이블에서 데이터 가져오기
+  const prdpItems = ref([]);
+  const prdpItemsLoading = ref(false);
+  const prdpItemsError = ref(null);
+
+  const fetchPrdpItems = async (prdpCode) => {
+    prdpItemsLoading.value = true;
+    prdpItemsError.value = null;
+
+    try {
+      const res = await axios.get(`/api/produce/prdpDetail/${prdpCode}`);
+      prdpItems.value = res.data;
+      return res.data;
+    } catch (e) {
+      console.error(e);
+      prdpItemsError.value = e;
+      prdpItems.value = [];
+      throw e;
+    } finally {
+      prdpItemsLoading.value = false;
+    }
+  };
 
   return {
     wkoList,
@@ -103,12 +139,20 @@ export const useProductionsStore = defineStore('productions', () => {
     wko,
     lines,
     fetchLines,
+    potypes,
+    fetchAllPoType,
     fetchWorkOrders,
     search,
     reset,
     fetchPrdpActive,
     prdpList,
     prdpLoading,
-    prdpError
+    prdpError,
+    allProducts,
+    fetchAllPrdDistinct,
+    prdpItems,
+    prdpItemsLoading,
+    prdpItemsError,
+    fetchPrdpItems
   };
 });

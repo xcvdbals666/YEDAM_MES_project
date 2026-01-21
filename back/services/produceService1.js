@@ -47,13 +47,34 @@ const findAllLinesDJ = async () => {
 };
 
 //생산계획 (due_date가 오늘날짜 기준 최근 60일까지만) 조회 - 모달 선택용 리스트
-const findPrdbActive = async () => {
+const findPrdpActive = async () => {
   const list = await mysql.query("selectPrdpActive", [], "produce1");
   return list;
 };
 
+//작업지시서 : 생산계획 상세 + 제품명 + 공정유형 가져오기 (prdp_code로 가져오기)
+const findPrdpDetail = async (prdpCode) => {
+  const list = await mysql.query("selectPrdpDetail", [prdpCode], "produce1");
+  return list;
+};
+
+//제품 목록 중복없이 조회
+const findAllPrdDistinct = async () => {
+  const list = await mysql.query("selectAllPrdDistinct", [], "produce1");
+  return list;
+};
+
+//공정유형 조회
+const findAllPoType = async () => {
+  const list = await mysql.query("selectAllPoType", [], "produce1");
+  return list;
+}
+
 module.exports = {
   searchWorkOrders,
   findAllLinesDJ,
-  findPrdbActive,
+  findPrdpActive,
+  findPrdpDetail,
+  findAllPrdDistinct,
+  findAllPoType,
 };
