@@ -13,6 +13,23 @@ const findAllPrdp = async (data) => {
   return list;
 };
 
+// 생산계획 검색
+const findByCodeOrNamePrdp = async (data) => {
+  const query = `%${data.q}`;
+  let list = await mysql.query(
+    "selectByCodeOrNamePrdp",
+    [query, query],
+    "produce2",
+  );
+  return list;
+};
+
+// 생산계획 상세 제품 조회
+const findPrdpDetail = async (prdpCode) => {
+  let list = await mysql.query("selectPrdpDetail", [prdpCode], "produce2");
+  return list;
+};
+
 // 주문 검색
 const findByCodeOrNameOrd = async (data) => {
   const query = `%${data.q}%`;
@@ -49,6 +66,7 @@ const findByCodeOrNameLine = async (data) => {
 
 module.exports = {
   findAllPrdp,
+  findByCodeOrNamePrdp,
   findByCodeOrNameOrd,
   findByCodeOrNameProd,
   findByCodeOrNameLine,
