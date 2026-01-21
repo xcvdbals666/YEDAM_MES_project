@@ -1,21 +1,3 @@
-//전체 작업지시서 조회
-const selectAllWkotbl = `
-SELECT 
-  wko_code,
-  start_date,
-  stat,
-  note,
-  prdp_code,
-  prod_code,
-  wko_qtt,
-  reg_date,
-  reg_code     AS writer,
-  end_date,
-  line_code,
-  wko_name
-FROM wko_tbl
-`;
-
 //라인 조회 (드롭다운용)
 const selectAllLinesDJ = `
 SELECT DISTINCT line_code
@@ -71,7 +53,6 @@ VALUES
 `;
 
 module.exports = {
-  selectAllWkotbl,
   selectAllLinesDJ,
   selectPrdpActive,
   selectPrdpDetail,

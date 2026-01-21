@@ -18,13 +18,19 @@ import 'primeicons/primeicons.css'
 const store = useProductionsStore();
 const { wkoList, prdpList, prdpLoading, prdpError, prdpItems, allProducts, lines } = storeToRefs(store);
 
-// const potypes = ['정형', '비정형'];
-
 //날짜 자르기
 const convertDate = (d) => {
   if (!d) return '';
   return d.slice(0, 10);
 };
+
+const statusMap = {
+  v1: '작업대기',
+  v2: '작업보류',
+  v3: '진행중',
+  v4: '작업취소'
+};
+
 
 const selectedPlan = ref(null); //모달에서 생산계획 하나 선택
 
@@ -57,6 +63,22 @@ const openPrdpModal = async () => {
   prdpModalOpen.value = true;
   await store.fetchPrdpActive();
 };
+
+const wkoListModalOpen = ref(false);
+
+const openWkoListModal = async () => {
+  wkoListModalOpen.value = true;
+
+  await store.fetchWorkOrders({
+    from: undefined,
+    to: undefined,
+    stat: undefined,
+    line: undefined,
+    name: undefined,
+    wko: undefined
+  });
+};
+
 
 //생산계획 선택
 const applySelectedPlan = async () => {
@@ -125,12 +147,10 @@ const saveWorkOrder = async () => {
   // 월, 일은 10보다 작으면 앞에'0을 붙여서 2자리로
   const month = String(now.getMonth() + 1).padStart(2, '0');
   const day = String(now.getDate()).padStart(2, '0');
-  
   const todayDate = `${year}${month}${day}`; 
-  
   const prefix = `WKO-${todayDate}`;
 
-  // 중복을 피하기 위해 DB에서 최신 목록을 한 번 더 - store에 fetchWorkOrders 실행
+  // 중복 피하기 위해 DB에서 최신 목록을 한 번 더 - store에 fetchWorkOrders 실행
   await store.fetchWorkOrders();
 
   // wkoList에서 오늘 만든 번호만 골라냄
@@ -148,7 +168,6 @@ const saveWorkOrder = async () => {
       // 3번째(인덱스 2번)를 숫자로 변환
       return parseInt(parts[2]); 
     });
-    
     // 찾아낸 숫자들 중 가장 큰 값에 1 더함
     nextNumber = Math.max(...numbers) + 1;
   }
@@ -157,11 +176,9 @@ const saveWorkOrder = async () => {
 
   form.value.wko_code = `${prefix}-${finalSeq}`;
 
-  // 백에 저장 요청을 보내기
   try {
     // 스토어에 새로 만든 insertWorkOrder 함수를 호출
     await store.insertWorkOrder(form.value);
-    
     alert(`저장이 완료되었습니다! 생성된 번호: ${form.value.wko_code}`);
   
     resetForm();
@@ -171,6 +188,29 @@ const saveWorkOrder = async () => {
     console.error("저장 에러 발생:", error);
     alert("저장에 실패했습니다.");
   }
+};
+
+//작업지시서 불러오기
+const selectedWko = ref(null);
+
+const applySelectedWko = async () => {
+  if (!selectedWko.value) return;
+
+  form.value.wko_code = selectedWko.value.wko_code ?? '';
+  form.value.prdp_code = selectedWko.value.prdp_code ?? '';
+  form.value.prod_code = selectedWko.value.prod_code ?? '';
+  form.value.wko_qtt = selectedWko.value.wko_qtt ?? '';
+  form.value.start_date = convertDate(selectedWko.value.start_date);
+  form.value.end_date = convertDate(selectedWko.value.end_date);
+  form.value.stat = selectedWko.value.stat ?? 'v1';
+  form.value.line_code = selectedWko.value.line_code ?? '';
+  form.value.wko_name = selectedWko.value.wko_name ?? '';
+
+  if (form.value.prdp_code) {
+    await store.fetchPrdpItems(form.value.prdp_code);
+  }
+
+  wkoListModalOpen.value = false;
 };
 </script>
 
@@ -183,10 +223,7 @@ const saveWorkOrder = async () => {
         <button class="p-button p-button-danger">삭제</button>
         <button class="p-button p-button-secondary" @click="resetForm">초기화</button>
         <button class="p-button p-button-info" @click="saveWorkOrder">저장</button>
-        <button class="p-button p-button-success" @click="">작업지시서 불러오기</button>
-      
-        <!-- <button class="p-button p-button-success" @click="openPrdpModal">생산계획 불러오기</button> -->
-      
+        <button class="p-button p-button-success" @click="openWkoListModal">작업지시서 불러오기</button>      
       </div>
     </div>
 
@@ -203,7 +240,11 @@ const saveWorkOrder = async () => {
 
       
       <div class="col-span-12 lg:col-span-1 flex items-center gap-3">
-        <button class="p-button p-button-success" @click="openPrdpModal">O</button>      
+        <Button 
+          icon="pi pi-search"
+          class="p-button-success custom-btn"
+          @click="openPrdpModal"
+        />      
       </div>
 
       <div class="col-span-12 lg:col-span-6 flex items-center gap-3">
@@ -284,6 +325,48 @@ const saveWorkOrder = async () => {
     <template #footer>
       <Button label="취소" class="p-button-text" @click="prdpModalOpen = false" />
       <Button label="확인" @click="applySelectedPlan" :disabled="!selectedPlan" />
+    </template>
+  </Dialog>
+
+  <!-- 모달창에 작업지시서 리스트 띄우기 -->
+  <Dialog v-model:visible="wkoListModalOpen" modal header="작업지시서 불러오기" :style="{ width: '70vw' }">
+    <DataTable
+      :value="wkoList"
+      scrollable
+      scrollHeight="400px"
+      dataKey="wko_code"
+      v-model:selection="selectedWko"
+      selectionMode="single"
+    >
+
+    
+      <Column selectionMode="single" headerStyle="width:3rem" />
+      <Column field="wko_code" header="작업지시번호" />
+      <Column field="prdp_code" header="생산계획번호" />
+      <Column field="prod_code" header="제품코드" />
+      <Column field="wko_qtt" header="수량" />
+      <Column header="시작일">
+        <template #body="{ data }">
+          {{ convertDate(data.start_date) }}
+        </template>
+      </Column>    
+      <Column field="line_code" header="라인" />
+      <Column header="완료예정일">
+        <template #body="{ data }">
+          {{ convertDate(data.end_date) }}
+        </template>
+      </Column>        
+      <Column header="상태">
+        <template #body="{ data }">
+          {{ statusMap[data.stat] ?? data.stat }}
+        </template>
+      </Column>      
+      <Column field="line_code" header="라인" />
+    </DataTable>
+
+    <template #footer>
+      <Button label="취소" class="p-button-text" @click="wkoListModalOpen = false" />
+      <Button label="확인" @click="applySelectedWko" :disabled="!selectedWko" />
     </template>
   </Dialog>
 </template>

@@ -6,13 +6,15 @@ const searchWorkOrders = async ({ from, to, stat, line, name, wko }) => {
   let sql = `
     SELECT 
       w.wko_code, 
+      w.prdp_code,
       w.prod_code,
       p.prod_name,
       w.line_code, 
       w.start_date, 
       w.end_date, 
       w.stat, 
-      w.wko_qtt
+      w.wko_qtt,
+      w.wko_name
     FROM wko_tbl w
     JOIN prod_tbl p
       ON w.prod_code = p.prod_code
