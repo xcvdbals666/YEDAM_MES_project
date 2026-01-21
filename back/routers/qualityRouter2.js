@@ -16,4 +16,10 @@ router.get("/qi-order", async (req, res) => {
   }
 });
 
+// 검사지 전체 불러오기
+router.get(`/qiorderlist`, async (req, res) => {
+  let list = await qualityService2.findAllQiOrderList();
+  res.send(list);
+});
+
 module.exports = router;

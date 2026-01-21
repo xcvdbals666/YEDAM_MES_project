@@ -8,6 +8,13 @@ const findQiOrderList = async (qio_code) => {
   return await mysql.query("selectQiOrderList", params, "quality2");
 };
 
+// 검사지 전체 불러오기
+const findAllQiOrderList = async () => {
+  let list = await mysql.query("selectAllQiOrderList", [], "quality2");
+  return list;
+};
+
 module.exports = {
   findQiOrderList,
+  findAllQiOrderList,
 };
