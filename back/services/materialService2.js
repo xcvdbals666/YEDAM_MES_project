@@ -37,10 +37,10 @@ const findMaxMprCode = async () => {
 };
 
 // mrp code 조회
-// const findAllMrpCodeMrpTbl = async () => {
-//   const list = await mysql.query("selectAllMrpCodeMrpTbl", [], "material2");
-//   return list;
-// };
+const findAllMrpCodeMrpTbl = async () => {
+  const list = await mysql.query("selectAllMrpCodeMrpTbl", [], "material2");
+  return list;
+};
 
 // 자재 선택 - 자재 정보 조회
 const findByMatCodeMatTbl = async (keyword) => {
@@ -95,8 +95,10 @@ const addMprTbl = async ({ request, requestDetail }) => {
 
 // 자재구매요청 정보 조회
 const findByMprCodeMprTbl = async (keyword) => {
+  // console.log("[findByMprCodeMprTbl] keyword:", keyword);
   let sql = `
     select
+      concat(m.mpr_code, '-', d.mat_code) as row_key,
       m.mpr_code,
       mt.mat_name,
       d.mat_code,
@@ -140,7 +142,31 @@ const findByMprCodeMprTbl = async (keyword) => {
 
   sql += " order by m.mpr_code desc, d.mpr_d_code asc";
 
-  return mysql.rquery(sql, params);
+  console.log("[SQL]", sql);
+  console.log("[PARAMS]", params);
+
+  try {
+    const result = await mysql.rquery(sql, params);
+    console.log("[RESULT COUNT]", result.length);
+    return result;
+  } catch (err) {
+    console.error("[DB ERROR]", err);
+    throw err;
+  }
+};
+
+// 자재구매요청서 전체 목록 조회
+const findAllMprTbl = async (keyword) => {
+  const like = `%${keyword || ""}%`;
+  const list = await mysql.query("selectAllMprTbl", like, "material2");
+  return list;
+};
+
+// 공급업체 목록 조회
+const findAllClientTbl = async (keyword) => {
+  const like = `%${keyword || ""}%`;
+  const list = await mysql.query("selectAllClientTbl", like, "material2");
+  return list;
 };
 
 module.exports = {
@@ -148,5 +174,8 @@ module.exports = {
   findByMatCodeMatTbl,
   findMaxMprCode,
   addMprTbl,
+  findAllMrpCodeMrpTbl,
   findByMprCodeMprTbl,
+  findAllMprTbl,
+  findAllClientTbl,
 };

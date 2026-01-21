@@ -17,10 +17,10 @@ router.get("/next-code", async (req, res) => {
 });
 
 // mrp code 조회
-// router.get("/getMrpCode", async (req, res) => {
-//   const list = await materialService2.findAllMrpCodeMrpTbl();
-//   res.send(list);
-// });
+router.get("/getMrpCode", async (req, res) => {
+  const list = await materialService2.findAllMrpCodeMrpTbl();
+  res.send(list);
+});
 
 // 자재 선택 - 자재 정보 조회
 router.get(`/mat-info`, async (req, res) => {
@@ -48,6 +48,20 @@ router.get("/mat-request", async (req, res) => {
     clientCode,
   });
 
+  res.send(list);
+});
+
+// 자재구매요청서 전체 목록 조회
+router.get("/mprList", async (req, res) => {
+  const { keyword = "" } = req.query;
+  const list = await materialService2.findAllMprTbl(keyword);
+  res.send(list);
+});
+
+// 공급업체 목록 조회
+router.get("/clientList", async (req, res) => {
+  const { keyword = "" } = req.query;
+  const list = await materialService2.findAllClientTbl(keyword);
   res.send(list);
 });
 module.exports = router;

@@ -8,7 +8,7 @@ const selectMaxMprCode = `SELECT IFNULL(MAX(mpr_code), 'MPR-000') AS last_code F
 const selectMaxMprDCode = `SELECT IFNULL(MAX(mpr_d_code), 'MPR-D-000') AS last_code FROM mpr_d_tbl`;
 
 // mrp code 조회
-// const selectAllMrpCodeMrpTbl = `SELECT mrp_code, plan_date FROM mrp_tbl order by plan_date desc`;
+const selectAllMrpCodeMrpTbl = `SELECT mrp_code, plan_date FROM mrp_tbl order by plan_date desc`;
 
 // 자재 선택 - 자재 정보 조회
 const selectByMatCodeMatTbl = `SELECT m.mat_code, m.mat_name, m.unit,
@@ -50,11 +50,28 @@ const insertMprTbl = `INSERT INTO mpr_tbl (mpr_code, reqdate, deadline, mrp_code
 const insertMprDTbl = `INSERT INTO mpr_d_tbl (mpr_d_code, req_qtt, unit, note, mpr_code, mat_sup, mat_code) 
                                    VALUES (?, ?, ?, ?, ?, ?, ?)`;
 
+// 자재구매요청서 전체 목록 조회
+const selectAllMprTbl = `SELECT m.mpr_code, m.reqdate, m.mcode, m.deadline, m.mrp_code,
+                                GROUP_CONCAT(DISTINCT mat.mat_name SEPARATOR ', ') AS material_names
+                         FROM mpr_tbl m
+                         LEFT JOIN mpr_d_tbl md ON m.mpr_code = md.mpr_code
+                         LEFT JOIN mat_tbl mat ON md.mat_code = mat.mat_code
+                         WHERE m.mpr_code like ?
+                         GROUP BY m.mpr_code,m.reqdate, m.mcode, m.deadline,m.mrp_code
+                         ORDER BY m.mpr_code DESC`;
+
+// 공급업체 목록 조회
+const selectAllClientTbl = `SELECT client_code, client_name, client_type
+                            FROM client_tbl
+                            WHERE client_name like ?`;
+
 module.exports = {
   selectByMatCodeMatTbl,
   selectMaxMprCode,
   selectMaxMprDCode,
-  // selectAllMrpCodeMrpTbl,
+  selectAllMrpCodeMrpTbl,
   insertMprTbl,
   insertMprDTbl,
+  selectAllMprTbl,
+  selectAllClientTbl,
 };
