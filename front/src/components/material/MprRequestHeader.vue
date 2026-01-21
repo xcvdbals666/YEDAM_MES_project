@@ -15,21 +15,26 @@ const data = computed({
 </script>
 
 <template>
-  <Fluid class="card">
-    <div class="flex justify-between items-center pb-4">
-      <h4 class="m-0">자재 구매 요청</h4>
-      <div class="flex items-center gap-2">
-        <Button label="초기화" severity="contrast" class="whitespace-nowrap px-3 py-1 h-[35px] text-sm gap-2" @click="emit('reset')" />
-        <Button label="저장" @click="emit('save')" class="px-3 py-1 h-[35px] text-sm gap-2" />
+  <div class="mpr-card">
+    <!-- 헤더 -->
+    <div class="flex justify-between items-center pb-4 border-b">
+      <h4 class="m-0 font-semibold">자재 구매 요청</h4>
+
+      <div class="flex items-center gap-2 whitespace-nowrap">
+        <Button label="삭제" severity="danger" />
+        <Button label="초기화" severity="contrast" />
+        <Button label="저장" severity="info" />
+        <Button label="MPR 불러오기" />
       </div>
     </div>
 
-    <table class="w-full">
+    <!-- 본문 -->
+    <table class="w-full mt-4">
       <colgroup>
-        <col class="w-25" />
-        <col class="w-auto" />
-        <col class="w-25" />
-        <col class="w-auto" />
+        <col class="w-[120px]" />
+        <col />
+        <col class="w-[120px]" />
+        <col />
       </colgroup>
 
       <tbody>
@@ -43,7 +48,6 @@ const data = computed({
           <td>
             <div class="flex gap-2">
               <InputText v-model="data.writer" placeholder="작성자 선택" readonly @click="emit('selectEmployee')" class="flex-1" />
-              <!-- <Button icon="pi pi-search" severity="secondary" @click="emit('selectEmployee')" /> -->
             </div>
           </td>
         </tr>
@@ -65,6 +69,7 @@ const data = computed({
           <td>
             <InputText v-model="data.reqDate" readonly />
           </td>
+
           <th>MRP 계획번호</th>
           <td>
             <AutoComplete
@@ -81,13 +86,22 @@ const data = computed({
         </tr>
       </tbody>
     </table>
-  </Fluid>
+  </div>
 </template>
 
 <style scoped>
+/* 카드 전체 */
+.mpr-card {
+  background: #ffffff;
+  border: 1px solid var(--surface-border, #e5e7eb);
+  border-radius: 10px;
+  padding: 20px;
+}
+
+/* 테이블 */
 th,
 td {
-  padding: 6px 8px;
+  padding: 8px 10px;
   text-align: left;
   vertical-align: middle;
 }
@@ -95,9 +109,17 @@ td {
 th {
   font-weight: 600;
   white-space: nowrap;
+  color: #374151;
 }
 
 td {
   padding-right: 20px;
+}
+
+/* 입력 컴포넌트 높이 통일 */
+:deep(.p-inputtext),
+:deep(.p-autocomplete),
+:deep(.p-datepicker input) {
+  width: 100%;
 }
 </style>
