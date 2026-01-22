@@ -61,10 +61,17 @@ router.get("/mpr-request", async (req, res) => {
   res.send(list);
 });
 
+// 자재구매요청 상세 정보 조회 - 요청기본정보
+router.get("/mpr-request/:mprCode/header", async (req, res) => {
+  const mprCode = req.params.mprCode;
+  const list = await materialService2.findByMprCodeMprTblDetail(mprCode);
+  res.send(list);
+});
+
 // 자재구매요청 상세 정보 조회 - 요청자재상세
 router.get("/mpr-request/:mprCode/items", async (req, res) => {
   const mprCode = req.params.mprCode;
-  const list = await materialService2.findByMprCodeMprDTbl(mprCode);
+  const list = await materialService2.findByMprCodeMprDTblDetail(mprCode);
   res.send(list);
 });
 

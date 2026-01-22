@@ -61,6 +61,13 @@ const selectAllMprTbl = `SELECT m.mpr_code, m.reqdate, m.mcode, m.deadline, m.mr
                          GROUP BY m.mpr_code,m.reqdate, m.mcode, m.deadline,m.mrp_code
                          ORDER BY m.mpr_code DESC`;
 
+// 자재구매요청 상세 정보 조회 - 요청기본정보
+const selectByMprCodeMprTbl = `SELECT m.mpr_code, m.reqdate, e.emp_name, d.dept_name
+                               FROM mpr_tbl m
+                               JOIN emp_tbl e ON e.emp_code = m.mcode
+                               LEFT JOIN dept_tbl d ON d.dept_code = e.dept_code
+                               WHERE m.mpr_code = ?`;
+
 // 자재구매요청 상세 정보 조회 - 요청자재상세
 const selectByMprCodeMprDTbl = `SELECT m.mpr_code, mt.mat_name, d.mat_code, m.reqdate,
                                        d.req_qtt, d.unit, d.note, c.client_name,
@@ -80,6 +87,7 @@ const selectAllClientTbl = `SELECT client_code, client_name, client_type, c2.not
 
 module.exports = {
   selectByMatCodeMatTbl,
+  selectByMprCodeMprTbl,
   selectByMprCodeMprDTbl,
   selectMaxMprCode,
   selectMaxMprDCode,
