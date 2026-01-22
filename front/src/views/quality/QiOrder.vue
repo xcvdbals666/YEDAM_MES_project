@@ -208,8 +208,8 @@ let callQiProd = ref(false);
 </script>
 
 <template>
-  <QiOrderHeader :order-input="orderInput" :key="orderInput" @search-order-list="searchOrderList" @del-qi-order="delQiOrder" @reset-qi-order="resetQiOrder" @submit-qi-order="submitQiOrder"></QiOrderHeader>
-  <QiOrderItem :selected-minbnd="seletedMinbnd" :key="seletedMinbnd" @search-list="searchMinbndList" @search-produce-list="searchProduceList"></QiOrderItem>
+  <QiOrderHeader :order-input="orderInput" :key="orderInput" :call-qi-order="callQiOrder" @search-order-list="searchOrderList" @del-qi-order="delQiOrder" @reset-qi-order="resetQiOrder" @submit-qi-order="submitQiOrder"></QiOrderHeader>
+  <QiOrderItem :selected-minbnd="seletedMinbnd" :key="seletedMinbnd" :call-qi-minbnd="callQiMinbnd" :call-qi-prod="callQiProd" @search-list="searchMinbndList" @search-produce-list="searchProduceList"></QiOrderItem>
   <QiOrderMain :all-qi-list="allQiList" :selected-qcr-list="selectedQcrList" :key="selectedQcrList"></QiOrderMain>
   <SelectQiOrderModal :display="orderDisplay" :qi-order-list="quality1.qiOrderList" @close="closeMOdal" @selected-order="selectedOrder"></SelectQiOrderModal>
   <SelectMinbndModal :display="display" :minbnd="minbndList" @close="closeMOdal" @select-comp="selectComp"></SelectMinbndModal>
