@@ -151,12 +151,12 @@ const findByMprCodeMprTbl = async (keyword) => {
   sql +=
     " GROUP BY m.mpr_code, m.reqdate, m.deadline, m.mrp_code, m.mcode ORDER BY m.mpr_code DESC";
 
-  console.log("[SQL]", sql);
-  console.log("[PARAMS]", params);
+  // console.log("[SQL]", sql);
+  // console.log("[PARAMS]", params);
 
   try {
     const result = await mysql.rquery(sql, params);
-    console.log("[RESULT COUNT]", result.length);
+    //console.log("[RESULT COUNT]", result.length);
     return result;
   } catch (err) {
     console.error("[DB ERROR]", err);
@@ -164,27 +164,39 @@ const findByMprCodeMprTbl = async (keyword) => {
   }
 };
 
+// 자재구매요청 상세 정보 조회 - 요청기본정보
+const findByMprCodeMprTblDetail = async (mprCode) => {
+  const list = await mysql.query(
+    "selectByMprCodeMprTbl",
+    [mprCode],
+    "material2",
+  );
+  return list[0] || null;
+};
+
 // 자재구매요청 상세 정보 조회 - 요청자재상세
-const findByMprCodeMprDTbl = async (mprCode) => {
+const findByMprCodeMprDTblDetail = async (mprCode) => {
+  // console.log(":" + mprCode + ":");
   const list = await mysql.query(
     "selectByMprCodeMprDTbl",
     [mprCode],
     "material2",
   );
+  // console.log("service : ", list);
   return list;
 };
 
 // 자재구매요청서 전체 목록 조회
 const findAllMprTbl = async (keyword) => {
   const like = `%${keyword || ""}%`;
-  const list = await mysql.query("selectAllMprTbl", like, "material2");
+  const list = await mysql.query("selectAllMprTbl", [like], "material2");
   return list;
 };
 
 // 공급업체 목록 조회
 const findAllClientTbl = async (keyword) => {
   const like = `%${keyword || ""}%`;
-  const list = await mysql.query("selectAllClientTbl", like, "material2");
+  const list = await mysql.query("selectAllClientTbl", [like], "material2");
   return list;
 };
 
@@ -197,5 +209,6 @@ module.exports = {
   findByMprCodeMprTbl,
   findAllMprTbl,
   findAllClientTbl,
-  findByMprCodeMprDTbl,
+  findByMprCodeMprTblDetail,
+  findByMprCodeMprDTblDetail,
 };

@@ -10,6 +10,7 @@ export const useMaterialStore = defineStore('material2', {
     requestList: [], // 자재구매요청 조회 정보
     clientList: [], // 공급업체 정보
     mprList: [], // 자재구매요청서 정보
+    mprHeaders: null, // 자재구매요청 상세 조회 - 요청기본정보
     mprItems: [] // 자재구매요청 상세 조회 - 요청 자재 상세 정보
   }),
   // getters
@@ -46,6 +47,12 @@ export const useMaterialStore = defineStore('material2', {
     async fetchRequest(keyword) {
       const response = await axios.get('/api/material/mpr-request', { params: keyword });
       this.requestList = response.data;
+    },
+
+    // 자재구매요청 상세 정보 조회 - 요청기본정보
+    async fetchDetailHeader(mprCode) {
+      const response = await axios.get(`/api/material/mpr-request/${mprCode}/header`);
+      this.mprHeaders = response.data;
     },
 
     // 자재구매요청 상세 조회 - 요청 자재 상세
