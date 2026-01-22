@@ -1,6 +1,9 @@
 // 순수 기능에 대한 정의 => 함수(function)
 const mysql = require("../database/mapper.js");
 
+// const { GoogleGenerativeAI } = require("@google/generative-ai");
+
+// const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 // 주문 전체 조회
 const findAllOrder = async () => {
   let list = await mysql.query("selectAllOrder", [], "order1");
@@ -26,6 +29,7 @@ const findAllProducts = async () => {
   let list = await mysql.query("selectAllProducts", [], "order1");
   return list;
 };
+// 주문 및 주문상세 등록
 const addOrder = async (order, orderDetail) => {
   console.log(order);
   console.log(orderDetail);
@@ -57,12 +61,17 @@ const addOrder = async (order, orderDetail) => {
   );
   return ordCode;
 };
+// 주문 및 주문상세 수정(상세는 추가도 가능함.)
 const modifyOrder = async (order, orderDetail) => {
   let ordCode = order.ord_code;
   delete order.ord_code;
   delete order.client_name;
   delete order.ord_date;
+  delete order.ord_priority;
+  delete order.stat_note;
+  delete order.mname;
   const detailValues = orderDetail.map((item) => [
+    item.ord_d_code,
     item.unit,
     item.spec,
     item.ord_amount,
@@ -73,13 +82,36 @@ const modifyOrder = async (order, orderDetail) => {
     ordCode,
     item.prod_code,
   ]);
+  console.log(orderDetail);
+  console.log(detailValues);
+  let detail = await mysql.query("deleteDetail", [ordCode], "order1");
   let orderResult = await mysql.query(
     "updateOrder",
     [order, ordCode],
     "order1",
   );
-  let detailResult = await mysql.query("updateDetail", [detailValues]);
+  let detailResult = await mysql.query(
+    "updateDetail",
+    [detailValues],
+    "order1",
+  );
+  return { order: orderResult, detail: detailResult };
 };
+// 주문 삭제
+const removeOrder = async (ordCode) => {
+  let result;
+  let detail = await mysql.query("deleteDetail", [ordCode], "order1");
+  let order = await mysql.query("deleteOrder", [ordCode], "order1");
+  if (order.affectedRows > 0 || detail.affectedRows > 0) {
+    result = `삭제완료`;
+  } else {
+    result = `삭제실패`;
+  }
+
+  return result;
+};
+
+// ai활용
 module.exports = {
   findAllOrder,
   findAllClient,
@@ -88,4 +120,5 @@ module.exports = {
   findOrderDetailByCode,
   addOrder,
   modifyOrder,
+  removeOrder,
 };
