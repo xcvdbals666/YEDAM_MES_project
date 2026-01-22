@@ -40,9 +40,9 @@ router.get(`/allProductsList`, async (req, res) => {
 });
 
 //작업지시서 등록하기
-router.post("/workorderInsert", async (req, res) => {
+router.post("/workorderSave", async (req, res) => {
   try {
-    const result = await produceService.updateWorkOrder(req.body);
+    const result = await produceService.saveWorkOrder(req.body);
     res.status(200).json(result);
   } catch (err) {
     console.error("라우터 에러:", err);
@@ -56,5 +56,11 @@ router.delete("/workOrderRemove/:wko_code", async (req, res) => {
   const result = await produceService.removeWorkOrder(wko_code);
   res.send(result);
 });
+
+//(동적)작업진행조회 페이지에서 작업지시서, 생산실적 테이블로 검색조회
+router.get(`/workInProcessList`, async (req, res) => {
+  const rows = await produceService.getWorkInProcessList(req.query);
+  res.json(rows)
+})
 
 module.exports = router;

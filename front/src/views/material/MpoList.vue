@@ -1,8 +1,11 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useMaterialStore } from '@/stores/material1';
+import { useOrderStore2 } from '@/stores/order2';
+import { downloadExcel } from '@/utils/excel';
 
 const mpoStore = useMaterialStore();
+const orderStore = useOrderStore2();
 
 // 검색 조건
 const searchData = ref({
@@ -36,7 +39,7 @@ const loadMpoList = async () => {
 
 // 검색
 const handleSearch = async () => {
-  await loadMpoList();
+  mpoList.value = await mpoStore.searchMpoDetail(searchData.value);
 };
 
 // 초기화
@@ -61,6 +64,30 @@ const formatDate = (v) => {
   const mm = String(d.getMonth() + 1).padStart(2, '0');
   const dd = String(d.getDate()).padStart(2, '0');
   return `${yyyy}-${mm}-${dd}`;
+};
+
+//엑셀다운로드
+const handleExcelDownload = () => {
+  // 엑셀 파일의 컬럼명 (순서 중요)
+  const headers = ['발주서번호', '발주제안일', '자재유형', '자재명', '공급업체', '필요수량', '입고납기일', '발주상태', '작성자', '등록일자'];
+
+  // 각 출고 데이터를 엑셀 행으로 변환
+  // 주의: headers 배열 순서와 동일하게 매핑해야 함
+  const mapFunction = (item) => [
+    item.purchase_code,
+    formatDate(item.purchase_req_date),
+    item.material_type || '-',
+    item.material_names,
+    item.supplier_name || '-',
+    item.req_qtt || '-',
+    formatDate(item.deadline),
+    item.stat,
+    item.emp_name,
+    formatDate(item.regdate)
+  ];
+
+  // 엑셀 다운로드 실행
+  downloadExcel(selectedRows.value.length > 0 ? selectedRows.value : orderStore.outboundList, headers, mapFunction, '발주목록조회');
 };
 </script>
 
@@ -94,7 +121,7 @@ const formatDate = (v) => {
 
               <th>자재유형</th>
               <td>
-                <InputText v-model="searchData.matName" placeholder="자재 선택" class="w-full" />
+                <Select v-model="searchData.matName" :options="['전체', '원자재', '부자재']" placeholder="자재 선택" class="w-full" />
               </td>
             </tr>
 
@@ -140,7 +167,7 @@ const formatDate = (v) => {
         <h4 class="m-0">검색 결과 {{ mpoList.length }}건</h4>
 
         <div class="flex gap-2">
-          <Button icon="pi pi-file-excel" label="엑셀 다운로드" class="px-3 py-1 h-[35px] text-sm gap-2" />
+          <Button icon="pi pi-file-excel" label="엑셀 다운로드" class="px-3 py-1 h-[35px] text-sm gap-2" @click="handleExcelDownload" />
         </div>
       </div>
 

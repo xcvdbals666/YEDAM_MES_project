@@ -42,6 +42,16 @@ const confirm = () => {
   emit('select', selectedMpr.value);
   close();
 };
+
+// 자재명 포맷
+const formatMaterialNames = (names) => {
+  if (!names) return '-';
+  const arr = names.split(', ');
+  if (arr.length === 1) {
+    return arr[0];
+  }
+  return `${arr[0]} 외 ${arr.length - 1}건`;
+};
 </script>
 
 <template>
@@ -56,7 +66,11 @@ const confirm = () => {
       <Column field="mpr_code" header="요청서 번호" style="width: 120px" />
       <Column field="reqdate" header="요청일" style="width: 120px" />
       <Column field="emp_name" header="요청자" style="width: 120px" />
-      <Column field="material_names" header="자재명" />
+      <Column field="material_names" header="자재명">
+        <template #body="{ data }">
+          {{ formatMaterialNames(data.material_names) }}
+        </template>
+      </Column>
     </DataTable>
 
     <template #footer>

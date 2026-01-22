@@ -85,7 +85,7 @@ const model = ref([
           {
             label: '작업진행 목록',
             icon: 'pi pi-fw pi-lock',
-            to: ''
+            to: '/workInProcessList'
           },
           {
             label: '생산실적조회',
@@ -135,6 +135,11 @@ const model = ref([
             label: '발주서목록',
             icon: 'pi pi-fw pi-sign-in',
             to: '/mpolist'
+          },
+          {
+            label: '입고등록',
+            icon: 'pi pi-fw pi-sign-in',
+            to: '/inboundregister'
           }
         ]
       },

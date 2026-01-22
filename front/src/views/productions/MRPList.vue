@@ -1,21 +1,23 @@
 <script setup>
 import { useProductionStore } from '@/stores/production2';
 import { onMounted, reactive, ref } from 'vue';
+import { useRouter } from 'vue-router';
 
 const store = useProductionStore();
+const router = useRouter();
 
 const today = new Date();
 const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
 const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
 const data = reactive({
-  code: '',
-  name: '',
-  prdpStart: firstDay,
-  prdpEnd: lastDay,
-  dueStart: firstDay,
-  dueEnd: lastDay
+  mrpCode: '',
+  prdpCode: '',
+  prdpName: '',
+  matName: '',
+  mrpStart: firstDay,
+  mrpEnd: lastDay
 });
-const plans = ref([]);
+const MRP = ref([]);
 
 // 날짜포맷
 const formatDate = (date) => {
@@ -24,78 +26,87 @@ const formatDate = (date) => {
 
 // 초기화
 const reset = () => {
-  data.code = '';
-  data.name = '';
-  data.prdpStart = firstDay;
-  data.prdpEnd = lastDay;
-  data.dueStart = firstDay;
-  data.dueEnd = lastDay;
+  data.mrpCode = '';
+  data.prdpCode = '';
+  data.prdpName = '';
+  data.matName = '';
+  data.mrpStart = firstDay;
+  data.mrpEnd = lastDay;
 };
 
 // 조회
 const search = async () => {
   const params = {
-    code: data.code,
-    name: data.name
+    mrpCode: data.mrpCode,
+    prdpCode: data.prdpCode,
+    prdpName: data.prdpName,
+    matName: data.matName
   };
-  params.prdpStart = formatDate(data.prdpStart);
-  params.prdpEnd = formatDate(data.prdpEnd);
-  params.dueStart = formatDate(data.dueStart);
-  params.dueEnd = formatDate(data.dueEnd);
+  params.mrpStart = formatDate(data.mrpStart);
+  params.mrpEnd = formatDate(data.mrpEnd);
 
-  const list = await store.fetchProdPlan(params);
-  plans.value = list.map((item) => ({
+  const list = await store.fetchMRPs(params);
+  MRP.value = list.map((item) => ({
     ...item,
-    prdp_date: item.prdp_date.slice(0, 10),
-    start_date: item.start_date.slice(0, 10),
-    end_date: item.end_date.slice(0, 10),
-    due_date: item.due_date.slice(0, 10)
+    plan_date: item.plan_date.slice(0, 10)
   }));
 };
 
 onMounted(async () => {
+  store.mrpCode = null;
   await search();
 });
+
+const goDetail = (row) => {
+  store.mrpCode = row.mrp_code;
+  router.push({ name: 'productionMRP' });
+};
 </script>
 <template>
   <Fluid class="card grid gap-4">
-    <div class="font-semibold text-xl">생산계획</div>
+    <div class="font-semibold text-xl">MRP</div>
     <table class="w-full">
       <colgroup>
-        <col class="w-25" />
+        <col class="w-30" />
         <col class="w-auto" />
-        <col class="w-25" />
+        <col class="w-30" />
         <col class="w-auto" />
       </colgroup>
       <tbody>
         <tr>
+          <th>MRP코드</th>
+          <td><InputText placeholder="생산계획코드를 입력하세요" v-model="data.mrpCode"></InputText></td>
           <th>생산계획코드</th>
-          <td><InputText placeholder="생산계획코드를 입력하세요" v-model="data.prdpCode"></InputText></td>
-          <th>계획명</th>
+          <td><InputText placeholder="계획명을 입력하세요" v-model="data.prdpCode"></InputText></td>
+        </tr>
+        <tr>
+          <th>자재명</th>
+          <td><InputText placeholder="생산계획코드를 입력하세요" v-model="data.matName"></InputText></td>
+          <th>생산계획명</th>
           <td><InputText placeholder="계획명을 입력하세요" v-model="data.prdpName"></InputText></td>
         </tr>
         <tr>
-          <th>계획일자</th>
+          <th>MRP계획일자</th>
           <td>
             <Fluid class="flex gap-2 items-center">
               <div class="flex-1">
-                <DatePicker :showIcon="true" :showButtonBar="true" v-model="data.prdpStart"></DatePicker>
+                <DatePicker :showIcon="true" :showButtonBar="true" v-model="data.mrpStart"></DatePicker>
               </div>
               <span>-</span>
               <div class="flex-1">
-                <DatePicker :showIcon="true" :showButtonBar="true" v-model="data.prdpEnd"></DatePicker>
+                <DatePicker :showIcon="true" :showButtonBar="true" v-model="data.mrpEnd"></DatePicker>
               </div>
             </Fluid>
           </td>
-          <th>납기일자</th>
-          <td>
+          <th style="visibility: hidden"></th>
+          <td style="visibility: hidden">
             <Fluid class="flex gap-2 items-center">
               <div class="flex-1">
-                <DatePicker :showIcon="true" :showButtonBar="true" v-model="data.dueStart"></DatePicker>
+                <DatePicker></DatePicker>
               </div>
               <span>-</span>
               <div class="flex-1">
-                <DatePicker :showIcon="true" :showButtonBar="true" v-model="data.dueEnd"></DatePicker>
+                <DatePicker></DatePicker>
               </div>
             </Fluid>
           </td>
@@ -111,18 +122,18 @@ onMounted(async () => {
   </Fluid>
   <Fluid class="card">
     <div class="font-semibold text-xl pb-4">제품</div>
-    <DataTable :value="plans" :paginator="true" :rows="8" dataKey="prdp_code" :rowHover="true" showGridlines>
+    <DataTable :value="MRP" :paginator="true" :rows="8" dataKey="mrp_d_code" :rowHover="true" showGridlines @row-click="goDetail($event.data)">
       <template #empty>
         <div class="text-center py-6 text-gray-400">데이터 없음</div>
       </template>
-      <Column field="prdp_code" header="생산계획코드" headerClass="table-header" bodyClass="table-body text-[14px]" style="width: 140px"></Column>
-      <Column field="prdp_name" header="계획명" headerClass="table-header" bodyClass="table-body text-[14px]" style="width: 140px"></Column>
-      <Column field="prdp_date" header="계획일자" headerClass="table-header" bodyClass="table-body text-[14px]" style="width: 95px"></Column>
-      <Column field="start_date" header="계획시작일" headerClass="table-header" bodyClass="table-body text-[14px]" style="width: 95px"></Column>
-      <Column field="end_date" header="계획종료일" headerClass="table-header" bodyClass="table-body text-[14px]" style="width: 95px"></Column>
-      <Column field="due_date" header="납기일자" headerClass="table-header" bodyClass="table-body text-[14px]" style="width: 95px"></Column>
-      <Column field="reg" header="작성자" headerClass="table-header" bodyClass="table-body text-[14px]" style="width: 100px"></Column>
-      <Column field="note" header="비고" headerClass="table-header" bodyClass="table-body text-[14px]" style="width: 100px"></Column>
+      <Column field="mrp_code" header="MRP코드" headerClass="table-header truncate" bodyClass="table-body text-[14px] truncate" style="width: 100px"></Column>
+      <Column field="prdp_code" header="생산계획코드" headerClass="table-header truncate" bodyClass="table-body text-[14px] truncate" style="width: 100px"></Column>
+      <Column field="prdp_name" header="생산계획명" headerClass="table-header truncate" bodyClass="table-body text-[14px] truncate" style="width: 100px"></Column>
+      <Column field="mat_name" header="자재명" headerClass="table-header truncate" bodyClass="table-body text-[14px] truncate" style="width: 100px"></Column>
+      <Column field="req_qtt" header="필요수량" headerClass="table-header truncate" bodyClass="table-body text-[14px] truncate" style="width: 80px"></Column>
+      <Column field="unit" header="단위" headerClass="table-header truncate" bodyClass="table-body text-[14px] truncate" style="width: 60px"></Column>
+      <Column field="plan_date" header="MRP계획일자" headerClass="table-header truncate" bodyClass="table-body text-[14px] truncate" style="width: 120px"></Column>
+      <Column field="mrp_note" header="비고" headerClass="table-header truncate" bodyClass="table-body text-[14px] truncate" style="width: 140px"></Column>
     </DataTable>
   </Fluid>
 </template>
