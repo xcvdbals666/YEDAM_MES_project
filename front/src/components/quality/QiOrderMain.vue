@@ -12,7 +12,6 @@ const props = defineProps({
   selectedQcrList: { type: Array, required: true }
 });
 
-let ary = ref([]);
 watch(
   () => props.selectedQcrList,
   (newval) => {

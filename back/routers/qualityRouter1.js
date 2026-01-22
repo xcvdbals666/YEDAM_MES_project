@@ -23,7 +23,7 @@ router.get(`/qiorderiteminfo/:id`, async (req, res) => {
   res.send(list);
 });
 
-// 검사지 전체 불러오기
+// 생산실적 전체 불러오기
 router.get(`/qiproducelist`, async (req, res) => {
   let list = await qualityService.findQiProduceList();
   res.send(list);
@@ -50,4 +50,33 @@ router.delete("/removeqiorder/:id", async (req, res) => {
   let list = await qualityService.removeqiorder(id);
   res.send(list);
 });
+
+// 검사 결과서 관리
+// 검사지 전체 불러오기
+router.get(`/qirqiorderlist`, async (req, res) => {
+  let list = await qualityService.findAllQirQiOrder();
+  res.send(list);
+});
+
+// 검사 결과서 등록
+router.post("/submitqiresult", async (req, res) => {
+  let data = req.body;
+  console.log(data);
+  let list = await qualityService.addQiResultForm(data);
+  res.send(list);
+});
+
+// 검사지 정보 불러오기(생산일 경우)
+router.get(`/qirprodinfo/:id`, async (req, res) => {
+  let id = req.params.id;
+  let list = await qualityService.findQirProdInfo(id);
+  res.send(list);
+});
+
+// 검사결과서 불러오기
+router.get(`/qirlist`, async (req, res) => {
+  let list = await qualityService.findQirList();
+  res.send(list);
+});
+
 module.exports = router;

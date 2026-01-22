@@ -1,7 +1,8 @@
 <script setup>
 import { defineProps } from 'vue';
 const props = defineProps({
-  orderInput: { type: Object, required: true }
+  orderInput: { type: Object, required: true },
+  callQiOrder: { type: Boolean, required: true }
 });
 </script>
 <template>
@@ -13,7 +14,7 @@ const props = defineProps({
           <Button type="button" label="삭제" @click="$emit('delQiOrder', orderInput.qio_code)" severity="danger" />
           <Button type="button" label="초기화" @click="$emit('resetQiOrder')" severity="secondary" />
           <Button type="button" label="저장" @click="$emit('submitQiOrder')" severity="success" />
-          <Button type="button" label="검사지 불러오기" @click="$emit('searchOrderList')" />
+          <Button type="button" label="검사지 불러오기" :disabled="callQiOrder" @click="$emit('searchOrderList')" />
         </div>
       </div>
       <div class="grid grid-cols-4 gap-4">
