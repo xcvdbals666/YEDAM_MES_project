@@ -135,6 +135,11 @@ const model = ref([
             label: '발주서목록',
             icon: 'pi pi-fw pi-sign-in',
             to: '/mpolist'
+          },
+          {
+            label: '입고등록',
+            icon: 'pi pi-fw pi-sign-in',
+            to: '/inboundregister'
           }
         ]
       },
