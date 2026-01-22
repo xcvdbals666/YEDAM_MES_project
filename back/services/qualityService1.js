@@ -41,17 +41,28 @@ const addQiOrderForm = async (data) => {
     "quality1",
   );
   let qio_code = rows.newQio;
-  console.log(qio_code);
-  const { insp_date, insp_vol, mpo_d_code } = data;
-  try {
-    console.log("전송 데이터:", [qio_code, insp_date, insp_vol, mpo_d_code]);
+  console.log("newQio_code: :", qio_code);
 
-    let list = await mysql.query(
-      "insertQio_tbl",
-      [qio_code, insp_date, insp_vol, mpo_d_code],
-      "quality1",
-    );
-    return list;
+  try {
+    if (data.mat_type == "i3") {
+      const { insp_date, insp_vol, mpo_d_code, mat_type } = data;
+      console.log("전송 데이터:", [qio_code, insp_date, insp_vol, mpo_d_code]);
+      let list = await mysql.query(
+        "insertQio_tbl",
+        [qio_code, insp_date, insp_vol, mpo_d_code],
+        "quality1",
+      );
+      return list;
+    } else {
+      const { insp_date, insp_vol, prdr_code, mat_type } = data;
+      console.log("전송 데이터:", [qio_code, insp_date, insp_vol, prdr_code]);
+      let list = await mysql.query(
+        "insertQio_tblPro",
+        [qio_code, insp_date, insp_vol, prdr_code],
+        "quality1",
+      );
+      return list;
+    }
   } catch (err) {
     console.error(err);
   }
