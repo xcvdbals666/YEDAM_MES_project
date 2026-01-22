@@ -73,7 +73,9 @@ const getOrderDetails = async (event) => {
   // 2. API 호출
   await order.getOrderDetail(orderInfo.value.ord_code);
   orderDetail.value = order.details;
-
+  for (let val of orderDetail.value) {
+    totalPrice.value = totalPrice.value + val.total_price;
+  }
   // 3. 데이터 준비 끝난 후 모달 열기
   ordVisible.value = true;
 };
@@ -105,6 +107,11 @@ const getPrioritySeverity = (priority) => {
 };
 const isRowSelectable = (data) => {
   return true; // 모든 행 선택 가능
+};
+const totalPrice = ref(0);
+const closeModal = () => {
+  totalPrice.value = 0;
+  ordVisible.value = false;
 };
 </script>
 
@@ -147,7 +154,7 @@ const isRowSelectable = (data) => {
         <div class="flex justify-between items-end mb-3">
           <h3 class="text-lg font-bold text-gray-700">📦 주문 품목</h3>
           <span class="text-sm text-gray-500">
-            총 합계: <span class="text-xl font-bold text-blue-600">{{}}</span>
+            총 합계: <span class="text-xl font-bold text-blue-600">{{ totalPrice.toLocaleString() }} </span>원
           </span>
         </div>
 
@@ -197,7 +204,7 @@ const isRowSelectable = (data) => {
       </div>
     </div>
     <template #footer>
-      <Button label="확인" severity="info" variant="outlined" class="min-w-[65px]" @click="ordVisible = false" />
+      <Button label="확인" severity="info" variant="outlined" class="min-w-[65px]" @click="closeModal" />
     </template>
   </Dialog>
   <Fluid>
