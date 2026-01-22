@@ -458,5 +458,6 @@ module.exports = {
   selectNextLotNum,
   insertMatLot,
   selectNextMinbndCode,
+  insertMinbnd,
   selectPassedQirList,
 };

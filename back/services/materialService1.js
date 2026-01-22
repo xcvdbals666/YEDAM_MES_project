@@ -353,7 +353,7 @@ const addInbound = async (items) => {
         item.inbnd_qtt, // ord_qtt = inbnd_qtt
         lotNum,
         item.mat_sup,
-        item.qio_code || null,
+        item.qio_code || "",
         item.mcode,
       ],
       "material1",

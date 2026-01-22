@@ -2,6 +2,9 @@
 import { ref } from 'vue';
 import { useMaterialStore } from '@/stores/material1';
 import SelectModal from '@/components/material/modal/SelectModal.vue';
+import AddMaterialModal from '@/components/material/modal/AddMaterialModal.vue';
+
+import InboundModal from '@/components/material/modal/InboundModal.vue';
 
 const store = useMaterialStore();
 
@@ -60,6 +63,11 @@ const handleSelectMat = (mat) => {
   inboundForm.value.matName = mat.mat_name;
   inboundForm.value.matType = mat.material_type_code;
   inboundForm.value.unit = mat.unit;
+  // 자재에 연결된 공급업체 정보가 있으면 자동 입력
+  // if (mat.client_code) {
+  //   inboundForm.value.clientCode = mat.client_code;
+  //   inboundForm.value.clientName = mat.supplier_name;
+  // }
 };
 
 // 공급업체 선택
@@ -68,7 +76,7 @@ const handleSelectClient = (client) => {
   inboundForm.value.clientName = client.client_name;
 };
 
-// 담당자 선택
+// 담당자 선택 (상단 폼)
 const handleSelectEmp = (emp) => {
   inboundForm.value.empCode = emp.emp_code;
   inboundForm.value.empName = emp.emp_name;
@@ -90,7 +98,6 @@ const handleSelectRowEmp = (emp) => {
 
 // 품질검사 합격 목록 선택
 const handleSelectQir = (items) => {
-  // 선택된 합격 항목들을 입고 대기 목록에 추가
   items.forEach((item) => {
     // 중복 체크
     const exists = inboundList.value.some((row) => row.qirCode === item.qir_code);
@@ -203,27 +210,23 @@ const submitInbound = async () => {
     return;
   }
 
-  try {
-    const payload = inboundList.value.map((item) => ({
-      mat_code: item.matCode,
-      mat_type: item.matType,
-      unit: item.unit,
-      inbnd_qtt: item.inbndQtt,
-      inbnd_date: formatDate(item.inbndDate),
-      mat_sup: item.clientCode,
-      mcode: item.empCode,
-      qio_code: item.qioCode,
-      mpo_d_code: item.mpoDCode
-    }));
+  const payload = inboundList.value.map((item) => ({
+    mat_code: item.matCode,
+    mat_type: item.matType,
+    unit: item.unit,
+    inbnd_qtt: item.inbndQtt,
+    inbnd_date: formatDate(item.inbndDate),
+    mat_sup: item.clientCode,
+    mcode: item.empCode,
+    qio_code: item.qioCode
+  }));
 
-    // TODO: API 호출
-    // const result = await store.addInbound(payload);
+  const result = await store.addInbound(payload);
 
-    console.log('등록할 데이터:', payload);
-    alert('등록되었습니다!');
+  if (result.status === 'success') {
+    alert('입고 등록이 완료되었습니다!');
     cancelAll();
-  } catch (err) {
-    console.error('입고 등록 실패:', err);
+  } else {
     alert('등록에 실패했습니다.');
   }
 };
@@ -265,8 +268,8 @@ const submitInbound = async () => {
 
         <!-- 자재분류 -->
         <div>
-          <label class="block mb-1 text-sm font-medium">자재유형</label>
-          <InputText :value="getMatTypeName(inboundForm.matType)" placeholder="유형" class="w-full" disabled />
+          <label class="block mb-1 text-sm font-medium">자재분류</label>
+          <InputText :value="getMatTypeName(inboundForm.matType)" placeholder="분류" class="w-full" disabled />
         </div>
 
         <!-- 단위 -->
@@ -304,7 +307,7 @@ const submitInbound = async () => {
         <!-- 입고일자 -->
         <div>
           <label class="block mb-1 text-sm font-medium">입고일자 *</label>
-          <DatePicker v-model="inboundForm.inbndDate" diadateFormat="yy-mm-dd" placeholder="YYYY-MM-DD" showIcon class="w-full" />
+          <DatePicker v-model="inboundForm.inbndDate" dateFormat="yy-mm-dd" placeholder="YYYY-MM-DD" showIcon class="w-full" />
         </div>
       </div>
 
@@ -335,9 +338,13 @@ const submitInbound = async () => {
           <template #body="{ index }">{{ index + 1 }}</template>
         </Column>
 
-        <Column field="matCode" header="자재코드" sortable style="width: 120px" />
+        <Column field="matCode" header="자재코드" sortable style="width: 120px">
+          <template #body="{ data }">{{ data.matCode }}</template>
+        </Column>
 
-        <Column field="matName" header="자재명" sortable style="min-width: 150px" />
+        <Column field="matName" header="자재명" sortable style="min-width: 150px">
+          <template #body="{ data }">{{ data.matName }}</template>
+        </Column>
 
         <Column header="분류" sortable style="width: 80px">
           <template #body="{ data }">{{ getMatTypeName(data.matType) }}</template>
@@ -347,7 +354,9 @@ const submitInbound = async () => {
           <template #body="{ data }">{{ getUnitName(data.unit) }}</template>
         </Column>
 
-        <Column field="clientName" header="공급업체" sortable style="width: 120px" />
+        <Column field="clientName" header="공급업체" sortable style="width: 120px">
+          <template #body="{ data }">{{ data.clientName }}</template>
+        </Column>
 
         <Column header="담당자" style="width: 120px">
           <template #body="{ data, index }">
@@ -360,15 +369,11 @@ const submitInbound = async () => {
         </Column>
 
         <Column header="입고수량" sortable style="width: 100px">
-          <template #body="{ data }">
-            <InputNumber v-model="data.inbndQtt" class="w-full" />
-          </template>
+          <template #body="{ data }">{{ data.inbndQtt }}</template>
         </Column>
 
         <Column header="입고일자" sortable style="width: 150px">
-          <template #body="{ data }">
-            <DatePicker v-model="data.inbndDate" dateFormat="yy-mm-dd" showIcon class="w-full" />
-          </template>
+          <template #body="{ data }">{{ formatDate(data.inbndDate) }}</template>
         </Column>
 
         <Column header="삭제" style="width: 70px">
@@ -384,12 +389,21 @@ const submitInbound = async () => {
         <Button label="취소" icon="pi pi-times" severity="secondary" @click="cancelAll" />
       </div>
     </div>
+
     <!-- 자재 모달 -->
     <AddMaterialModal :visible="showMatModal" @update:visible="showMatModal = $event" @add="handleSelectMat" />
+
     <!-- 공급업체 선택 -->
     <SelectModal :visible="showClientModal" type="client" @update:visible="showClientModal = $event" @select="handleSelectClient" />
-    <!-- 담당자 선택 -->
+
+    <!-- 담당자 선택 (상단 폼) -->
     <SelectModal :visible="showEmpModal" type="employee" @update:visible="showEmpModal = $event" @select="handleSelectEmp" />
+
+    <!-- 담당자 선택 (행별) -->
+    <SelectModal :visible="showRowEmpModal" type="employee" @update:visible="showRowEmpModal = $event" @select="handleSelectRowEmp" />
+
+    <!-- 품질검사 합격 목록 모달 -->
+    <InboundModal :visible="showQirModal" @update:visible="showQirModal = $event" @select="handleSelectQir" />
   </div>
 </template>
 
