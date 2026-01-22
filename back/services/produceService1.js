@@ -9,6 +9,7 @@ const searchWorkOrders = async ({ from, to, stat, line, name, wko }) => {
       w.prdp_code,
       w.prod_code,
       p.prod_name,
+      pp.prdp_date,
       w.line_code, 
       w.start_date, 
       w.end_date, 
@@ -18,6 +19,8 @@ const searchWorkOrders = async ({ from, to, stat, line, name, wko }) => {
     FROM wko_tbl w
     JOIN prod_tbl p
       ON w.prod_code = p.prod_code
+    JOIN prdp_tbl pp
+      ON pp.prdp_code = w.prdp_code 
     WHERE 1=1
   `;
   const params = [];
@@ -127,6 +130,118 @@ const removeWorkOrder = async (wko_code) => {
   return { ok: true, wko_code, result };
 };
 
+//불러온 작업지시서 수정하기
+const saveWorkOrder = async (data) => {
+  const {
+    wko_code,
+    start_date,
+    stat,
+    prdp_code,
+    prod_code,
+    wko_qtt,
+    end_date,
+    line_code,
+    wko_name,
+  } = data;
+
+  const exists = await mysql.query("existsWorkOrder", [wko_code], "produce1");
+  const isUpdate = Array.isArray(exists) && exists.length > 0;
+
+  if (isUpdate) {
+    const params = [
+      start_date,
+      stat,
+      prdp_code || null,
+      prod_code,
+      wko_qtt,
+      end_date || null,
+      line_code,
+      wko_name,
+      wko_code,
+    ];
+
+    const result = await mysql.query("updateWorkOrder", params, "produce1");
+    return { ok: true, mode: "update", wko_code, result };
+  } else {
+
+    const params = [
+      wko_code,
+      start_date,
+      stat,
+      prdp_code || null,
+      prod_code,
+      wko_qtt,
+      end_date || null,
+      line_code,
+      wko_name,
+    ];
+    const result = await mysql.query("insertWorkOrder", params, "produce1");
+    return { ok: true, mode: "insert", wko_code, result };
+  }
+};
+
+//작업진행조회 페이지에서 작업지시서, 생산실적 테이블로 검색조회
+const getWorkInProcessList = async (q = {}) => {
+
+  const { wko = '', wkoName = '', name = '', line = '', from = '', to = '' } = q;
+
+  let sql = `
+  SELECT 
+    w.wko_code,
+    w.wko_name,
+    w.prod_code,
+    p.prod_name,
+    w.wko_qtt,
+    w.stat,
+    w.reg_date,
+    w.line_code,
+    r.start_date,
+    r.end_date
+  FROM wko_tbl w
+  JOIN prod_tbl p
+    ON p.prod_code = w.prod_code
+  LEFT JOIN prdr_tbl r
+    ON r.work_order_code = w.wko_code
+  `;
+
+  const params = [];
+
+  if (wko) {
+    sql += ` AND w.wko_code LIKE ?`;
+    params.push(`%${wko}%`);
+  }
+
+  if (wkoName) {
+    sql += ` AND w.wko_name LIKE ?`;
+    params.push(`%${wkoName}%`);
+  }
+
+  if (name) {
+    sql += ` AND p.prod_name LIKE ?`;
+    params.push(`%${name}%`);
+  }
+
+  if (line) {
+    sql += ` AND w.line_code = ?`;
+    params.push(line);
+  }
+
+  if (from) {
+    sql += ` AND DATE(w.reg_date) >= ?`;
+    params.push(from);
+  }
+
+  if (to) {
+    sql += ` AND DATE(w.reg_date) <= ?`;
+    params.push(to);
+  }
+
+  sql += ` ORDER BY w.reg_date DESC, w.wko_code DESC`;
+
+  return await mysql.rquery(sql, params);
+};
+
+
 module.exports = {
   searchWorkOrders,
   findAllLinesDJ,
@@ -135,4 +250,6 @@ module.exports = {
   findAllPrdDistinct,
   updateWorkOrder,
   removeWorkOrder,
+  saveWorkOrder,
+  getWorkInProcessList,
 };

@@ -10,16 +10,15 @@ const { wkoList, loading, error, from, to, stat, line, name, wko, lines } = stor
 
 const statusOptions = [
   { label: '작업대기', value: 'v1' },
-  { label: '작업보류', value: 'v2' },
+  { label: '작업완료', value: 'v2' },
   { label: '진행중', value: 'v3' },
   { label: '작업취소', value: 'v4' }
 
 ];
 
-
 const statusMap = {
   v1: '작업대기',
-  v2: '작업보류',
+  v2: '작업완료',
   v3: '진행중',
   v4: '작업취소'
 };
@@ -67,12 +66,6 @@ onMounted(() => {
           <label>라인</label>
           <Dropdown v-model="line" :options="lines" optionLabel="line_code" optionValue="line_code" placeholder="라인 선택" class="w-full" />
         </div>
-
-        <!-- 공정유형이 어딧는데 ... -->
-        <!-- <div class="field-row">
-          <label>공정유형</label>
-          <Dropdown v-model="procType" :options="procOptions" class="w-full" />
-        </div> -->
       </div>
     </div>
 
