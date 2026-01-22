@@ -85,7 +85,7 @@ const model = ref([
           {
             label: '작업진행 목록',
             icon: 'pi pi-fw pi-lock',
-            to: ''
+            to: '/workInProcessList'
           },
           {
             label: '생산실적조회',
@@ -105,7 +105,7 @@ const model = ref([
             to: '/qiorder'
           },
           {
-            label: '품질검사 목록조회',
+            label: '품질검사 지시 목록조회',
             icon: 'pi pi-fw pi-sign-in',
             to: '/qiorderlist'
           },
@@ -113,6 +113,11 @@ const model = ref([
             label: '품질검사 결과관리',
             icon: 'pi pi-fw pi-sign-in',
             to: '/qiresult'
+          },
+          {
+            label: '품질검사 결과 목록조회',
+            icon: 'pi pi-fw pi-sign-in',
+            to: '/qioresultlist'
           }
         ]
       },
@@ -140,6 +145,11 @@ const model = ref([
             label: '발주서목록',
             icon: 'pi pi-fw pi-sign-in',
             to: '/mpolist'
+          },
+          {
+            label: '입고등록',
+            icon: 'pi pi-fw pi-sign-in',
+            to: '/inboundregister'
           }
         ]
       },

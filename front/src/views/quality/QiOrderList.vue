@@ -1,5 +1,5 @@
 <!--QiOrderList.vue-->
-
+<!--품질검사 지시 목록조회-->
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useQualityStore2 } from '@/stores/quality2.js';
@@ -95,7 +95,7 @@ const filteredOrders = computed(() => {
     <SelectQiOrderModal2 :display="orderDisplay" :qi-order-list="qualityStore.qiOrderList" @close="closeModal" @selected-order="selectedOrder" />
     <!------------------------------------------------------------------------------------------------->
     <!-- 검색이 되어야 하는 창-->
-    <div class="text-2xl font-bold text-center">품질 검사 지시 조회</div>
+    <div class="text-2xl font-bold text-center">품질 검사 목록 조회</div>
 
     <!-- 검색 조건 영역 -->
     <div class="grid grid-cols-4 gap-6">

@@ -29,11 +29,17 @@ router.get(`/mat-info`, async (req, res) => {
   res.send(list);
 });
 
-// 자재구매요청
-router.post(`/mat-request`, async (req, res) => {
-  const data = req.body;
-  let result = await materialService2.addMprTbl(data);
-  res.send(result);
+// 자재구매요청/수정
+router.post("/mat-request", async (req, res) => {
+  try {
+    const data = req.body;
+    const result = await materialService2.modifyMprTbl(data);
+    res.send(result);
+  } catch (err) {
+    res.status(400).send({
+      message: err.message || "처리 중 오류 발생",
+    });
+  }
 });
 
 // 자재구매요청 조회
@@ -64,8 +70,8 @@ router.get("/mpr-request", async (req, res) => {
 // 자재구매요청 상세 정보 조회 - 요청기본정보
 router.get("/mpr-request/:mprCode/header", async (req, res) => {
   const mprCode = req.params.mprCode;
-  const list = await materialService2.findByMprCodeMprTblDetail(mprCode);
-  res.send(list);
+  const result = await materialService2.findByMprCodeMprTblDetail(mprCode);
+  res.send(result);
 });
 
 // 자재구매요청 상세 정보 조회 - 요청자재상세
@@ -75,12 +81,26 @@ router.get("/mpr-request/:mprCode/items", async (req, res) => {
   res.send(list);
 });
 
-// 자재구매요청서 목록 조회
-router.get("/mpr-list", async (req, res) => {
+// MPR 불러오기용 모달 + 검색
+router.get("/header-modal", async (req, res) => {
   const { keyword = "" } = req.query;
-  const list = await materialService2.findAllMprTbl(keyword);
+  const list = await materialService2.findMprHeaderModal(keyword);
   res.send(list);
 });
+
+// MPR 불러오기용 - 헤더부분
+router.get("/mpr-header/:mprCode", async (req, res) => {
+  const mprCode = req.params.mprCode;
+  const result = await materialService2.findMprHeader(mprCode);
+  res.send(result);
+});
+
+// 자재구매요청서 목록 조회
+// router.get("/mpr-list", async (req, res) => {
+//   const { keyword = "" } = req.query;
+//   const list = await materialService2.findAllMprTbl(keyword);
+//   res.send(list);
+// });
 
 // 공급업체 목록 조회
 router.get("/client-list", async (req, res) => {
@@ -88,4 +108,19 @@ router.get("/client-list", async (req, res) => {
   const list = await materialService2.findAllClientTbl(keyword);
   res.send(list);
 });
+
+//MRP 기준 정보 불러오기
+router.get("/request-mrp/:mrpCode", async (req, res) => {
+  const mrpCode = req.params.mrpCode;
+  const list = await materialService2.findByMrpCodeMrpDTbl(mrpCode);
+  res.send(list);
+});
+
+// 구매요청 수정/삭제 여부 확인
+router.get("/mpr-request/:mprCode/editable", async (req, res) => {
+  const mprCode = req.params.mprCode;
+  const isEditable = await materialService2.findIsEditable(mprCode);
+  res.send({ isEditable });
+});
+
 module.exports = router;

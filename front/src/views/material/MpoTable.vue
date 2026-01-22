@@ -12,6 +12,7 @@ const showMrpModal = ref(false);
 const showAddModal = ref(false);
 const showMpoModal = ref(false);
 const showEmployee = ref(false);
+const showAddPanel = ref(false);
 const empStore = useMaterialStore2();
 
 const selectedMaterials = ref([]);
@@ -133,18 +134,23 @@ const resetForm = () => {
   selectedMaterials.value = [];
 };
 
+//발주서 저장
 const saveMpo = async () => {
   const payload = {
-    stat: mpoStore.mpoData.stat,
-    mcode: mpoStore.mpoData.mcode,
-    note: mpoStore.mpoData.note || '',
-    materials: mpoStore.materials.map((m) => ({
-      mat_code: m.mat_code,
-      unit: m.unit,
-      req_qtt: m.req_qtt,
-      deadline: m.delivery_date,
-      client_code: m.client_code
-    }))
+    statCode: mpoStore.mpoData.stat,
+    mpoData: {
+      mcode: mpoStore.mpoData.mcode,
+      note: mpoStore.mpoData.note || '',
+      mpr_code: mpoStore.mpoData.mprCode || null,
+      materials: mpoStore.materials.map((m) => ({
+        mat_code: m.mat_code,
+        unit: m.unit,
+        req_qtt: m.req_qtt,
+        shortage_qtt: Math.max(0, (m.req_qtt || 0) - (m.current_stock || 0)),
+        deadline: m.delivery_date,
+        client_code: m.client_code
+      }))
+    }
   };
 
   try {
@@ -282,7 +288,7 @@ const saveMpo = async () => {
 
         <Column field="shortage_qtt" header="부족수량" style="min-width: 100px">
           <template #body="{ data }">
-            <InputText :value="data.shortage_qtt" disabled class="w-full" />
+            <InputText :value="Math.max(0, (data.req_qtt || 0) - (data.current_stock || 0))" disabled class="w-full" />
           </template>
         </Column>
 
