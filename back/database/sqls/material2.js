@@ -52,14 +52,14 @@ const insertMprDTbl = `INSERT INTO mpr_d_tbl (mpr_d_code, req_qtt, unit, note, m
                                    VALUES (?, ?, ?, ?, ?, ?, ?)`;
 
 // 자재구매요청서 전체 목록 조회
-const selectAllMprTbl = `SELECT m.mpr_code, m.reqdate, m.mcode, m.deadline, m.mrp_code,
-                                GROUP_CONCAT(DISTINCT mat.mat_name SEPARATOR ', ') AS material_names
-                         FROM mpr_tbl m
-                         LEFT JOIN mpr_d_tbl md ON m.mpr_code = md.mpr_code
-                         LEFT JOIN mat_tbl mat ON md.mat_code = mat.mat_code
-                         WHERE m.mpr_code like ?
-                         GROUP BY m.mpr_code,m.reqdate, m.mcode, m.deadline,m.mrp_code
-                         ORDER BY m.mpr_code DESC`;
+// const selectAllMprTbl = `SELECT m.mpr_code, m.reqdate, m.mcode, m.deadline, m.mrp_code,
+//                                 GROUP_CONCAT(DISTINCT mat.mat_name SEPARATOR ', ') AS material_names
+//                          FROM mpr_tbl m
+//                          LEFT JOIN mpr_d_tbl md ON m.mpr_code = md.mpr_code
+//                          LEFT JOIN mat_tbl mat ON md.mat_code = mat.mat_code
+//                          WHERE m.mpr_code like ?
+//                          GROUP BY m.mpr_code,m.reqdate, m.mcode, m.deadline,m.mrp_code
+//                          ORDER BY m.mpr_code DESC`;
 
 // 자재구매요청 상세 정보 조회 - 요청기본정보
 const selectByMprCodeMprTbl = `SELECT m.mpr_code, m.reqdate, e.emp_name, d.dept_name
@@ -69,21 +69,89 @@ const selectByMprCodeMprTbl = `SELECT m.mpr_code, m.reqdate, e.emp_name, d.dept_
                                WHERE m.mpr_code = ?`;
 
 // 자재구매요청 상세 정보 조회 - 요청자재상세
-const selectByMprCodeMprDTbl = `SELECT m.mpr_code, mt.mat_name, d.mat_code, m.reqdate,
-                                       d.req_qtt, d.unit, d.note, c.client_name,
-                                       c2.note as unit_label
+const selectByMprCodeMprDTbl = `SELECT d.mpr_d_code, mt.mat_name, d.mat_code, d.req_qtt, d.unit, d.note,
+                                       c.client_name, c.client_code, cc.note AS unit_label,
+                                       IFNULL(s.current_qty, 0) AS current_qty,
+                                       CASE WHEN d.req_qtt - IFNULL(s.current_qty, 0) > 0
+                                            THEN d.req_qtt - IFNULL(s.current_qty, 0)
+                                            ELSE 0
+                                       END AS req_lack_qty
                                 FROM mpr_d_tbl d
-                                JOIN mpr_tbl m ON d.mpr_code = m.mpr_code
-                                JOIN mat_tbl mt ON d.mat_code = mt.mat_code
-                                JOIN client_tbl c ON d.mat_sup = c.client_code
-                                JOIN common_code c2 ON c2.com_value = d.unit
-                                WHERE m.mpr_code = ?`;
+                                LEFT JOIN mpr_tbl m ON m.mpr_code = d.mpr_code
+                                JOIN mat_tbl mt ON mt.mat_code = d.mat_code
+                                LEFT JOIN client_tbl c ON c.client_code = d.mat_sup
+                                LEFT JOIN common_code cc ON cc.com_value = d.unit
+                                LEFT JOIN (SELECT mat_code,
+                                                  SUM(IFNULL(inbnd_qtt, 0)) - SUM(IFNULL(outbnd_qtt, 0)) AS current_qty
+                                           FROM (SELECT mat_code, inbnd_qtt, 0 AS outbnd_qtt
+                                                 FROM minbnd_tbl
+                                                 UNION ALL
+                                                 SELECT mat_code, 0 AS inbnd_qtt, outbnd_qtt
+                                                 FROM moutbnd_tbl) x
+                                           GROUP BY mat_code) s ON s.mat_code = d.mat_code
+                                WHERE d.mpr_code = ?
+                                ORDER BY d.mat_code`;
+
+// MPR 불러오기용 모달 + 검색
+const selectMprHeaderModal = `SELECT mpr_code, reqdate, deadline, mcode, mrp_code
+                         FROM mpr_tbl
+                         WHERE mpr_code like ?
+                         ORDER BY mpr_code desc`;
+
+// MPR 불러오기용 조회 - 헤더부분
+const selectMprHeader = `SELECT m.mpr_code, m.reqdate, m.deadline, m.mcode, m.mrp_code, e.emp_name, d.dept_name
+                         FROM mpr_tbl m
+                         JOIN emp_tbl e ON e.emp_code = m.mcode
+                         LEFT JOIN dept_tbl d ON d.dept_code = e.dept_code
+                         WHERE m.mpr_code = ?`;
 
 // 공급업체 목록 조회
 const selectAllClientTbl = `SELECT client_code, client_name, client_type, c2.note
                             FROM client_tbl c
                             JOIN common_code c2 ON c2.com_value = c.client_type
                             WHERE client_name like ?`;
+
+//MRP 기준 정보 불러오기
+const selectByMrpCodeMrpDTbl = `SELECT d.mrp_code, d.mrp_d_code, d.mat_code, m.mat_name,
+                                       d.req_qtt, d2.mrp_note, d.unit, c2.note AS unit_label,
+                                       IFNULL(s.current_qty, 0) AS current_qty,
+                                       CASE WHEN d.req_qtt - (IFNULL(s.current_qty, 0) - IFNULL(m.save_inven, 0)) > 0
+                                            THEN d.req_qtt - (IFNULL(s.current_qty, 0) - IFNULL(m.save_inven, 0))
+                                            ELSE 0
+                                       END AS lack_qty, c.client_code, c.client_name
+                                FROM mrp_d_tbl d
+                                JOIN mrp_tbl d2 ON d.mrp_code = d2.mrp_code
+                                JOIN mat_tbl m ON m.mat_code = d.mat_code
+                                LEFT JOIN client_tbl c ON c.client_code = m.sup
+                                LEFT JOIN common_code c2 ON c2.com_value = d.unit
+                                                            AND c2.group_value = '0H'
+                                LEFT JOIN (SELECT mat_code, SUM(in_qty) - SUM(out_qty) AS current_qty
+                                           FROM (SELECT mat_code, IFNULL(SUM(inbnd_qtt), 0) AS in_qty, 0 AS out_qty
+                                                 FROM minbnd_tbl
+                                                 GROUP BY mat_code
+                                           UNION ALL
+                                                 SELECT mat_code, 0 AS in_qty, IFNULL(SUM(outbnd_qtt), 0) AS out_qty
+                                                 FROM moutbnd_tbl
+                                                 GROUP BY mat_code)x
+                                           GROUP BY mat_code) s ON s.mat_code = d.mat_code
+                                WHERE d.mrp_code = ?
+                                ORDER BY d.mrp_d_code`;
+
+// 구매요청 수정/삭제 여부 확인
+const selectIsEditable = `SELECT 1 FROM mpr_mapp_tbl WHERE mpr_code = ? LIMIT 1`;
+
+// 구매요청 헤더 수정
+const updateMprTbl = `UPDATE mpr_tbl
+                      SET reqdate  = ?, deadline = ?, mrp_code = ?
+                      WHERE mpr_code = ?`;
+
+// 구매요청 상세 삭제
+const deleteMprDTbl = `DELETE FROM mpr_d_tbl WHERE mpr_d_code = ?`;
+
+// 구매요청 상세 수정
+const updateMprDTbl = `UPDATE mpr_d_tbl
+                       SET req_qtt = ?, unit = ?, note = ?, mat_sup = ?, mat_code = ?
+                       WHERE mpr_d_code = ?`;
 
 module.exports = {
   selectByMatCodeMatTbl,
@@ -94,6 +162,13 @@ module.exports = {
   selectAllMrpCodeMrpTbl,
   insertMprTbl,
   insertMprDTbl,
-  selectAllMprTbl,
+  // selectAllMprTbl,
   selectAllClientTbl,
+  selectMprHeaderModal,
+  selectMprHeader,
+  selectByMrpCodeMrpDTbl,
+  selectIsEditable,
+  updateMprTbl,
+  deleteMprDTbl,
+  updateMprDTbl,
 };
