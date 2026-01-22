@@ -4,12 +4,16 @@ import axios from 'axios';
 export const useProductionStore = defineStore('production', {
   // state
   state: () => ({
+    prdpCode: null,
+    mrpCode: null,
     productionPlan: [],
+    MRP: [],
     prdpList: [],
     orderList: [],
     prodList: [],
     lineList: [],
-    planProdList: []
+    planProdList: [],
+    materialList: []
   }),
   // getters
 
@@ -104,7 +108,63 @@ export const useProductionStore = defineStore('production', {
     // 생산계획 삭제
     async deletePrdp(prdpCode) {
       try {
-        const response = await axios.delete('/api/produce/prdp', { code: prdpCode });
+        const response = await axios.delete(`/api/produce/prdp/${prdpCode}`);
+        return response.data;
+      } catch (err) {
+        console.log(err);
+      }
+    },
+
+    // 자재 검색
+    async fetchMaterials(data) {
+      try {
+        const response = await axios.get(`/api/produce/materialList`, {
+          params: data
+        });
+        this.materialList = response.data;
+        return this.materialList;
+      } catch (err) {
+        console.log(err);
+      }
+    },
+
+    // BOM 불러오기
+    async fetchBoms(prdpCode) {
+      try {
+        const response = await axios.get(`/api/produce/bom/${prdpCode}`);
+        return response.data;
+      } catch (err) {
+        console.log(err);
+      }
+    },
+
+    // MRP 조회
+    async fetchMRPs(data) {
+      try {
+        const response = await axios.get(`/api/produce/mrp`, {
+          params: data
+        });
+        this.MRP = response.data;
+        return this.MRP;
+      } catch (err) {
+        console.log(err);
+      }
+    },
+
+    // MRP 상세조회
+    async fetchMRPDetail() {
+      try {
+        const response = await axios.get(`/api/produce/mrp/${this.mrpCode}`);
+        return response.data;
+      } catch (err) {
+        console.log(err);
+      }
+    },
+
+    // MRP 저장
+    async saveMrp(matList, mrpInfo) {
+      try {
+        const response = await axios.put(`/api/produce/mrp`, { mat: matList, info: mrpInfo });
         return response.data;
       } catch (err) {
         console.log(err);

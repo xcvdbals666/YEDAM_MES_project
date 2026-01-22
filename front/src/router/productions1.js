@@ -1,6 +1,8 @@
 // src / router / production1.js
 import WorkOrderList from '../views/productions/WorkOrderList.vue';
 import WorkOrderMgt from '../views/productions/WorkOrderMgt.vue';
+import WorkInProcessList from '../views/productions/WorkInProcessList.vue';
+import WorkInProcessDetail from '../views/productions/WorkInProcessDetail.vue';
 
 const ProductionRoutes1 = [
   {
@@ -12,6 +14,17 @@ const ProductionRoutes1 = [
     path: '/workorderMgt',
     name: 'WorkOrderMgt',
     component: WorkOrderMgt
+  },
+  {
+    path: '/workInProcessList',
+    name: 'WorkInProcessList',
+    component: WorkInProcessList
+  },
+  {
+    path: '/workInProcessList/:wko_code',
+    name: 'WorkInProcessDetail',
+    component: WorkInProcessDetail,
+    props: true //params를 props로 받게
   }
 ];
 

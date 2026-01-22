@@ -7,6 +7,31 @@ const findAllOutreqtbl = async () => {
   return list;
 };
 
+// 주문 선택 모달
+const findByOrderOrdTbl = async (keyword) => {
+  let sql = `
+    SELECT o.ord_code, od.prod_code, p.prod_name, od.ord_amount, o.ord_name, o.ord_date
+    FROM ord_tbl o
+    JOIN ord_d_tbl od ON o.ord_code = od.ord_code
+    JOIN prod_tbl p ON od.prod_code = p.prod_code
+    WHERE 1=1
+  `;
+  const params = [];
+
+  if (keyword) {
+    sql += `
+      AND (
+        o.ord_code LIKE ?
+        OR o.ord_name LIKE ?
+      )
+    `;
+    const like = `%${keyword}%`;
+    params.push(like, like);
+  }
+  sql += ` ORDER BY o.ord_code `;
+  return mysql.rquery(sql, params);
+};
+
 // 출고 번호 선택 모달
 const findByOutcodeOutTbl = async (keyword) => {
   let sql = `
@@ -129,11 +154,43 @@ const findSearchOutreqtbl = async (params) => {
   return list;
 };
 
+// 주문 정보 단건 조회
+const findByOrdcode = async (ord_code) => {
+  let info = await mysql.query("selectByOrdcode", [ord_code], "order2");
+  return info;
+};
+
+// 주문 제품 목록 조회
+const findProductsByOrdcode = async (ord_code) => {
+  let list = await mysql.query("selectProdList", [ord_code], "order2");
+  return list;
+};
+
+// 주문 정보 + 제품 목록 조회 + 출고코드 생성
+const findOrderDetailForOutbound = async (ord_code) => {
+  // Promise.all(): 여러 개의 비동기 작업을 동시에 실행하고 모두 끝날 때까지 기다림
+  const [orderInfo, products, outCode] = await Promise.all([
+    mysql.query("selectByOrdcode", [ord_code], "order2"),
+    mysql.query("selectProdList", [ord_code], "order2"),
+    mysql.query("generateOutCode", [], "order2"),
+  ]);
+
+  return {
+    orderInfo: orderInfo[0] || null, // 주문 정보는 1개
+    products: products, // 제품은 배열
+    out_req_code: outCode[0].new_out_req_code,
+  };
+};
+
 module.exports = {
   findAllOutreqtbl,
+  findByOrderOrdTbl,
   findByOutcodeOutTbl,
   findByCodeProdTbl,
   findByCodeClientTbl,
   findByEmpcodeEmpTbl,
   findSearchOutreqtbl,
+  findByOrdcode,
+  findProductsByOrdcode,
+  findOrderDetailForOutbound,
 };

@@ -12,7 +12,9 @@ const selectAllOrder = `SELECT ord_code,
         (SELECT min(ord_priority)
         FROM ord_d_tbl d
         WHERE d.ord_code=o.ord_code) AS ord_priority,
-        ord_stat
+        ord_stat,
+        com_note(ord_stat) as stat_note,
+        (SELECT emp_name FROM emp_tbl e WHERE e.emp_code=o.mcode)AS mname
 FROM ord_tbl o
 order by 1 desc`;
 
@@ -40,7 +42,7 @@ const selectOrderDetailByCode = `SELECT ord_d_code,
 FROM ord_d_tbl d
 WHERE ord_code = ?`;
 
-// 주문작성시 client 목록 가져오기(납품업체)
+// 주문 작성시 client 목록 가져오기(납품업체)
 const selectAllClient = `SELECT client_code,client_name 
 FROM client_tbl 
 WHERE client_type = 'l1'`;
@@ -67,9 +69,11 @@ FROM prod_tbl p
 WHERE is_used = 'f2'
 AND prod_type = 'i1'`;
 
+// 주문 등록
 const insertOrder = `INSERT INTO ord_tbl 
                       SET ?`;
 
+// 주문 상세 등록
 const insertOrderDetail = `INSERT INTO ord_d_tbl (
         unit,
         spec,
@@ -82,8 +86,50 @@ const insertOrderDetail = `INSERT INTO ord_d_tbl (
         prod_code  
       ) 
 VALUES ?`;
-const selectOrderCode = `SELECT create_ord_code() as ord_code
+
+// 주문 등록시 사용할 코드 조회
+const selectOrderCode = `SELECT create_ord_code() AS ord_code
 FROM dual`;
+
+// 주문 수정
+const updateOrder = `UPDATE ord_tbl
+SET ?
+WHERE ord_code = ?
+`;
+
+// 주문상세 수정 및 등록
+const updateDetail = `INSERT INTO ord_d_tbl (
+        ord_d_code,
+        unit,
+        spec,
+        ord_amount,
+        prod_price,
+        delivery_date,
+        ord_priority,
+        total_price,
+        ord_code,  
+        prod_code  
+      ) 
+VALUES ?
+ON DUPLICATE KEY UPDATE
+        unit = VALUES(unit),
+        spec = VALUES(spec),
+        ord_amount = VALUES(ord_amount),
+        prod_price = VALUES(prod_price),
+        delivery_date = VALUES(delivery_date),
+        ord_priority = VALUES(ord_priority),
+        total_price = VALUES(total_price),
+        ord_code = VALUES(ord_code), 
+        prod_code = VALUES(prod_code)`;
+
+// 주문 삭제
+const deleteOrder = `DELETE FROM ord_tbl
+WHERE ord_code = ?`;
+
+// 주문 상세 삭제(주문 코드 기반)
+const deleteDetail = `DELETE FROM ord_d_tbl
+WHERE ord_code = ?`;
+
 module.exports = {
   selectAllOrder,
   selectAllClient,
@@ -93,4 +139,8 @@ module.exports = {
   insertOrder,
   insertOrderDetail,
   selectOrderCode,
+  updateOrder,
+  updateDetail,
+  deleteOrder,
+  deleteDetail,
 };

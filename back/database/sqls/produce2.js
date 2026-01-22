@@ -97,6 +97,86 @@ const deletePrdpDetail = `
 DELETE FROM prdp_d_tbl
 WHERE prdp_d_code = ?`;
 
+// 자재 검색
+const selectByCodeOrNameMat = `
+SELECT mi.mat_code, mi.mat_name, mt.note AS mat_type, mi.save_inven, mu.note AS unit, mi.note
+FROM mat_tbl mi
+JOIN common_code mt ON mt.com_value = mi.material_type_code
+JOIN common_code mu ON mu.com_value = mi.unit
+WHERE mi.mat_code LIKE ? OR mi.mat_name LIKE ?`;
+
+// BOM 자재 불러오기
+const selectBomMat = `
+WITH RECURSIVE bom_tree AS (
+  SELECT bm.mat_code, bm.mat_name, bm.req_qtt, bm.unit
+  FROM bom_tbl bt
+  JOIN bom_mat bm ON bt.bom_code = bm.bom_code
+  WHERE bt.prod_code IN (SELECT prod_code FROM prdp_d_tbl WHERE prdp_code = ?)
+  UNION ALL
+  SELECT bm2.mat_code, bm2.mat_name, bm2.req_qtt, bm2.unit
+  FROM bom_tree btree
+  JOIN bom_tbl bt2 ON bt2.prod_code = btree.mat_code
+  JOIN bom_mat bm2 ON bm2.bom_code = bt2.bom_code
+  WHERE btree.mat_code LIKE 'PROD-%'
+)
+SELECT b.mat_code, b.mat_name, b.req_qtt, m.save_inven, c.note AS unit
+FROM bom_tree b
+JOIN common_code c ON c.com_value = b.unit
+JOIN mat_tbl m ON m.mat_code = b.mat_code
+WHERE b.mat_code LIKE 'MAT-%'`;
+
+// MRP 상세조회
+const selectByCodeMrp = `
+SELECT m.*, e.emp_name
+FROM mrp_tbl m
+JOIN emp_tbl e ON m.emp_code = e.emp_code
+WHERE mrp_code = ?`;
+
+// MRP 상세조회 - 자재목록
+const selectByCodeMrpDetail = `
+SELECT m.*, mt.mat_name, cu.note AS unit_note, mt.save_inven
+FROM mrp_d_tbl m
+JOIN common_code cu ON cu.com_value = m.unit
+JOIN mat_tbl mt ON mt.mat_code = m.mat_code
+WHERE mrp_code = ?`;
+
+// MRP 수정
+const updateMrp = `
+UPDATE mrp_tbl
+SET plan_date = ?, start_date = ?, mrp_note = ?, prdp_code = ?, emp_code = ?
+WHERE mrp_code = ?`;
+
+// MRP 번호 최대값
+const selectMaxCodeMrp = `
+SELECT SUBSTR(MAX(mrp_code), 14, 3) AS number
+FROM mrp_tbl`;
+
+// MRP 저장
+const insertMrp = `
+INSERT INTO mrp_tbl(mrp_code, plan_date, start_date, mrp_note, prdp_code, emp_code)
+VALUES(?, ?, ?, ?, ?, ?)`;
+
+// MRP 자제 번호 최대값
+const selectMaxCodeMrpDetail = `
+SELECT SUBSTR(MAX(mrp_d_code), 7, 4) AS number
+FROM mrp_d_tbl`;
+
+// MRP 자재 삭제
+const deleteMrpDetail = `
+DELETE FROM mrp_d_tbl
+WHERE mrp_d_code = ?`;
+
+// MRP 자재 수정
+const updateMrpDetail = `
+UPDATE mrp_d_tbl
+SET req_qtt = ?
+WHERE mrp_d_code = ?`;
+
+// MRP 자재 추가
+const insertMrpDetail = `
+INSERT INTO mrp_d_tbl(mrp_d_code, unit, req_qtt, mrp_code, mat_code)
+VALUES(?, ?, ?, ?, ?)`;
+
 module.exports = {
   selectAllPrdp,
   selectByCodeOrNamePrdp,
@@ -113,4 +193,15 @@ module.exports = {
   updatePrdpDetail,
   insertPrdpDetail,
   deletePrdpDetail,
+  selectByCodeOrNameMat,
+  selectBomMat,
+  selectByCodeMrp,
+  selectByCodeMrpDetail,
+  updateMrp,
+  selectMaxCodeMrp,
+  insertMrp,
+  selectMaxCodeMrpDetail,
+  deleteMrpDetail,
+  updateMrpDetail,
+  insertMrpDetail,
 };

@@ -49,6 +49,11 @@ export const useOrderStore = defineStore('order', {
       console.log(orderList);
       this.orders = orderList;
     },
+    // 주문 목록 불러오기(주문목록페이지용)
+    async getOrderList() {
+      let list = await axios.get(`${url}/orders`);
+      this.orders = list.data;
+    },
     // 주문 상세 불러오기
     async getOrderDetail(ordCode) {
       let list = await axios.get(`${url}/details/${ordCode}`);
@@ -63,6 +68,12 @@ export const useOrderStore = defineStore('order', {
     // 주문수정
     async updateOrder(order, products) {
       let result = await axios.put(`${url}/order`, { order: order, orderDetail: products });
+      console.log(result.data);
+      return result.data;
+    },
+    // 주문삭제
+    async deleteOrder(orderCode) {
+      let result = await axios.delete(`${url}/order/${orderCode}`);
       console.log(result.data);
       return result.data;
     }

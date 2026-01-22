@@ -1,19 +1,16 @@
 <script setup>
-import { defineProps, ref } from 'vue';
-
-const selectedProducts = ref();
+import { defineProps } from 'vue';
 
 const props = defineProps({
-  display: { type: Boolean, required: true },
-  produceList: { type: Object, required: true }
+  display: { type: Boolean, required: true }
 });
 </script>
 <template>
   <Dialog v-model:visible="props.display" :breakpoints="{ '960px': '75vw' }" :style="{ width: '50vw' }" :modal="true">
-    <DataTable ref="dt" v-model:selection="selectedProducts" :value="props.produceList" dataKey="prdp_code">
+    <DataTable ref="dt" v-model:selection="selectedProducts" dataKey="prdp_code">
       <template #header>
         <div class="flex flex-wrap gap-2 items-center justify-between">
-          <h4 class="m-0">생산실적 불러오기</h4>
+          <h4 class="m-0">검사결과서 불러오기</h4>
         </div>
       </template>
       <Column selectionMode="single" style="width: 3rem" :exportable="false"></Column>

@@ -79,6 +79,7 @@ const deleteProduct = () => {
 // 제품 열 추가.
 const addProduct = () => {
   products.value.push({ selected: false, prod_code: '', unit: 'h2', spec: '', ord_amount: '', prod_price: '', delivery_date: '', ord_priority: '', total_price: '', com_value: '' });
+  console.log(products.value);
 };
 // 완제품 모달 보여주기
 const prodVisible = ref(false);
@@ -139,14 +140,44 @@ const getOrderInfo = async () => {
 // 저장버튼 이벤트 함수
 
 const saveBtn = async () => {
-  if (orderInfo.value.ord_code.length == 0) {
+  // 유효성 체크
+  if (orderInfo.value.client_code == null && orderInfo.value.mcode == '') {
+    alert('주문정보를 입력해주세요');
+    return;
+  }
+  for (let product of products.value) {
+    console.log(products.value);
+    console.log(product);
+    if (product.prod_code == '') {
+      alert('제품을 선택해주세요.');
+      return;
+    }
+    if (product.ord_amount == '' || product.ord_amount == undefined) {
+      alert('제품 수량을 입력해주세요.');
+      return;
+    }
+    if (product.prod_price == '' || product.prod_price == undefined) {
+      alert('단가를 입력해주세요');
+      return;
+    }
+    if (product.delivery_date == '' || product.delivery_date == undefined) {
+      alert('납기일을 입력해주세요.');
+      return;
+    }
+    if (product.ord_priority == '' || product.ord_priority == undefined) {
+      alert('우선순위를 입력해주세요.(1~5까지 가능합니다.)');
+      return;
+    }
+  }
+  if (orderInfo.value.ord_code.length == 0 && orderInfo.value.client_code != null && orderInfo.value.mcode != '') {
     // ord_code가 없으면(길이가 0임.) 신규등록
+
     console.log(`ord_code's length 0`);
     let result = await order.registerOrder(orderInfo.value, products.value);
     orderInfo.value.ord_code = result;
     await order.getOrderDetail(orderInfo.value.ord_code);
     products.value = order.details;
-  } else {
+  } else if (orderInfo.value.ord_code.length > 0) {
     // ord_code가 있으면 수정
     console.log(`ord_code's length is not 0`);
     if (JSON.stringify(orderInfo.value) == JSON.stringify(selectedOrder.value) && JSON.stringify(products.value) == JSON.stringify(order.details)) {
@@ -154,52 +185,27 @@ const saveBtn = async () => {
       console.log(orderInfo.value);
     } else {
       let result = await order.updateOrder(orderInfo.value, products.value);
+      if (result.order.affectedRows > 0 || result.detail.affectedRows > 0) {
+        alert('수정이 완료되었습니다.');
+      }
       console.log(result);
     }
   }
 };
 // 삭제버튼 이벤트 함수
-const deleteBtn = () => {
-  if (orderInfo.value.ord_code.length == 0) {
-    confirm('delete?');
+const deleteBtn = async () => {
+  if (orderInfo.value.ord_code.length != 0) {
+    if (confirm(`${orderInfo.value.ord_name}(${orderInfo.value.ord_code}) 주문을 삭제하시겠습니까?`)) {
+      let result = await order.deleteOrder(orderInfo.value.ord_code);
+      alert(result);
+      resetBtn();
+    }
   }
 };
 </script>
 
 <template>
   <Fluid>
-    <BaseDialog v-model:visible="prodVisible" header="제품검색" width="60rem">
-      <DataTable
-        :value="order.products"
-        v-model:filters="filters"
-        :globalFilterFields="['prod_code', 'prod_name', 'prod_type']"
-        paginator
-        :rows="10"
-        :rowClass="rowClass"
-        selection-mode="single"
-        @row-click="onRowSelect"
-        :metaKeySelection="true"
-        tableStyle="min-width: 50rem"
-      >
-        <template #header>
-          <div class="flex justify-end">
-            <IconField>
-              <InputIcon class="pi pi-search" />
-              <InputText v-model="filters['global'].value" placeholder="제품명 또는 코드 검색" />
-            </IconField>
-          </div>
-        </template>
-        <Column field="prod_code" header="제품코드"></Column>
-        <Column field="prod_name" header="제품명"></Column>
-        <Column field="edate" header="유통기한"></Column>
-        <Column field="unit_note" header="단위">
-          <!-- <template #body="slotProps">
-            {{ order.converUnit(slotProps.data.unit) }}
-          </template> -->
-        </Column>
-        <Column field="com_note" header="완제품 유형" />
-      </DataTable>
-    </BaseDialog>
     <BaseDialog v-model:visible="ordVisible" header="주문불러오기" width="60rem">
       <DataTable
         :isDataSelectable="isRowSelectable"
@@ -235,13 +241,46 @@ const deleteBtn = () => {
         <Button label="취소" severity="danger" variant="outlined" class="min-w-[65px]" @click="ordVisible = false" />
       </template>
     </BaseDialog>
+    <BaseDialog v-model:visible="prodVisible" header="제품검색" width="60rem">
+      <DataTable
+        :value="order.products"
+        v-model:filters="filters"
+        :globalFilterFields="['prod_code', 'prod_name', 'prod_type']"
+        paginator
+        :rows="10"
+        :rowClass="rowClass"
+        selection-mode="single"
+        @row-click="onRowSelect"
+        :metaKeySelection="true"
+        tableStyle="min-width: 50rem"
+      >
+        <template #header>
+          <div class="flex justify-end">
+            <IconField>
+              <InputIcon class="pi pi-search" />
+              <InputText v-model="filters['global'].value" placeholder="제품명 또는 코드 검색" />
+            </IconField>
+          </div>
+        </template>
+        <Column field="prod_code" header="제품코드"></Column>
+        <Column field="prod_name" header="제품명"></Column>
+        <Column field="edate" header="유통기한"></Column>
+        <Column field="unit_note" header="단위">
+          <!-- <template #body="slotProps">
+            {{ order.converUnit(slotProps.data.unit) }}
+          </template> -->
+        </Column>
+        <Column field="com_note" header="완제품 유형" />
+      </DataTable>
+    </BaseDialog>
+
     <div class="flex flex-col md:flex-row gap-8">
       <div class="w-full min-w-[800px] border-collapse text-sm">
         <div class="card flex flex-col gap-4">
           <div class="font-semibold text-xl flex justify-between items-center">
             <div>주문 기본 정보</div>
             <div class="flex items-center gap-2">
-              <Button label="삭제" severity="danger" variant="outlined" class="min-w-[65px]" @click="deleteBtn" />
+              <Button label="삭제" severity="danger" variant="outlined" class="min-w-[65px]" @click="deleteBtn" :disabled="orderInfo.ord_stat != 'a1'" />
               <Button label="초기화" severity="contrast" variant="outlined" class="min-w-[65px]" @click="resetBtn" />
               <Button label="저장" severity="info" variant="outlined" class="min-w-[65px]" @click="saveBtn" />
               <Button label="주문정보 불러오기" severity="success" variant="outlined" class="min-w-[130px]" @click="openOrderList" />
@@ -267,13 +306,21 @@ const deleteBtn = () => {
                   </td>
                   <th class="min-w-[150px] bg-gray-100 border border-gray-200 p-3 text-center font-bold text-gray-700">거래처</th>
                   <td class="min-w-[275px] border border-gray-200 p-2">
-                    <Select v-model="orderInfo.client_code" :options="order.clients" option-label="client_name" option-value="client_code" placeholder="거래처를 선택해주세요." class="w-full" />
+                    <Select
+                      v-model="orderInfo.client_code"
+                      :options="order.clients"
+                      option-label="client_name"
+                      option-value="client_code"
+                      placeholder="거래처를 선택해주세요."
+                      class="w-full"
+                      :disabled="orderInfo.ord_stat !== 'a1' && orderInfo.ord_stat != null"
+                    />
                   </td>
                 </tr>
                 <tr>
                   <th class="min-w-[150px] bg-gray-100 border border-gray-200 p-3 text-center font-bold text-gray-700">거래처담당자</th>
                   <td class="min-w-[275px] border border-gray-200 p-2">
-                    <Select v-model="orderInfo.mcode" :options="order.employees" option-label="emp_name" option-value="emp_code" class="w-full">
+                    <Select v-model="orderInfo.mcode" :options="order.employees" option-label="emp_name" option-value="emp_code" class="w-full" :disabled="orderInfo.ord_stat !== 'a1' && orderInfo.ord_stat != null">
                       <template #option="slotProps">
                         <div class="flex items-center">
                           <span>{{ `${slotProps.option.emp_name}(${slotProps.option.emp_code})` }}</span>
@@ -298,8 +345,8 @@ const deleteBtn = () => {
         <div class="font-semibold text-xl flex justify-between items-center">
           <div>제품</div>
           <div class="flex items-center gap-2">
-            <Button label="제품삭제" severity="danger" variant="outlined" class="min-w-[100px]" @click="deleteProduct" />
-            <Button label="제품추가" severity="success" variant="outlined" class="min-w-[100px]" @click="addProduct" />
+            <Button label="제품삭제" severity="danger" variant="outlined" class="min-w-[100px]" @click="deleteProduct" :disabled="orderInfo.ord_stat !== 'a1' && orderInfo.ord_stat != null" />
+            <Button label="제품추가" severity="success" variant="outlined" class="min-w-[100px]" @click="addProduct" :disabled="orderInfo.ord_stat !== 'a1' && orderInfo.ord_stat != null" />
           </div>
         </div>
         <div>
@@ -324,9 +371,9 @@ const deleteBtn = () => {
                 </td>
                 <td class="min-w-[150px] border border-gray-200 p-3 text-center text-gray-700">
                   <IconField>
-                    <InputText v-model="product.prod_name" placeholder="제품명" class="w-full" readonly />
+                    <InputText v-model="product.prod_name" placeholder="제품명" class="w-full" :disabled="orderInfo.ord_stat != 'a1' && orderInfo.ord_stat != null" readonly />
                     <input type="hidden" v-model="product.prod_code" readonly />
-                    <InputIcon class="pi pi-search" style="cursor: pointer" @click="searchProduct(index)" />
+                    <InputIcon class="pi pi-search" style="cursor: pointer" @click="!(orderInfo.ord_stat != 'a1' && orderInfo.ord_stat != null) ? searchProduct(index) : null" />
                   </IconField>
                 </td>
                 <td class="min-w-[80px] border border-gray-200 p-3 text-center text-gray-700">
@@ -339,10 +386,10 @@ const deleteBtn = () => {
                   </InputGroup>
                 </td>
                 <td class="min-w-[90px] border border-gray-200 p-3 text-center text-gray-700">
-                  <InputNumber max="9999999999" min="0" v-model="product.ord_amount" placeholder="수량" class="w-full" @value-change="calculateTotal(product)" show-buttons="true" />
+                  <InputNumber max="9999999999" min="0" v-model="product.ord_amount" placeholder="수량" class="w-full" @value-change="calculateTotal(product)" show-buttons="true" :disabled="orderInfo.ord_stat != 'a1' && orderInfo.ord_stat != null" />
                 </td>
                 <td class="min-w-[100px] border border-gray-200 p-3 text-center text-gray-700">
-                  <InputNumber max="9999999999" min="0" v-model="product.prod_price" placeholder="단가" class="w-full" @value-change="calculateTotal(product)" />
+                  <InputNumber max="9999999999" min="0" v-model="product.prod_price" placeholder="단가" class="w-full" @value-change="calculateTotal(product)" :disabled="orderInfo.ord_stat != 'a1' && orderInfo.ord_stat != null" />
                 </td>
                 <td class="min-w-[150px] border border-gray-200 p-3 text-center text-gray-700">
                   <InputText type="date" v-model="product.delivery_date" class="w-full" />

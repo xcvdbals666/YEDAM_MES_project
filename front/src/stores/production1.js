@@ -119,10 +119,10 @@ export const useProductionsStore = defineStore('productions', () => {
     }
   };
 
-  // 작업지시서 저장 액션
-  const insertWorkOrder = async (formData) => {
+  // 작업지시서 저장수정
+  const saveWorkOrder = async (formData) => {
     try {
-      const res = await axios.post('/api/produce/workorderInsert', formData);
+      const res = await axios.post('/api/produce/workorderSave', formData);
       return res.data;
     } catch (e) {
       console.error('작업지시서 저장 중 에러 발생:', e);
@@ -132,9 +132,58 @@ export const useProductionsStore = defineStore('productions', () => {
 
   //불러온 작업지시서 삭제하기
   const deleteWorkOrderByWkoCode = async (wkoCode) => {
-    const res = await axios.delete(`api/produce/workOrderRemove/${wkoCode}`);
+    const res = await axios.delete(`/api/produce/workOrderRemove/${wkoCode}`);
     return res.data;
   };
+
+  //(동적)작업진행조회 페이지에서 작업지시서, 생산실적 테이블로 검색조회
+  const wipList = ref([]);
+  const wipLoading = ref(false);
+  const wipError = ref(null);
+
+  const wkoName = ref('');
+
+  const fetchWorkInProcess = async (overrideParams = null) => {
+    wipLoading.value = true;
+    wipError.value = null;
+
+    try {
+      const params = overrideParams ?? {
+        wko: wko.value || undefined,
+        wkoName: wkoName.value || undefined,
+        name: name.value || undefined,
+        line: line.value || undefined,
+        from: from.value || undefined,
+        to: to.value || undefined
+      };
+
+      const res = await axios.get('/api/produce/workInProcessList', { params });
+      wipList.value = res.data;
+    } catch (e) {
+      console.error(e);
+      wipError.value = e;
+      wipList.value = [];
+    } finally {
+      wipLoading.value = false;
+    }
+  }
+
+  // 작업진행조회 검색 버튼
+  const searchWip = async () => {
+    await fetchWorkInProcess();
+  };
+
+  // 작업진행조회 초기화 버튼
+  const resetWip = async () => {
+    from.value = '';
+    to.value = '';
+    line.value = '';
+    name.value = '';
+    wko.value = '';
+    wkoName.value = '';
+    await fetchWorkInProcess();
+  };
+
 
   return {
     wkoList,
@@ -161,7 +210,14 @@ export const useProductionsStore = defineStore('productions', () => {
     prdpItemsLoading,
     prdpItemsError,
     fetchPrdpItems,
-    insertWorkOrder,
-    deleteWorkOrderByWkoCode
+    saveWorkOrder,
+    deleteWorkOrderByWkoCode,
+    wipList,
+    wipLoading,
+    wipError,
+    wkoName,
+    fetchWorkInProcess,
+    searchWip,
+    resetWip,
   };
 });

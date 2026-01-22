@@ -74,6 +74,55 @@ const removeqiorder = async (id) => {
   return list;
 };
 
+// 검사 결과서 관리
+// 검사 지시서 전체 조회
+const findAllQirQiOrder = async () => {
+  let list = await mysql.query("selectAllQirQioOrder", [], "quality1");
+  return list;
+};
+
+// 결과서 등록
+const addQiResultForm = async (data) => {
+  const [rows] = await mysql.query("createQirCode", [], "quality1");
+  let qir_code = rows.newQir;
+  console.log("newQio_code: :", qir_code);
+
+  try {
+    if (data.mat_type == "i3" || data.mat_type == "i4") {
+      const { qio_code, qcr_code, mpo_d_code } = data;
+      console.log("전송 데이터:", [qir_code, qio_code, qcr_code, mpo_d_code]);
+      let list = await mysql.query(
+        "insertQir_tbl",
+        [qir_code, qio_code, qcr_code, mpo_d_code],
+        "quality1",
+      );
+      return list;
+    } else {
+      const { qio_code, qcr_code } = data;
+      console.log("전송 데이터:", [qir_code, qio_code, qcr_code]);
+      let list = await mysql.query(
+        "insertQir_tblPro",
+        [qir_code, qio_code, qcr_code],
+        "quality1",
+      );
+      return list;
+    }
+  } catch (err) {
+    console.error(err);
+  }
+};
+// 검사지 정보 불러오기(생산일 경우)
+const findQirProdInfo = async (id) => {
+  let list = await mysql.query("selectQirProdInfo", [id], "quality1");
+  return list;
+};
+
+// 검사결과서 정보 불러오기
+const findQirList = async (id) => {
+  let list = await mysql.query("selectQirList", [], "quality1");
+  return list;
+};
+
 module.exports = {
   findAllQiOrderCheckList,
   findAllQiOrderList,
@@ -82,4 +131,8 @@ module.exports = {
   findQiMpoList,
   addQiOrderForm,
   removeqiorder,
+  addQiResultForm,
+  findAllQirQiOrder,
+  findQirProdInfo,
+  findQirList,
 };

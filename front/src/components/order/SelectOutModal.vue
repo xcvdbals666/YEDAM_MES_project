@@ -3,12 +3,11 @@
 import { ref, watch } from 'vue';
 import { useOrderStore2 } from '@/stores/order2';
 
+const store = useOrderStore2();
 const props = defineProps({
   visible: Boolean
 });
 const emit = defineEmits(['update:visible', 'select']);
-const store = useOrderStore2();
-
 const selectedOutCode = ref(null);
 const keyword = ref(''); // 검색 입력값
 

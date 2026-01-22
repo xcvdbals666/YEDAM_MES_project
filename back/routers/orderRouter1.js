@@ -32,16 +32,22 @@ router.get(`/productList`, async (req, res) => {
   res.send(list);
 });
 
-// 주문등록
+// 주문 등록
 router.post(`/order`, async (req, res) => {
   let { order, orderDetail } = req.body;
   let result = await orderService.addOrder(order, orderDetail);
   res.send(result);
 });
-// 주문등록
+// 주문 수정
 router.put(`/order`, async (req, res) => {
   let { order, orderDetail } = req.body;
   let result = await orderService.modifyOrder(order, orderDetail);
+  res.send(result);
+});
+// 주문 삭제
+router.delete(`/order/:code`, async (req, res) => {
+  let ordCode = req.params.code;
+  let result = await orderService.removeOrder(ordCode);
   res.send(result);
 });
 module.exports = router;
