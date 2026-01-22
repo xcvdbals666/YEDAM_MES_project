@@ -13,9 +13,9 @@ const rows = computed({
   set: (val) => emit('update:modelValue', val)
 });
 
-const selectedRows = ref([]); // 체크박스
+const selectedRows = ref([]);
 
-// 행 추가
+// 행 추가 (수동 자재만 추가됨)
 const addRow = () => {
   emit('update:modelValue', [
     ...rows.value,
@@ -25,6 +25,8 @@ const addRow = () => {
       mprDCode: null,
       is_deleted: false,
       materialName: '',
+      curQtt: null,
+      lackQtt: null,
       reqQtt: null,
       unitCode: '',
       unitLabel: '',
@@ -37,15 +39,26 @@ const addRow = () => {
 };
 
 // 행 삭제
+// MRP 자재는 삭제 대상에서 제외
 const removeRow = () => {
-  const updated = rows.value.map((row) => (selectedRows.value.includes(row) ? { ...row, is_deleted: true } : row));
+  const updated = rows.value.map((row) => {
+    if (selectedRows.value.includes(row)) {
+      if (props.isEditMode && row.sourceType === 'mrp') {
+        return row;
+      }
+      return { ...row, is_deleted: true };
+    }
+    return row;
+  });
 
   emit('update:modelValue', updated);
   selectedRows.value = [];
 };
 
-// 화면에 보여줄 것만 필터링
+// 화면 표시용 (삭제 제외)
 const visibleRows = computed(() => rows.value.filter((row) => !row.is_deleted));
+
+// 수정 모드가 아닐 때만 빈 행 자동 추가
 watch(
   () => visibleRows.value.length,
   (len) => {
@@ -55,28 +68,22 @@ watch(
   }
 );
 
-// 첫 행 자동 추가
+// 최초 진입 시 1행 보장
 onMounted(() => {
   if (!rows.value.length) {
-    emit('update:modelValue', [
-      {
-        __key: Date.now() + Math.random(),
-        sourceType: 'manual',
-        mprDCode: null,
-        is_deleted: false,
-        materialName: '',
-        reqQtt: null,
-        unitCode: '',
-        unitLabel: '',
-        note: '',
-        matSup: null,
-        clientName: '',
-        matCode: ''
-      }
-    ]);
+    addRow();
   }
 });
 
+const rowSelectable = (row) => {
+  // 수정 모드 + MRP 자재는 선택 불가
+  if (props.isEditMode && row.sourceType === 'mrp') {
+    return false;
+  }
+  return true;
+};
+
+// MRP 자재 행 스타일
 const rowClass = (data) => {
   if (data.sourceType === 'mrp') {
     return 'row-mrp';
@@ -100,6 +107,7 @@ const rowClass = (data) => {
       :value="visibleRows"
       v-model:selection="selectedRows"
       :selectionMode="isEditable ? 'checkbox' : null"
+      :rowSelectable="rowSelectable"
       dataKey="__key"
       showGridlines
       tableStyle="table-layout: fixed; width: 100%;"
@@ -110,60 +118,64 @@ const rowClass = (data) => {
       :rows="10"
       :rowClass="rowClass"
     >
-      <Column selectionMode="multiple" headerStyle="width: 48px; padding: 8px;" />
+      <Column selectionMode="multiple" headerStyle="width: 48px; padding: 8px;">
+        <template #body="{ data }">
+          <Checkbox v-model="selectedRows" :value="data" :disabled="props.isEditMode && data.sourceType === 'mrp'" />
+        </template>
+      </Column>
 
       <Column header="자재코드" headerStyle="width: 120px; padding: 10px;">
         <template #body="{ data }">
-          <InputText v-model="data.matCode" placeholder="자재선택" :disabled="!isEditable" readonly class="w-full" @click="isEditable && emit('selecteMaterial', data)" />
+          <InputText v-model="data.matCode" readonly class="w-full" placeholder="자재 선택" :disabled="!isEditable || data.sourceType === 'mrp'" @click="isEditable && data.sourceType !== 'mrp' && emit('selecteMaterial', data)" />
         </template>
       </Column>
 
       <Column header="자재명" headerStyle="width: 220px; padding: 10px;">
         <template #body="{ data }">
-          <InputText v-model="data.materialName" :disabled="!isEditable" class="w-full" />
+          <InputText v-model="data.materialName" class="w-full" :disabled="!isEditable || data.sourceType === 'mrp'" />
         </template>
       </Column>
 
-      <Column header="현재고" headerStyle="width: 110px; padding: 10px;" bodyStyle="padding: 0.5rem">
+      <Column header="현재고" headerStyle="width: 110px; padding: 10px;">
         <template #body="{ data }">
-          <InputText v-model="data.curQtt" :disabled="!isEditable" class="w-full text-right" placeholder="0" />
+          <InputText v-model="data.curQtt" class="w-full text-right" disabled />
         </template>
       </Column>
 
-      <Column header="부족수량" headerStyle="width: 110px; padding: 10px;" bodyStyle="padding: 0.5rem">
+      <Column header="부족수량" headerStyle="width: 110px; padding: 10px;">
         <template #body="{ data }">
-          <InputText v-model="data.lackQtt" :disabled="!isEditable" class="w-full text-right" placeholder="0" />
+          <InputText v-model="data.lackQtt" class="w-full text-right" disabled />
         </template>
       </Column>
 
-      <Column header="요청수량" headerStyle="width: 110px; padding: 10px;" bodyStyle="padding: 0.5rem">
+      <Column header="요청수량" headerStyle="width: 110px; padding: 10px;">
         <template #body="{ data }">
-          <InputText v-model="data.reqQtt" :disabled="!isEditable" class="w-full text-right" placeholder="0" />
+          <InputText v-model="data.reqQtt" class="w-full text-right" :disabled="!isEditable || data.sourceType === 'mrp'" />
         </template>
       </Column>
 
-      <Column header="단위" headerStyle="width: 80px; padding: 10px;" bodyStyle="padding: 0.5rem">
+      <Column header="단위" headerStyle="width: 80px; padding: 10px;">
         <template #body="{ data }">
-          <InputText v-model="data.unitLabel" :disabled="!isEditable" class="w-full" />
+          <InputText v-model="data.unitLabel" class="w-full" :disabled="!isEditable || data.sourceType === 'mrp'" />
         </template>
       </Column>
 
       <Column header="공급업체" headerStyle="width: 160px; padding: 10px;">
         <template #body="{ data }">
-          <InputText v-model="data.clientName" :disabled="!isEditable" class="w-full" />
+          <InputText v-model="data.clientName" class="w-full" :disabled="!isEditable || data.sourceType === 'mrp'" />
         </template>
       </Column>
 
       <Column header="비고" headerStyle="padding: 10px">
         <template #body="{ data }">
-          <InputText v-model="data.note" :disabled="!isEditable" class="w-full" />
+          <InputText v-model="data.note" class="w-full" :disabled="!isEditable || data.sourceType === 'mrp'" />
         </template>
       </Column>
     </DataTable>
   </div>
 </template>
+
 <style scoped>
-/* 내부 컬럼 사이 세로선만 제거 */
 :deep(.p-datatable.p-datatable-gridlines .p-datatable-table th:not(:first-child)),
 :deep(.p-datatable.p-datatable-gridlines .p-datatable-table td:not(:first-child)) {
   border-left: 0 !important;
