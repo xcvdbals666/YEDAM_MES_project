@@ -11,7 +11,8 @@ const selectAllOrder = `SELECT ord_code,
         note,
         (SELECT min(ord_priority)
         FROM ord_d_tbl d
-        WHERE d.ord_code=o.ord_code) AS ord_priority
+        WHERE d.ord_code=o.ord_code) AS ord_priority,
+        ord_stat
 FROM ord_tbl o
 order by 1 desc`;
 

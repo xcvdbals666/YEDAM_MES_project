@@ -58,8 +58,27 @@ const addOrder = async (order, orderDetail) => {
   return ordCode;
 };
 const modifyOrder = async (order, orderDetail) => {
-  let orderResult = await mysql.query("updateOrder", [order], "order1");
-  let detailResult = await mysql.query("updateDetail", [orderDetail]);
+  let ordCode = order.ord_code;
+  delete order.ord_code;
+  delete order.client_name;
+  delete order.ord_date;
+  const detailValues = orderDetail.map((item) => [
+    item.unit,
+    item.spec,
+    item.ord_amount,
+    item.prod_price,
+    item.delivery_date,
+    item.ord_priority,
+    item.total_price,
+    ordCode,
+    item.prod_code,
+  ]);
+  let orderResult = await mysql.query(
+    "updateOrder",
+    [order, ordCode],
+    "order1",
+  );
+  let detailResult = await mysql.query("updateDetail", [detailValues]);
 };
 module.exports = {
   findAllOrder,
@@ -68,4 +87,5 @@ module.exports = {
   findAllProducts,
   findOrderDetailByCode,
   addOrder,
+  modifyOrder,
 };

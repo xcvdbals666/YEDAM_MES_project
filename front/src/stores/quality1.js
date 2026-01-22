@@ -59,6 +59,13 @@ export const useQuality1Store = defineStore('quality', {
       this.qiMpoList = response.data;
       console.log('qiMpoList: ', this.qiMpoList);
       return this.qiMpoList;
+    },
+
+    // 검사지시서 등록
+    async submitMinbndQi(data) {
+      console.log('전송데이터: ', data);
+      const response = await axios.post('api/quality/submitqiorderform', data);
+      console.log('검사지시서 등록완료', response);
     }
   }
 });

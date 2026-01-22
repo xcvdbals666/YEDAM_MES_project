@@ -1,3 +1,4 @@
+<!-- 현재 상태 나중에 꼭 넣기!! -->
 <script setup>
 import { onMounted } from 'vue';
 import { useRouter } from 'vue-router';
@@ -13,20 +14,26 @@ const props = defineProps({
   }
 });
 
+// 날짜 포맷
+const formatDate = (val) => {
+  const d = new Date(val);
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+};
+
 onMounted(() => {
+  store.fetchDetailHeader(props.mprCode);
   store.fetchDetailItem(props.mprCode);
 });
 </script>
 
 <template>
-  <!-- ← 목록으로 -->
-  <div class="mb-4">
-    <Button icon="pi pi-arrow-left" label="목록으로" severity="secondary" @click="router.back()" />
-  </div>
-
+  <p @click="router.back()" class="cursor-pointer text-lg"><i class="pi pi-arrow-left mr-1"></i> 목록으로</p>
   <!-- 요청기본정보 -->
   <div class="card mb-5">
-    <div class="border-b pb-2 mb-4">
+    <div class="border-b mb-4">
       <h4 class="font-semibold">요청기본정보</h4>
     </div>
 
@@ -40,20 +47,22 @@ onMounted(() => {
       <tbody>
         <tr>
           <th>요청번호</th>
-          <td>-</td>
+          <td>{{ store.mprHeaders?.mpr_code || '-' }}</td>
           <th>요청일자</th>
-          <td>-</td>
+          <td>{{ formatDate(store.mprHeaders?.reqdate) || '-' }}</td>
         </tr>
         <tr>
           <th>요청자</th>
-          <td>-</td>
+          <td>{{ store.mprHeaders?.emp_name || '-' }}</td>
           <th>요청부서</th>
-          <td>-</td>
+          <td>{{ store.mprHeaders?.dept_name || '-' }}</td>
         </tr>
-        <tr>
+        <!-- <tr>
           <th>현재상태</th>
-          <td colspan="3">-</td>
-        </tr>
+          <td colspan="3">
+            {{ store.mprHeader?.status_label || '-' }}
+          </td>
+        </tr> -->
       </tbody>
     </table>
   </div>

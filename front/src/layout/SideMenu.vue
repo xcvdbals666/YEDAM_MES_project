@@ -65,12 +65,12 @@ const model = ref([
           {
             label: 'MRP관리',
             icon: 'pi pi-fw pi-lock',
-            to: ''
+            to: '/production/mrp'
           },
           {
             label: 'MRP조회',
             icon: 'pi pi-fw pi-lock',
-            to: ''
+            to: '/production/mrpList'
           },
           {
             label: '작업지시서 관리',

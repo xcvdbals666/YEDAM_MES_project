@@ -5,61 +5,36 @@ import { reactive, ref } from 'vue';
 const store = useProductionStore();
 
 const displayPrdpModal = ref(false); // 생산계획 모달
-const displayOrderModal = ref(false); // 주문 모달
-const displayProdModal = ref(false); // 제품 모달
-const displayLineModal = ref(false); // 라인 모달
+const displayMaterialModal = ref(false); // 자재 모달
 const searchKeyword = ref(''); // 검색어
 const selectedPrdp = ref({}); // 생산계획 모달에서 선택한 데이터
-const selectedOrder = ref({}); // 주문 모달에서 선택한 데이터
-const selectedProd = ref({}); // 제품 모달에서 선택한 데이터
-const selectedLine = ref({}); // 라인 모달에서 선택한 데이터
-const selectedProdList = ref([]); // 제품목록에서 선택한 데이터
+const selectedMaterial = ref({}); // 자재 모달에서 선택한 데이터
 const prdpList = ref([]); // 검색한 생산계획 목록
-const orderList = ref([]); // 검색한 주문 목록
-const prodList = ref([]); // 검색한 제품 목록
-const lineList = ref([]); // 검색한 라인 목록
-const planProdList = ref([]); // 행으로 추가한 제품 목록
+const materialList = ref([]); // 검색한 자재 목록
+const mrpMaterialList = ref([]); // 행으로 추가한 자재 목록
 const idx = ref(null); // 선택한 인덱스(제품 및 라인 검색 결과 적용 용도)
 let rownum = 0; // 임시 인덱스
 const user = JSON.parse(localStorage.getItem('user'));
 
-// 생산계획 정보
-const planInfo = reactive({
+// MRP 정보
+const mrpInfo = reactive({
+  mrpCode: '',
   prdpCode: '',
-  prdpName: '',
   prdpDate: new Date(),
+  startDate: '',
   reg: user.emp_code,
   empName: user.emp_name,
-  startDate: '',
-  endDate: '',
-  ordCode: '',
-  dueDate: '',
   note: ''
 });
 
 // 생산계획 삭제
-const remove = async () => {
-  if (!planInfo.prdpCode) {
-    alert('삭제할 생산계획을 먼저 불러와야 합니다.');
-    return;
-  }
-  if (confirm('정말로 삭제하시겠습니까?')) {
-    const result = await store.deletePrdp(planInfo.prdpCode);
-    if (result.status == 'success') {
-      alert('삭제되었습니다!');
-      reset();
-      return;
-    }
-  } else {
-    return;
-  }
-};
+const remove = () => {};
 
 // 생산계획 초기화
 const reset = () => {
   planInfo.prdpCode = '';
   planInfo.prdpName = '';
-  planInfo.prdpDate = new Date();
+  planInfo.prdpDate = '';
   planInfo.reg = user.emp_code;
   planInfo.empName = user.emp_name;
   planInfo.startDate = '';
@@ -310,39 +285,22 @@ const searchProd = async () => {
           </colgroup>
           <tbody>
             <tr>
+              <th>MRP코드</th>
+              <td><InputText placeholder="MRP 코드" v-model="mrpInfo.prdpCode" disabled></InputText></td>
               <th>생산계획코드</th>
-              <td><InputText placeholder="생산계획코드" v-model="planInfo.prdpCode" disabled></InputText></td>
-              <th>계획명</th>
-              <td><InputText v-model="planInfo.prdpName"></InputText></td>
+              <td><InputText v-model="planInfo.prdpCode" disabled></InputText></td>
             </tr>
             <tr>
-              <th>계획일자</th>
-              <td><DatePicker :showIcon="true" :showButtonBar="true" v-model="planInfo.prdpDate" disabled></DatePicker></td>
+              <th>계획수립일</th>
+              <td><DatePicker :showIcon="true" :showButtonBar="true" v-model="mrpInfo.prdpDate" disabled></DatePicker></td>
+              <th>생산시작일</th>
+              <td><DatePicker :showIcon="true" :showButtonBar="true" v-model="mrpInfo.startDate" disabled></DatePicker></td>
+            </tr>
+            <tr>
               <th>작성자</th>
-              <td><InputText v-model="planInfo.empName" disabled></InputText></td>
-            </tr>
-            <tr>
-              <th>계획시작일</th>
-              <td><DatePicker :showIcon="true" :showButtonBar="true" v-model="planInfo.startDate" placeholder="날짜 선택"></DatePicker></td>
-              <th>계획종료일</th>
-              <td><DatePicker :showIcon="true" :showButtonBar="true" v-model="planInfo.endDate" placeholder="날짜 선택"></DatePicker></td>
-            </tr>
-            <tr>
-              <th>주문코드</th>
-              <td>
-                <IconField iconPosition="left" @click="openOrderModal">
-                  <InputText v-model="planInfo.ordCode" type="text" placeholder="검색" readonly />
-                  <InputIcon class="pi pi-search" />
-                </IconField>
-              </td>
-              <th>납기일자</th>
-              <td><DatePicker :showIcon="true" :showButtonBar="true" v-model="planInfo.dueDate" placeholder="날짜 선택"></DatePicker></td>
-            </tr>
-            <tr>
+              <td><InputText v-model="mrpInfo.empName" disabled></InputText></td>
               <th>비고</th>
-              <td><InputText v-model="planInfo.note" placeholder="특이사항 입력"></InputText></td>
-              <th></th>
-              <td></td>
+              <td><InputText v-model="mrpInfo.note" placeholder="특이사항 입력"></InputText></td>
             </tr>
           </tbody>
         </table>

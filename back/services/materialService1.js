@@ -9,6 +9,14 @@ const formatDate = (dateStr) => {
   return dateStr;
 };
 
+const getStatCode = (statLabel) => {
+  const statMap = {
+    요청완료: "c1",
+    입고완료: "c2",
+  };
+  return statMap[statLabel] || statLabel;
+};
+
 // 발주서 (MPO) 관련
 // 발주서 전체 목록 조회 (모달용)
 const findAllMpoTbl = async () => {
@@ -48,10 +56,12 @@ const addMpoTbl = async (mpoData) => {
   let codeResult = await mysql.query("selectNextMpoCode", [], "material1");
   let nextCode = codeResult[0].next_code;
 
+  const statCode = getStatCode(mpoData.stat);
+
   // 2. 발주서 기본정보 등록
   let result = await mysql.query(
     "insertMpoTbl",
-    [nextCode, mpoData.stat, mpoData.mcode, mpoData.note],
+    [nextCode, statCode, mpoData.mcode, mpoData.note],
     "material1",
   );
 
@@ -91,7 +101,7 @@ const updateMpoTbl = async (purchaseCode, mpoData) => {
   // 1. 발주서 기본정보 수정
   let result = await mysql.query(
     "updateMpoTbl",
-    [mpoData.stat, mpoData.mcode, mpoData.note, purchaseCode],
+    [statCode, mpoData.mcode, mpoData.note, purchaseCode],
     "material1",
   );
 
