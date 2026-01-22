@@ -209,7 +209,7 @@ const handleExcelDownload = () => {
   const mapFunction = (item) => [item.out_req_code, item.prod_name, item.req_qtt, item.outbnd_qtt, item.un_qtt, formatDate(item.out_req_date), item.emp_name, item.client_name, statusMap[item.stat]?.label || item.stat];
 
   // 엑셀 다운로드 실행
-  downloadExcel(orderStore.outboundList, headers, mapFunction, '출고조회');
+  downloadExcel(selectedRows.value.length > 0 ? selectedRows.value : orderStore.outboundList, headers, mapFunction, '출고조회');
 };
 </script>
 <template>

@@ -161,7 +161,7 @@ const formatDate = (v) => {
           <div class="text-center py-6 text-gray-400">데이터 없음</div>
         </template>
 
-        <Column selectionMode="multiple" headerStyle="width: 48px; background-color: #f9fafb; padding: 10px;" />
+        <Column selectionMode="multiple" headerStyle="width: 48px; background-color:#f9fafb; padding: 10px;" />
 
         <Column header="발주서번호" field="purchase_code" sortable headerStyle="width: 120px; background-color: #f9fafb; padding: 10px;">
           <template #body="{ data }">{{ data.purchase_code }}</template>

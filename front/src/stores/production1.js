@@ -8,19 +8,12 @@ export const useProductionsStore = defineStore('productions', () => {
   const loading = ref(false);
   const error = ref(null);
   const lines = ref([]); //라인 드롭다운으로 받음
-  // const potypes = ref([]); //공정유형 드롭다운으로 받음
 
   //라인목록 조회
   const fetchLines = async () => {
     const res = await axios.get('/api/produce/allLineList');
     lines.value = res.data;
   };
-
-  //라인 공정유형 조회
-  // const fetchAllPoType = async () => {
-  //   const res = await axios.get('/api/produce/allPoTypeList');
-  //   potypes.value = res.data;
-  // };
 
   // 검색조건
   const from = ref('');
@@ -71,10 +64,9 @@ export const useProductionsStore = defineStore('productions', () => {
     await fetchWorkOrders();
   };
 
-
-  //##########################
-  //모달 리스트띄우기
-  //##########################
+  //###################################
+  //모달 생산계획서 리스트 띄우기
+  //###################################
   //로딩중인지, 에러났는지 상태관리
   const prdpList = ref([]);
   const prdpLoading = ref(false);
@@ -100,9 +92,9 @@ export const useProductionsStore = defineStore('productions', () => {
     const res = await axios.get('/api/produce/allProductsList');
     allProducts.value = res.data;
   };
-  //#########################
-  //모달 끝
-  //#########################
+  //###################################
+  //생산계획서 리스트 모달 끝
+  //###################################
 
   //생산계획서에 딸린 계획서 디테일 테이블에서 데이터 가져오기
   const prdpItems = ref([]);
@@ -133,9 +125,15 @@ export const useProductionsStore = defineStore('productions', () => {
       const res = await axios.post('/api/produce/workorderInsert', formData);
       return res.data;
     } catch (e) {
-      console.error("작업지시서 저장 중 에러 발생:", e);
+      console.error('작업지시서 저장 중 에러 발생:', e);
       throw e;
     }
+  };
+
+  //불러온 작업지시서 삭제하기
+  const deleteWorkOrderByWkoCode = async (wkoCode) => {
+    const res = await axios.delete(`api/produce/workOrderRemove/${wkoCode}`);
+    return res.data;
   };
 
   return {
@@ -163,6 +161,7 @@ export const useProductionsStore = defineStore('productions', () => {
     prdpItemsLoading,
     prdpItemsError,
     fetchPrdpItems,
-    insertWorkOrder
+    insertWorkOrder,
+    deleteWorkOrderByWkoCode
   };
 });

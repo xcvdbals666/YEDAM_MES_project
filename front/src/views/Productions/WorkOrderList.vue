@@ -16,7 +16,7 @@ const statusOptions = [
 
 ];
 
-//
+
 const statusMap = {
   v1: '작업대기',
   v2: '작업보류',
