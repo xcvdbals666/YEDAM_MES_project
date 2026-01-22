@@ -43,6 +43,9 @@ const handleSelectEmployee = (employee) => {
 
 // 자재 추가 함수 추가
 const addMaterialToTable = (mat) => {
+  const deliveryDate = new Date();
+  deliveryDate.setDate(deliveryDate.getDate() + 7);
+
   mpoStore.materials.push({
     mat_code: mat.mat_code,
     mat_name: mat.mat_name,
@@ -51,15 +54,20 @@ const addMaterialToTable = (mat) => {
     req_qtt: mat.req_qtt || 0,
     current_stock: mat.current_stock || 0,
     shortage_qtt: 0,
-    delivery_date: mat.delivery_date || '',
+    delivery_date: deliveryDate,
     supplier_name: mat.supplier_name,
     client_code: mat.client_code
   });
 };
 
-// mpr 선택 시
+// mpr 선택 시 - 작성자 정보도 함께 설정
 const handleSelectMpr = async (mpr) => {
   mpoStore.mpoData.mprCode = mpr.mpr_code;
+
+  // 작성자 정보도 함께 설정
+  mpoStore.mpoData.mcode = mpr.mcode;
+  mpoStore.mpoData.mcodeName = mpr.emp_name;
+
   // mrp_code로 자재 조회
   await mpoStore.fetchMprMaterials(mpr.mpr_code);
 };
@@ -234,7 +242,7 @@ const saveMpo = async () => {
           <div class="text-center py-6 text-gray-400">데이터 없음</div>
         </template>
 
-        <Column selectionMode="multiple" style="width: 50px" />
+        <Column selectionMode="multiple" headerStyle="width: 50px" />
 
         <Column field="mat_name" header="자재명" style="min-width: 200px">
           <template #body="{ data }">
