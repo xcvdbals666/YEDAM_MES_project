@@ -7,10 +7,15 @@ export const useOrderStore2 = defineStore('order2', {
   // state
   state: () => ({
     outboundList: [],
+    orderCode: [],
     outboundCode: [],
     outboundProd: [],
     outboundClient: [],
-    employees: []
+    employees: [],
+    selectedOrder: null,
+    orderDetail: null,
+    products: [],
+    outReqCode: ''
   }),
   actions: {
     // 출고 조회 + 검색
@@ -87,6 +92,45 @@ export const useOrderStore2 = defineStore('order2', {
       } catch (error) {
         console.error('출고 담당자 조회 실패:', error);
       }
+    },
+
+    // 주문 선택 모달
+    async fetctOrdCode({ keyword }) {
+      try {
+        const response = await axios.get(`/api/order/order-code`, { params: { keyword: keyword || '' } });
+        this.orderCode = response.data;
+      } catch (error) {
+        console.error('주문 번호 조회 실패:', error);
+      }
+    },
+
+    // 선택한 주문 번호 스토어에 저장
+    setSelectedOrder(orderData) {
+      this.selectedOrder = orderData;
+    },
+
+    // 선택한 주문 번호의 정보 조회
+    async fetchOrderDetailByProdCode(ordCode) {
+      try {
+        const response = await axios.get(`/api/order/order-detail/${ordCode}`);
+
+        this.orderDetail = response.data.orderInfo;
+        this.products = response.data.products;
+        this.outReqCode = response.data.out_req_code;
+
+        return response.data;
+      } catch (error) {
+        console.error('주문 상세 조회 실패:', error);
+        throw error;
+      }
+    },
+
+    // 출고 요청 관련 데이터 초기화
+    resetOutboundRequest() {
+      this.selectedOrder = null;
+      this.orderDetail = null;
+      this.products = [];
+      this.outReqCode = '';
     }
   },
   persist: true
