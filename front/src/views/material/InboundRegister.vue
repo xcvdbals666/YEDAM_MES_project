@@ -304,7 +304,7 @@ const submitInbound = async () => {
         <!-- 입고일자 -->
         <div>
           <label class="block mb-1 text-sm font-medium">입고일자 *</label>
-          <DatePicker v-model="inboundForm.inbndDate" dateFormat="yy-mm-dd" placeholder="YYYY-MM-DD" showIcon class="w-full" />
+          <DatePicker v-model="inboundForm.inbndDate" diadateFormat="yy-mm-dd" placeholder="YYYY-MM-DD" showIcon class="w-full" />
         </div>
       </div>
 
