@@ -40,7 +40,7 @@ router.get(`/allProductsList`, async (req, res) => {
 });
 
 //작업지시서 등록하기
-router.post('/workorderInsert', async (req, res) => {
+router.post("/workorderInsert", async (req, res) => {
   try {
     const result = await produceService.updateWorkOrder(req.body);
     res.status(200).json(result);
@@ -48,6 +48,13 @@ router.post('/workorderInsert', async (req, res) => {
     console.error("라우터 에러:", err);
     res.status(500).json({ ok: false, message: err.message });
   }
+});
+
+//불러온 작업지시서 삭제하기
+router.delete("/workOrderRemove/:wko_code", async (req, res) => {
+  const { wko_code } = req.params;
+  const result = await produceService.removeWorkOrder(wko_code);
+  res.send(result);
 });
 
 module.exports = router;
