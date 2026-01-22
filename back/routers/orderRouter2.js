@@ -42,6 +42,13 @@ router.get(`/outbounds`, async (req, res) => {
   }
 });
 
+// 주문 선택 모달
+router.get("/order-code", async (req, res) => {
+  const { keyword = "" } = req.query;
+  let list = await orderService.findByOrderOrdTbl(keyword);
+  res.send(list);
+});
+
 // 출고 번호 선택 모달
 router.get("/outbound-code", async (req, res) => {
   const { keyword = "" } = req.query;
@@ -68,6 +75,27 @@ router.get("/outbound-emp", async (req, res) => {
   const { keyword = "" } = req.query;
   let list = await orderService.findByEmpcodeEmpTbl(keyword);
   res.send(list);
+});
+
+// 주문 정보 단건 조회
+router.get("/order-code/:ord_code", async (req, res) => {
+  const ord_code = req.params.ord_code;
+  let result = await orderService.findByOrdcode(ord_code);
+  res.send(result);
+});
+
+// 주문 제품 목록 조회
+router.get("/order-products/:ord_code", async (req, res) => {
+  const ord_code = req.params.ord_code;
+  let result = await orderService.findProductsByOrdcode(ord_code);
+  res.send(result);
+});
+
+// 주문 정보 + 제품 목록 함께 조회
+router.get("/order-detail/:ord_code", async (req, res) => {
+  const ord_code = req.params.ord_code;
+  let result = await orderService.findOrderDetailForOutbound(ord_code);
+  res.send(result);
 });
 
 module.exports = router;
