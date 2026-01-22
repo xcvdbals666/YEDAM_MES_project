@@ -18,7 +18,7 @@ router.get(`/prdpList`, async (req, res) => {
 });
 
 // 생산계획 상세 제품 조회
-router.get(`/planProd/:prdp_code`, async (req, res) => {
+router.get(`/planProd/:prdpCode`, async (req, res) => {
   const data = req.params;
   let list = await produceService.findPrdpDetail(data);
   res.send(list);
@@ -53,8 +53,9 @@ router.put(`/prdp`, async (req, res) => {
 });
 
 // 생산계획 삭제
-router.delete(`/prdp`, async (req, res) => {
-  const data = req.body;
+router.delete(`/prdp/:prdpCode`, async (req, res) => {
+  console.log(req.params);
+  const data = req.params;
   let result = await produceService.removePrdp(data);
   res.send(result);
 });
