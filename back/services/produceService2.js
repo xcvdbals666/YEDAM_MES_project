@@ -26,8 +26,8 @@ const findByCodeOrNamePrdp = async (data) => {
 
 // 생산계획 상세 제품 조회
 const findPrdpDetail = async (data) => {
-  const { prdp_code } = data;
-  let list = await mysql.query("selectPrdpDetail", [prdp_code], "produce2");
+  const { prdpCode } = data;
+  let list = await mysql.query("selectPrdpDetail", [prdpCode], "produce2");
   return list;
 };
 
@@ -166,11 +166,11 @@ const modifyPrdp = async (data) => {
 };
 
 const removePrdp = async (data) => {
-  const { code } = data; // prdp_code
+  const { prdpCode } = data;
   const resObj = { status: "success" };
   try {
-    await mysql.query("deleteDetailPrdp", [code], "produce2");
-    await mysql.query("deletePrdp", [code], "produce2");
+    await mysql.query("deleteDetailPrdp", [prdpCode], "produce2");
+    await mysql.query("deletePrdp", [prdpCode], "produce2");
   } catch (err) {
     resObj.status = "fail";
     console.log(err);

@@ -104,7 +104,7 @@ export const useProductionStore = defineStore('production', {
     // 생산계획 삭제
     async deletePrdp(prdpCode) {
       try {
-        const response = await axios.delete('/api/produce/prdp', { code: prdpCode });
+        const response = await axios.delete(`/api/produce/prdp/${prdpCode}`);
         return response.data;
       } catch (err) {
         console.log(err);
