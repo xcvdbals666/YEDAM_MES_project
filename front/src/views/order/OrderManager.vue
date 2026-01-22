@@ -151,6 +151,7 @@ const saveBtn = async () => {
     console.log(`ord_code's length is not 0`);
     if (JSON.stringify(orderInfo.value) == JSON.stringify(selectedOrder.value) && JSON.stringify(products.value) == JSON.stringify(order.details)) {
       alert('수정된게 없음.');
+      console.log(orderInfo.value);
     } else {
       let result = await order.updateOrder(orderInfo.value, products.value);
       console.log(result);
