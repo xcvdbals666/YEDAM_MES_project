@@ -42,6 +42,20 @@ router.post("/mat-request", async (req, res) => {
   }
 });
 
+// 자재구매요청 삭제
+router.delete("/mat-request/:mprCode", async (req, res) => {
+  try {
+    const mprCode = req.params.mprCode;
+    const result = await materialService2.removeMpr(mprCode);
+    res.send(result);
+  } catch (err) {
+    res.status(400).send({
+      status: "fail",
+      message: err.message,
+    });
+  }
+});
+
 // 자재구매요청 조회
 router.get("/mpr-request", async (req, res) => {
   const {
