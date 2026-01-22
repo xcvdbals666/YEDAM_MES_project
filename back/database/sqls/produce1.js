@@ -28,12 +28,12 @@ SELECT
   p.prod_name,
   d.planned_qtt,
   d.line_code,
-  pp.po_type
+  pp.prdp_date    AS prdp_date
 FROM prdp_d_tbl d
 JOIN prod_tbl p
   ON p.prod_code = d.prod_code
-LEFT JOIN prod_proc_tbl pp
-  ON pp.prod_code = d.prod_code
+JOIN prdp_tbl pp
+  ON pp.prdp_code = d.prdp_code
 WHERE d.prdp_code = ?
 `;
 
@@ -58,6 +58,30 @@ DELETE FROM wko_tbl
 WHERE wko_code = ?
 `;
 
+//불러온 작업지시서 수정하기
+//wko_code로 된 작업지시서가 존재하는지 체크
+const existsWorkOrder = `
+SELECT 1
+FROM wko_tbl
+WHERE wko_code=?
+LIMIT 1
+`;
+
+//해당 작업지시서 수정
+const updateWorkOrder = `
+UPDATE wko_tbl
+SET
+  start_date = ?,
+  stat = ?,
+  prdp_code = ?,
+  prod_code = ?,
+  wko_qtt = ?,
+  end_date = ?,
+  line_code = ?,
+  wko_name = ?
+WHERE wko_code = ?
+`;
+
 module.exports = {
   selectAllLinesDJ,
   selectPrdpActive,
@@ -65,4 +89,6 @@ module.exports = {
   selectAllPrdDistinct,
   insertWorkOrder,
   deleteWorkOrder,
+  existsWorkOrder,
+  updateWorkOrder,
 };

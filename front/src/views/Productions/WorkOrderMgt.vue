@@ -24,7 +24,7 @@ const convertDate = (d) => {
 
 const statusMap = {
   v1: '작업대기',
-  v2: '작업보류',
+  v2: '작업완료',
   v3: '진행중',
   v4: '작업취소'
 };
@@ -136,6 +136,8 @@ onMounted(() => {
 //wko_code 번호만들기
 //저장버튼 누르는 순간 실행!
 const saveWorkOrder = async () => {
+  
+  if (!form.value.wko_code){
   const now = new Date();
   const year = now.getFullYear();
   // 월, 일은 10보다 작으면 앞에'0을 붙여서 2자리로
@@ -169,17 +171,16 @@ const saveWorkOrder = async () => {
   const finalSeq = String(nextNumber).padStart(3, '0');
 
   form.value.wko_code = `${prefix}-${finalSeq}`;
+}
 
   try {
-    // 스토어에 새로 만든 insertWorkOrder 함수를 호출
-    await store.insertWorkOrder(form.value);
+    await store.saveWorkOrder(form.value);
     alert(`저장이 완료되었습니다! 생성된 번호: ${form.value.wko_code}`);
-
     resetForm();
     await store.fetchWorkOrders();
   } catch (error) {
     console.error('저장 에러 발생:', error);
-    alert('저장에 실패했습니다.');
+    alert('필수값이 입력되지 않았습니다.');
   }
 };
 
@@ -191,6 +192,7 @@ const applySelectedWko = async () => {
 
   form.value.wko_code = selectedWko.value.wko_code ?? '';
   form.value.prdp_code = selectedWko.value.prdp_code ?? '';
+  form.value.prdp_date = convertDate(selectedWko.value.prdp_date);
   form.value.prod_code = selectedWko.value.prod_code ?? '';
   form.value.wko_qtt = selectedWko.value.wko_qtt ?? '';
   form.value.start_date = convertDate(selectedWko.value.start_date);
