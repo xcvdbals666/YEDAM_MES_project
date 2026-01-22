@@ -54,9 +54,43 @@ router.put(`/prdp`, async (req, res) => {
 
 // 생산계획 삭제
 router.delete(`/prdp/:prdpCode`, async (req, res) => {
-  console.log(req.params);
   const data = req.params;
   let result = await produceService.removePrdp(data);
+  res.send(result);
+});
+
+// 자재 검색
+router.get(`/materialList`, async (req, res) => {
+  const data = req.query;
+  let list = await produceService.findByCodeOrNameMat(data);
+  res.send(list);
+});
+
+// BOM 불러오기
+router.get(`/bom/:prdpCode`, async (req, res) => {
+  const data = req.params;
+  let list = await produceService.findBomMat(data);
+  res.send(list);
+});
+
+// MRP 조회
+router.get(`/mrp`, async (req, res) => {
+  const data = req.query;
+  let list = await produceService.findAllMrp(data);
+  res.send(list);
+});
+
+// MRP 상세조회
+router.get(`/mrp/:mrpCode`, async (req, res) => {
+  const data = req.params;
+  let result = await produceService.findByCodeMrpDetail(data);
+  res.send(result);
+});
+
+// MRP 저장
+router.put(`/mrp`, async (req, res) => {
+  const data = req.body;
+  let result = await produceService.modifyMrp(data);
   res.send(result);
 });
 

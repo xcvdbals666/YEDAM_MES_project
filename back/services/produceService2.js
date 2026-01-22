@@ -3,13 +3,21 @@ const mysql = require("../database/mapper.js");
 // 생산계획서 조회
 const findAllPrdp = async (data) => {
   const { code, name, prdpStart, prdpEnd, dueStart, dueEnd } = data;
-  const prdpCode = `%${code}%`;
-  const prdpName = `%${name}%`;
-  let list = await mysql.query(
-    "selectAllPrdp",
-    [prdpCode, prdpName, prdpStart, prdpEnd, dueStart, dueEnd],
-    "produce2",
-  );
+  let sql = `SELECT * FROM prdp_tbl WHERE 1=1`;
+  const params = [];
+  if (code) {
+    sql += ` AND prdp_code LIKE ?`;
+    params.push(`%${code}%`);
+  }
+  if (name) {
+    sql += ` AND prdp_name LIKE ?`;
+    params.push(`%${name}%`);
+  }
+  sql += ` AND prdp_date BETWEEN ? AND ?`;
+  params.push(prdpStart, prdpEnd);
+  sql += ` AND due_date BETWEEN ? AND ?`;
+  params.push(dueStart, dueEnd);
+  let list = await mysql.rquery(sql, params);
   return list;
 };
 
@@ -165,6 +173,7 @@ const modifyPrdp = async (data) => {
   return resObj;
 };
 
+// 생산계획 삭제
 const removePrdp = async (data) => {
   const { prdpCode } = data;
   const resObj = { status: "success" };
@@ -178,6 +187,151 @@ const removePrdp = async (data) => {
   return resObj;
 };
 
+// 자재 검색
+const findByCodeOrNameMat = async (data) => {
+  const query = `%${data.q}%`;
+  let list = await mysql.query(
+    "selectByCodeOrNameMat",
+    [query, query],
+    "produce2",
+  );
+  return list;
+};
+
+// BOM 불러오기
+const findBomMat = async (data) => {
+  const { prdpCode } = data;
+  let list = await mysql.query("selectBomMat", [prdpCode], "produce2");
+  return list;
+};
+
+// MRP 조회
+const findAllMrp = async (data) => {
+  const { mrpCode, prdpCode, prdpName, matName, mrpStart, mrpEnd } = data;
+  let sql = `
+  SELECT d.mrp_d_code, m.mrp_code, m.prdp_code, p.prdp_name, mt.mat_name, d.req_qtt, cu.note AS unit, m.plan_date, m.mrp_note
+  FROM mrp_tbl m
+  JOIN mrp_d_tbl d ON m.mrp_code = d.mrp_code
+  JOIN prdp_tbl p ON p.prdp_code = m.prdp_code
+  JOIN common_code cu ON cu.com_value = d.unit
+  JOIN mat_tbl mt ON mt.mat_code = d.mat_code
+  WHERE 1=1`;
+  const params = [];
+  if (mrpCode) {
+    sql += ` AND mrp_code LIKE ?`;
+    params.push(`%${mrpCode}%`);
+  }
+  if (prdpCode) {
+    sql += ` AND m.prdp_code LIKE ?`;
+    params.push(`%${prdpCode}%`);
+  }
+  if (prdpName) {
+    sql += ` AND m.prdp_name LIKE ?`;
+    params.push(`%${prdpName}%`);
+  }
+  if (matName) {
+    sql += ` AND mt.mat_name LIKE ?`;
+    params.push(`%${matName}%`);
+  }
+  sql += ` AND plan_date BETWEEN ? AND ?`;
+  params.push(mrpStart, mrpEnd);
+
+  let list = await mysql.rquery(sql, params);
+  return list;
+};
+
+// MRP 상세 조회
+const findByCodeMrpDetail = async (data) => {
+  const { mrpCode } = data;
+  let resObj = { info: {}, matList: [] };
+  resObj.info = await mysql.query("selectByCodeMrp", [mrpCode], "produce2");
+  resObj.matList = await mysql.query(
+    "selectByCodeMrpDetail",
+    [mrpCode],
+    "produce2",
+  );
+  return resObj;
+};
+
+// MRP 저장
+const modifyMrp = async (data) => {
+  const { mat, info } = data;
+  let mrpCode = info.mrpCode;
+  let resObj = { status: "success", mrpCode: "" };
+  // mrp 저장
+  try {
+    let mrpResult = null;
+    if (info.mrpCode.startsWith("MRP")) {
+      mrpResult = await mysql.query(
+        "updateMrp",
+        [
+          info.planDate,
+          info.startDate,
+          info.note,
+          info.prdpCode,
+          info.empCode,
+          info.mrpCode,
+        ],
+        "produce2",
+      );
+    } else {
+      const day = `${info.planDate.slice(0, 4)}${info.planDate.slice(5, 7)}${info.planDate.slice(8, 10)}`;
+      const number =
+        Number(
+          (await mysql.query("selectMaxCodeMrp", [day], "produce2"))[0].number,
+        ) + 1;
+      mrpCode = `MRP-${day}-${String(number).padStart(3, "0")}`;
+      mrpResult = await mysql.query(
+        "insertMrp",
+        [
+          mrpCode,
+          info.planDate,
+          info.startDate,
+          info.note,
+          info.prdpCode,
+          info.empCode,
+        ],
+        "produce2",
+      );
+    }
+    resObj.mrpCode = mrpCode;
+    // MRP 자재목록 저장
+    for (const data of mat) {
+      let result = null;
+      if (data.is_delete) {
+        // 행 삭제
+        result = await mysql.query(
+          "deleteMrpDetail",
+          [data.mrp_d_code],
+          "produce2",
+        );
+      } else if (data.mrp_d_code.startsWith("MRP")) {
+        // 행 수정
+        result = await mysql.query(
+          "updateMrpDetail",
+          [data.req_qtt, data.mrp_d_code],
+          "produce2",
+        );
+      } else {
+        const number =
+          Number(
+            (await mysql.query("selectMaxCodeMrpDetail", null, "produce2"))[0]
+              .number,
+          ) + 1;
+        const mrp_d_code = `MRP-D-${String(number).padStart(4, "0")}`;
+        result = await mysql.query(
+          "insertMrpDetail",
+          [mrp_d_code, data.unit, data.req_qtt, mrpCode, data.mat_code],
+          "produce2",
+        );
+      }
+    }
+  } catch (err) {
+    resObj.status = "fail";
+    console.log(err);
+  }
+};
+
 module.exports = {
   findAllPrdp,
   findByCodeOrNamePrdp,
@@ -187,4 +341,8 @@ module.exports = {
   findByCodeOrNameLine,
   modifyPrdp,
   removePrdp,
+  findByCodeOrNameMat,
+  findBomMat,
+  findAllMrp,
+  findByCodeMrpDetail,
 };
