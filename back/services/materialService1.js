@@ -44,6 +44,103 @@ const findByCodeMpoDTbl = async (purchaseCode) => {
   return list;
 };
 
+//발주서 검색 상세
+const searchMpoDetail = async (keyword) => {
+  let sql = `
+    SELECT 
+      mpo.purchase_code,
+      DATE_FORMAT(mpo.purchase_req_date, '%Y-%m-%d') AS purchase_req_date,
+      CASE 
+        WHEN mpo.stat = 'c1' THEN '요청완료'
+        WHEN mpo.stat = 'c2' THEN '입고완료'
+        ELSE mpo.stat
+      END AS stat,
+      mpo.mcode,
+      e.emp_name,
+      DATE_FORMAT(mpo.regdate, '%Y-%m-%d') AS regdate,
+      GROUP_CONCAT(DISTINCT m.mat_name SEPARATOR ', ') AS material_names,
+      GROUP_CONCAT(DISTINCT 
+        CASE 
+          WHEN m.material_type_code = 't1' THEN '원자재'
+          WHEN m.material_type_code = 't2' THEN '부자재'
+          ELSE m.material_type_code
+        END 
+      SEPARATOR ', ') AS material_type,
+      GROUP_CONCAT(DISTINCT c.client_name SEPARATOR ', ') AS supplier_name,
+      SUM(d.req_qtt) AS req_qtt,
+      MIN(DATE_FORMAT(d.deadline, '%Y-%m-%d')) AS deadline
+    FROM mpo_tbl mpo
+    LEFT JOIN emp_tbl e ON mpo.mcode = e.emp_code
+    LEFT JOIN mpo_d_tbl d ON mpo.purchase_code = d.purchase_code
+    LEFT JOIN mat_tbl m ON d.mat_code = m.mat_code
+    LEFT JOIN client_tbl c ON d.client_code = c.client_code
+    WHERE 1=1
+  `;
+
+  const params = [];
+
+  // 발주서번호
+  if (keyword.purchaseCode) {
+    sql += " AND mpo.purchase_code LIKE ? ";
+    params.push(`%${keyword.purchaseCode}%`);
+  }
+
+  // 발주상태
+  if (keyword.stat && keyword.stat !== "전체") {
+    sql += " AND mpo.stat = ? ";
+    params.push(keyword.stat === "요청완료" ? "c1" : "c2");
+  }
+
+  // 공급업체
+  if (keyword.matCode) {
+    sql += " AND c.client_name LIKE ? ";
+    params.push(`%${keyword.matCode}%`);
+  }
+
+  // 자재유형
+  if (keyword.matName && keyword.matName !== "전체") {
+    sql += " AND m.material_type_code = ? ";
+    params.push(keyword.matName === "원자재" ? "t1" : "t2");
+  }
+
+  // 발주제안일 FROM
+  if (keyword.reqDateStart) {
+    sql += " AND mpo.purchase_req_date >= ? ";
+    params.push(formatDate(keyword.reqDateStart));
+  }
+
+  // 발주제안일 TO
+  if (keyword.reqDateEnd) {
+    sql += " AND mpo.purchase_req_date <= ? ";
+    params.push(formatDate(keyword.reqDateEnd));
+  }
+
+  // 납기일 FROM
+  if (keyword.deadlineStart) {
+    sql += " AND d.deadline >= ? ";
+    params.push(formatDate(keyword.deadlineStart));
+  }
+
+  // 납기일 TO
+  if (keyword.deadlineEnd) {
+    sql += " AND d.deadline <= ? ";
+    params.push(formatDate(keyword.deadlineEnd));
+  }
+
+  sql += `
+    GROUP BY mpo.purchase_code, mpo.purchase_req_date, mpo.stat, mpo.mcode, mpo.regdate
+    ORDER BY mpo.purchase_code DESC
+  `;
+
+  try {
+    const result = await mysql.rquery(sql, params);
+    return result;
+  } catch (err) {
+    console.error("[MPO SEARCH ERROR]", err);
+    throw err;
+  }
+};
+
 // 발주서 검색
 const searchMpoTbl = async (keyword) => {
   let list = await mysql.query("selectSearchMpoTbl", [keyword], "material1");
@@ -51,13 +148,12 @@ const searchMpoTbl = async (keyword) => {
 };
 
 // 발주서 등록 (기본정보 + 자재 상세)
-const addMpoTbl = async (mpoData) => {
+const addMpoTbl = async (data) => {
+  const statCode = data.statCode || "c1"; // data에서 statCode 꺼내기
+  const mpoData = data.mpoData;
   // 1. 발주서 번호 자동생성
-  let codeResult = await mysql.query("selectNextMpoCode", [], "material1");
-  let nextCode = codeResult[0].next_code;
-
-  const statCode = getStatCode(mpoData.stat);
-
+  let nextCodeResult = await mysql.query("selectNextMpoCode", [], "material1");
+  let nextCode = nextCodeResult[0].next_code;
   // 2. 발주서 기본정보 등록
   let result = await mysql.query(
     "insertMpoTbl",
@@ -67,6 +163,7 @@ const addMpoTbl = async (mpoData) => {
 
   let resObj = {};
   if (result.affectedRows > 0) {
+    let totalReqQtt = 0;
     // 3. 발주서 자재 상세 등록 (반복)
     let seq = 1;
     for (let item of mpoData.materials) {
@@ -84,7 +181,29 @@ const addMpoTbl = async (mpoData) => {
         ],
         "material1",
       );
+      totalReqQtt += item.req_qtt || 0; // 총요청수량 계산
       seq++;
+    }
+    // 4. MPR-MPO 매핑 등록
+    if (mpoData.mpr_code) {
+      // 매핑 코드 생성
+      let mappCodeResult = await mysql.query(
+        "selectNextMappCode",
+        [],
+        "material1",
+      );
+      let mappCode = mappCodeResult[0].next_code;
+
+      await mysql.query(
+        "insertMprMappTbl",
+        [
+          mappCode,
+          mpoData.mpr_code,
+          nextCode,
+          totalReqQtt, //총 요청수량
+        ],
+        "material1",
+      );
     }
     resObj = {
       status: "success",
@@ -97,7 +216,7 @@ const addMpoTbl = async (mpoData) => {
 };
 
 // 발주서 수정
-const updateMpoTbl = async (purchaseCode, mpoData) => {
+const updateMpoTbl = async (statCode, purchaseCode, mpoData) => {
   // 1. 발주서 기본정보 수정
   let result = await mysql.query(
     "updateMpoTbl",
@@ -139,19 +258,20 @@ const updateMpoTbl = async (purchaseCode, mpoData) => {
 
 // 발주서 삭제
 const deleteMpoTbl = async (purchaseCode) => {
-  // 1. 자재 상세 먼저 삭제
+  // 1. MPR 매핑 테이블 먼저 삭제
+  await mysql.query("deleteMprMappByPurchaseCode", [purchaseCode], "material1");
+
+  // 2. 자재 상세 삭제
   await mysql.query("deleteMpoDetailTbl", [purchaseCode], "material1");
 
-  // 2. 발주서 기본정보 삭제
-  let result = await mysql.query("deleteMpoTbl", [purchaseCode], "material1");
+  // 3. 발주서 기본정보 삭제
+  const result = await mysql.query("deleteMpoTbl", [purchaseCode], "material1");
 
-  let resObj = {};
   if (result.affectedRows > 0) {
-    resObj = { status: "success", no: purchaseCode };
+    return { status: "success", no: purchaseCode };
   } else {
-    resObj = { status: "fail" };
+    return { status: "fail" };
   }
-  return resObj;
 };
 
 // 자재구매요청서 (MPR) 관련
@@ -195,6 +315,7 @@ module.exports = {
   findByCodeMpoDTbl,
   addMpoTbl,
   searchMpoTbl,
+  searchMpoDetail,
   updateMpoTbl,
   deleteMpoTbl,
 

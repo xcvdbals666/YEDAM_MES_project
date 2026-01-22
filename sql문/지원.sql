@@ -9,6 +9,7 @@ select * from sup_tbl;
 select * from client_tbl;
 select * from  minbnd_tbl ;
 select * from mat_tbl;
+select * from moutbnd_tbl;
 
 
 -- mat_tbl에 공급업체 정보 확인
@@ -138,4 +139,10 @@ select * from mpo_tbl;
 select * from mpr_d_tbl;
 
 select * from mat_tbl;
+select * from mpr_mapp_tbl;
 
+select * from minbnd_tbl;
+select * from mat_lot_tbl;
+select * from qir_tbl;  -- 품질검사 테이블 (g2)
+select * from  qio_tbl;
+select * from client_tbl;

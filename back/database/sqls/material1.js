@@ -137,6 +137,10 @@ DELETE FROM mpo_d_tbl WHERE purchase_code = ?
 const deleteMpoTbl = `
 DELETE FROM mpo_tbl WHERE purchase_code = ?
 `;
+// 발주서 (mapp 삭제)
+const deleteMprMappByPurchaseCode = `
+DELETE FROM mpr_mapp_tbl WHERE purchase_code = ?
+`;
 
 // 발주서 검색
 const selectSearchMpoTbl = `
@@ -169,6 +173,52 @@ LEFT JOIN mpo_d_tbl d ON mpo.purchase_code = d.purchase_code
 LEFT JOIN mat_tbl m ON d.mat_code = m.mat_code
 LEFT JOIN client_tbl c ON d.client_code = c.client_code
 WHERE mpo.purchase_code LIKE CONCAT('%', ?, '%')
+GROUP BY mpo.purchase_code, mpo.purchase_req_date, mpo.stat, mpo.mcode, mpo.regdate
+ORDER BY mpo.purchase_code DESC
+`;
+
+//발주 상세 조회 검색
+const selectSearchMpoDetailTbl = `
+SELECT 
+  mpo.purchase_code,
+  DATE_FORMAT(mpo.purchase_req_date, '%Y-%m-%d') AS purchase_req_date,
+  CASE 
+    WHEN mpo.stat = 'c1' THEN '요청완료'
+    WHEN mpo.stat = 'c2' THEN '입고완료'
+    ELSE mpo.stat
+  END AS stat,
+  mpo.mcode,
+  e.emp_name,
+  DATE_FORMAT(mpo.regdate, '%Y-%m-%d') AS regdate,
+  GROUP_CONCAT(DISTINCT m.mat_name SEPARATOR ', ') AS material_names,
+  GROUP_CONCAT(DISTINCT 
+    CASE 
+      WHEN m.material_type_code = 't1' THEN '원자재'
+      WHEN m.material_type_code = 't2' THEN '부자재'
+      ELSE m.material_type_code
+    END SEPARATOR ', '
+  ) AS material_type,
+  GROUP_CONCAT(DISTINCT c.client_name SEPARATOR ', ') AS supplier_name,
+  SUM(d.req_qtt) AS req_qtt,
+  MIN(DATE_FORMAT(d.deadline, '%Y-%m-%d')) AS deadline
+FROM mpo_tbl mpo
+LEFT JOIN emp_tbl e ON mpo.mcode = e.emp_code
+LEFT JOIN mpo_d_tbl d ON mpo.purchase_code = d.purchase_code
+LEFT JOIN mat_tbl m ON d.mat_code = m.mat_code
+LEFT JOIN client_tbl c ON d.client_code = c.client_code
+WHERE 1=1
+  AND (? = '' OR mpo.purchase_code LIKE CONCAT('%', ?, '%'))
+  AND (? = '전체' OR 
+       (CASE 
+          WHEN m.material_type_code = 't1' THEN '원자재'
+          WHEN m.material_type_code = 't2' THEN '부자재'
+        END) = ?)
+  AND (? = '' OR c.client_name LIKE CONCAT('%', ?, '%'))
+  AND (? = '전체' OR 
+       (CASE 
+          WHEN mpo.stat = 'c1' THEN '요청완료'
+          WHEN mpo.stat = 'c2' THEN '입고완료'
+        END) = ?)
 GROUP BY mpo.purchase_code, mpo.purchase_req_date, mpo.stat, mpo.mcode, mpo.regdate
 ORDER BY mpo.purchase_code DESC
 `;
@@ -297,6 +347,26 @@ WHERE m.is_used = 'f2'
 ORDER BY m.mat_code
 `;
 
+// MPR-MPO 매핑 코드 자동생성
+const selectNextMappCode = `
+SELECT 
+  CONCAT('MAPP-', LPAD(IFNULL(MAX(CAST(SUBSTRING(mapp_code, 6) AS UNSIGNED)), 0) + 1, 3, '0')) 
+  AS next_code
+FROM mpr_mapp_tbl
+WHERE mapp_code LIKE 'MAPP-%'
+`;
+
+// MPR-MPO 매핑 등록
+const insertMprMappTbl = `
+INSERT INTO mpr_mapp_tbl (
+  mapp_code,
+  mpr_code,
+  purchase_code,
+  req_qtt,
+  regdate
+) VALUES (?, ?, ?, ?, NOW())
+`;
+
 module.exports = {
   // 발주서 (MPO)
   selectAllMpoTbl,
@@ -306,6 +376,7 @@ module.exports = {
   insertMpoTbl,
   insertMpoDetailTbl,
   selectSearchMpoTbl,
+  selectSearchMpoDetailTbl,
   updateMpoTbl,
   deleteMpoDetailTbl,
   deleteMpoTbl,
@@ -317,4 +388,9 @@ module.exports = {
 
   // 자재 (MAT)
   selectAllMatTbl,
+
+  // 발주서 & 자재구매요청서 매핑(MPR_MAPP)
+  selectNextMappCode,
+  insertMprMappTbl,
+  deleteMprMappByPurchaseCode,
 };

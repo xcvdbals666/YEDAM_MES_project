@@ -24,10 +24,9 @@ watch(
 );
 
 // 검색
-const handleSearch = () => {
-  store.searchMpoList(searchKeyword.value);
+const handleSearch = async () => {
+  await store.searchMpoList(searchKeyword.value);
 };
-
 // 모달 닫기
 const close = () => {
   emit('update:visible', false);

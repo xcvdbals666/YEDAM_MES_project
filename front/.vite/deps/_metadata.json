@@ -7,13 +7,13 @@
     "vue": {
       "src": "../../node_modules/vue/dist/vue.runtime.esm-bundler.js",
       "file": "vue.js",
-      "fileHash": "f243ee62",
+      "fileHash": "4a10f85c",
       "needsInterop": false
     },
     "pinia": {
       "src": "../../node_modules/pinia/dist/pinia.mjs",
       "file": "pinia.js",
-      "fileHash": "4eb5ea77",
+      "fileHash": "01f3c044",
       "needsInterop": false
     },
     "@primeuix/themes/aura": {
@@ -25,25 +25,25 @@
     "primevue/config": {
       "src": "../../node_modules/primevue/config/index.mjs",
       "file": "primevue_config.js",
-      "fileHash": "0c162857",
+      "fileHash": "79998588",
       "needsInterop": false
     },
     "primevue/confirmationservice": {
       "src": "../../node_modules/primevue/confirmationservice/index.mjs",
       "file": "primevue_confirmationservice.js",
-      "fileHash": "6fd605e1",
+      "fileHash": "f8a8e155",
       "needsInterop": false
     },
     "primevue/toastservice": {
       "src": "../../node_modules/primevue/toastservice/index.mjs",
       "file": "primevue_toastservice.js",
-      "fileHash": "10faa5d1",
+      "fileHash": "5740c2e3",
       "needsInterop": false
     },
     "vue-router": {
       "src": "../../node_modules/vue-router/dist/vue-router.mjs",
       "file": "vue-router.js",
-      "fileHash": "cbd4ec0f",
+      "fileHash": "bb3f7006",
       "needsInterop": false
     }
   },

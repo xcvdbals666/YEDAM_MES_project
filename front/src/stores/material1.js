@@ -59,7 +59,7 @@ export const useMaterialStore = defineStore('material', {
       this.materials = [];
       this.mprList = [];
       this.matList = [];
-      this.mpoList = [];
+      //this.mpoList = [];
     },
 
     // MPR 목록 조회 (모달용)
@@ -92,7 +92,7 @@ export const useMaterialStore = defineStore('material', {
       return this.mpoList;
     },
 
-    // 발주서 검색
+    // 발주서 검색(모달용)
     async searchMpoList(keyword) {
       try {
         if (!keyword) {
@@ -105,6 +105,15 @@ export const useMaterialStore = defineStore('material', {
       } catch (err) {
         console.log(err);
       }
+    },
+
+    //발주서 상세 검색
+    async searchMpoDetail(params) {
+      const response = await axios.get('/api/material/mpo/search/detail', {
+        params
+      });
+      this.mpoList = response.data;
+      return this.mpoList;
     },
 
     // 발주서 상세 조회 (기본정보 + 자재목록)
