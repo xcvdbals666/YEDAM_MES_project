@@ -308,6 +308,66 @@ const findAllMatTbl = async () => {
   return list;
 };
 
+// 입고 관련
+
+// 품질검사 합격 목록 조회
+const findPassedQirList = async () => {
+  let list = await mysql.query("selectPassedQirList", [], "material1");
+  return list;
+};
+
+// 입고 등록 (여러 건)
+const addInbound = async (items) => {
+  const results = [];
+
+  for (let item of items) {
+    // 1. LOT번호 생성
+    let lotResult = await mysql.query("selectNextLotNum", [], "material1");
+    let lotNum = lotResult[0].next_lot_num;
+
+    // 2. LOT 등록
+    await mysql.query(
+      "insertMatLot",
+      [lotNum, item.mat_type, item.mat_code],
+      "material1",
+    );
+
+    // 3. 입고코드 생성
+    let minbndResult = await mysql.query(
+      "selectNextMinbndCode",
+      [],
+      "material1",
+    );
+    let minbndCode = minbndResult[0].next_code;
+
+    // 4. 입고 등록
+    await mysql.query(
+      "insertMinbnd",
+      [
+        minbndCode,
+        item.mat_code,
+        item.mat_type,
+        item.unit,
+        item.inbnd_qtt,
+        formatDate(item.inbnd_date),
+        item.inbnd_qtt, // ord_qtt = inbnd_qtt
+        lotNum,
+        item.mat_sup,
+        item.qio_code || null,
+        item.mcode,
+      ],
+      "material1",
+    );
+
+    results.push({
+      minbnd_code: minbndCode,
+      lot_num: lotNum,
+    });
+  }
+
+  return { status: "success", results };
+};
+
 module.exports = {
   // 발주서 (MPO)
   findAllMpoTbl,
@@ -326,4 +386,8 @@ module.exports = {
 
   // 자재 (MAT)
   findAllMatTbl,
+
+  //입고
+  findPassedQirList,
+  addInbound,
 };
