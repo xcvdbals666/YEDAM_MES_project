@@ -41,7 +41,7 @@ const searchMinbndList = async () => {
   display.value = true;
 };
 
-// 재고불러오기 모달창 닫기
+// 모달창 닫기
 const closeMOdal = () => {
   display.value = false;
   orderDisplay.value = false;
@@ -51,6 +51,9 @@ const closeMOdal = () => {
 
 // 선택된 값 불러오기
 const selectComp = (data) => {
+  callQiOrder.value = true;
+  callQiProd.value = true;
+
   console.log('data: ', data);
   if (data != null) {
     console.log(data);
@@ -98,6 +101,9 @@ const searchOrderList = async () => {
 // 선택한 검사지시서 정보 조회
 let orderInput = ref({ qio_code: '', qio_date: '', emp_name: '' }); // 검사지 불러오기 선택값
 const selectedOrder = async (data) => {
+  callQiMinbnd.value = true;
+  callQiProd.value = true;
+
   if (data != undefined) {
     console.log('selectedOrder: ', data);
     orderDisplay.value = false;
@@ -120,12 +126,18 @@ const selectedOrder = async (data) => {
 };
 
 // 초기화버튼 누를 경우
-const resetQiOrder = () => {
+const resetQiOrder = async () => {
   console.log('adsfasd');
+  await quality1.fetchQiMpoList();
+  await quality1.fetchQiProduceList();
+  await quality1.fetchQiMpoList();
   minbndList.value = [{ qio_code: '', mat_code: '', mat_name: '', inspection_item: '', com_value: '', note: '', sum: '' }];
   seletedMinbnd.value = { mpo_d_code: '', mat_code: '', mat_name: '', req_qtt: '', mat_type: '' };
   selectedQcrList.value = [];
   orderInput.value = { qio_code: '', qio_date: '', emp_name: '' };
+  callQiMinbnd.value = false;
+  callQiProd.value = false;
+  callQiOrder.value = false;
   quality1.state = 0;
 };
 
@@ -142,6 +154,9 @@ const searchProduceList = async () => {
 // 생산실적 선택값 가져오기
 let realSelectedProdInfo = ref([]);
 const selectProd = (data) => {
+  callQiOrder.value = true;
+  callQiMinbnd.value = true;
+
   console.log(data);
   realSelectedProdInfo.value = data;
   produceDisplay.value = false;
@@ -163,7 +178,7 @@ const submitQiOrder = async () => {
           insp_date: quality1.qiMpoList[0].deadline,
           insp_vol: minbndList.value[0].req_qtt,
           mpo_d_code: minbndList.value[0].mpo_d_code,
-          mat_type: selectedMinbnd.value.mat_type
+          mat_type: seletedMinbnd.value.mat_type
         });
       } else {
         let data = {
@@ -173,13 +188,19 @@ const submitQiOrder = async () => {
           mat_type: realSelectedProdInfo.value.prod_type
         };
         await quality1.submitMinbndQi(data);
-        alert('검사지시서 등록완료!');
-        minbndList.value = [{ qio_code: '', mat_code: '', mat_name: '', inspection_item: '', com_value: '', note: '', sum: '' }];
-        seletedMinbnd.value = { mpo_d_code: '', mat_code: '', mat_name: '', req_qtt: '', mat_type: '' };
-        selectedQcrList.value = [];
-        orderInput.value = { qio_code: '', qio_date: '', emp_name: '' };
-        quality1.state = 0;
       }
+      alert('검사지시서 등록완료!');
+      callQiMinbnd.value = false;
+      callQiProd.value = false;
+      callQiOrder.value = false;
+      minbndList.value = [{ qio_code: '', mat_code: '', mat_name: '', inspection_item: '', com_value: '', note: '', sum: '' }];
+      seletedMinbnd.value = { mpo_d_code: '', mat_code: '', mat_name: '', req_qtt: '', mat_type: '' };
+      selectedQcrList.value = [];
+      orderInput.value = { qio_code: '', qio_date: '', emp_name: '' };
+      quality1.state = 0;
+      await quality1.fetchQiMpoList();
+      await quality1.fetchQiProduceList();
+      await quality1.fetchQiMpoList();
     }
   } else {
     alert('저장할 내용이 없습니다.');
@@ -194,11 +215,15 @@ const delQiOrder = async (data) => {
     .then((res) => {
       console.log(res);
       alert('삭제완료!');
+      quality1.state = 0;
       minbndList.value = [{ qio_code: '', mat_code: '', mat_name: '', inspection_item: '', com_value: '', note: '', sum: '' }];
       seletedMinbnd.value = { mpo_d_code: '', mat_code: '', mat_name: '', req_qtt: '', mat_type: '' };
       selectedQcrList.value = [];
       orderInput.value = { qio_code: '', qio_date: '', emp_name: '' };
     });
+  await quality1.fetchQiMpoList();
+  await quality1.fetchQiProduceList();
+  await quality1.fetchQiMpoList();
 };
 
 // 버튼간 비활성화
