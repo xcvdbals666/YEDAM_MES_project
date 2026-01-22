@@ -60,14 +60,15 @@ const CONFIG = {
   mpr: {
     title: '자재구매요청서 선택',
     placeholder: '자재구매요청번호를 입력해주세요',
-    fetch: (keyword) => store.fetchMprList({ keyword }),
-    list: () => store.mprList,
+    fetch: (keyword) => store.fetchMprHeaderModal({ keyword }),
+    list: () => store.headerModals,
     dataKey: 'mpr_code',
     columns: [
-      { field: 'mpr_code', header: '요청서 번호' },
-      { field: 'reqdate', header: '요청일', formatter: (row) => formatDate(row.reqdate) },
-      { field: 'mcode', header: '요청자' },
-      { field: 'material_names', header: '자재명' }
+      { field: 'mpr_code', header: '요청서번호' },
+      { field: 'reqdate', header: '요청일자', formatter: (row) => formatDate(row.reqdate) },
+      { field: 'deadline', header: '납기일자', formatter: (row) => formatDate(row.deadline) },
+      { field: 'mrp_code', header: 'MRP계획번호' },
+      { field: 'mcode', header: '요청자' }
     ]
   },
 
@@ -78,7 +79,7 @@ const CONFIG = {
     list: () => store.clientList,
     dataKey: 'client_code',
     columns: [
-      { field: 'client_code', header: '공급업체 번호' },
+      { field: 'client_code', header: '공급업체번호' },
       { field: 'client_name', header: '공급업체명' },
       { field: 'note', header: '거래처유형' }
     ]
@@ -111,11 +112,18 @@ const close = () => {
 
 // 선택 확정
 const confirm = () => {
+  console.log('selected material:', selected.value);
   if (!selected.value) {
     alert('항목을 선택해주세요.');
     return;
   }
-  emit('select', selected.value);
+
+  if (props.type === 'mpr') {
+    emit('select', selected.value.mpr_code);
+  } else {
+    emit('select', selected.value);
+  }
+
   close();
 };
 </script>

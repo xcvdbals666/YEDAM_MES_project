@@ -49,28 +49,70 @@ const findByMatCodeMatTbl = async (keyword) => {
   return list;
 };
 
-// 자재구매요청
-const addMprTbl = async ({ request, requestDetail }) => {
-  // mpr_code 생성
-  const rows = await mysql.query("selectMaxMprCode", [], "material2");
-  const last = rows[0]?.last_code || "MPR-000";
-  const mprCode = `MPR-${String(Number(last.replace("MPR-", "")) + 1).padStart(3, "0")}`;
+// 자재구매요청/수정
+const modifyMprTbl = async ({ request, requestDetail }) => {
+  let mprCode = request.mprCode;
 
-  // 요청정보 insert
-  await mysql.query(
-    "insertMprTbl",
-    [
-      mprCode,
-      request.reqDate,
-      request.deadline,
-      request.mrpCode,
-      request.mCode,
-    ],
-    "material2",
-  );
+  // 신규 / 수정 분기
+  if (!mprCode) {
+    // 신규
+    const rows = await mysql.query("selectMaxMprCode", [], "material2");
+    const last = rows[0]?.last_code || "MPR-000";
+    mprCode = `MPR-${String(Number(last.replace("MPR-", "")) + 1).padStart(3, "0")}`;
 
-  // 상세요청정보 insert
+    await mysql.query(
+      "insertMprTbl",
+      [
+        mprCode,
+        request.reqDate,
+        request.deadline,
+        request.mrpCode,
+        request.mCode,
+      ],
+      "material2",
+    );
+  } else {
+    // 수정
+
+    // 발주매핑 체크
+    const map = await mysql.query("selectIsEditable", [mprCode], "material2");
+    if (map.length > 0) {
+      throw new Error("발주가 진행된 구매요청은 수정할 수 없습니다.");
+    }
+
+    await mysql.query(
+      "updateMprTbl",
+      [request.reqDate, request.deadline, request.mrpCode, mprCode],
+      "material2",
+    );
+  }
+
+  // 상세 처리
   for (const mat of requestDetail) {
+    // 삭제
+    if (mat.is_deleted && mat.mprDCode) {
+      await mysql.query("deleteMprDTbl", [mat.mprDCode], "material2");
+      continue;
+    }
+
+    // 수정
+    if (mat.mprDCode) {
+      await mysql.query(
+        "updateMprDTbl",
+        [
+          mat.reqQtt,
+          mat.unitCode,
+          mat.note,
+          mat.matSup,
+          mat.matCode,
+          mat.mprDCode,
+        ],
+        "material2",
+      );
+      continue;
+    }
+
+    // 신규
     const dRows = await mysql.query("selectMaxMprDCode", [], "material2");
     const lastD = dRows[0]?.last_code || "MPR-D-000";
     const mprDCode = `MPR-D-${String(Number(lastD.replace("MPR-D-", "")) + 1).padStart(3, "0")}`;
@@ -186,12 +228,25 @@ const findByMprCodeMprDTblDetail = async (mprCode) => {
   return list;
 };
 
-// 자재구매요청서 전체 목록 조회
-const findAllMprTbl = async (keyword) => {
+// MPR 불러오기용 모달 + 검색
+const findMprHeaderModal = async (keyword) => {
   const like = `%${keyword || ""}%`;
-  const list = await mysql.query("selectAllMprTbl", [like], "material2");
+  const list = await mysql.query("selectMprHeaderModal", [like], "material2");
   return list;
 };
+
+// MPR 불러오기용 - 헤더부분
+const findMprHeader = async (mprCode) => {
+  const list = await mysql.query("selectMprHeader", [mprCode], "material2");
+  return list;
+};
+
+// 자재구매요청서 전체 목록 조회
+// const findAllMprTbl = async (keyword) => {
+//   const like = `%${keyword || ""}%`;
+//   const list = await mysql.query("selectAllMprTbl", [like], "material2");
+//   return list;
+// };
 
 // 공급업체 목록 조회
 const findAllClientTbl = async (keyword) => {
@@ -200,15 +255,35 @@ const findAllClientTbl = async (keyword) => {
   return list;
 };
 
+//MRP 기준 정보 불러오기
+const findByMrpCodeMrpDTbl = async (mrpCode) => {
+  const list = await mysql.query(
+    "selectByMrpCodeMrpDTbl",
+    [mrpCode],
+    "material2",
+  );
+  return list;
+};
+
+// 구매요청 수정/삭제 여부 확인
+const findIsEditable = async (mprCode) => {
+  const list = await mysql.query("selectIsEditable", [mprCode], "material2");
+  return list.length === 0;
+};
+
 module.exports = {
   findByEmpcodeEmpTbl,
   findByMatCodeMatTbl,
   findMaxMprCode,
-  addMprTbl,
+  modifyMprTbl,
   findAllMrpCodeMrpTbl,
   findByMprCodeMprTbl,
-  findAllMprTbl,
+  // findAllMprTbl,
   findAllClientTbl,
   findByMprCodeMprTblDetail,
   findByMprCodeMprDTblDetail,
+  findMprHeader,
+  findMprHeaderModal,
+  findByMrpCodeMrpDTbl,
+  findIsEditable,
 };
