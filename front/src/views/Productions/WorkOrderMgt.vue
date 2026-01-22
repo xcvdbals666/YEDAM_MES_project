@@ -7,8 +7,6 @@
   생산 라인도 선택된 제품이 사용 가능한 라인만 조회됩니다.
   작업 지시서 불러오기 버튼으로 등록된 작업 지시서를 수정할 수 있습니다 
   -->
-
-<!-- 제품코드로 조인해서 prod_proc_tbl에서 정형/비정형 불러오기 -->
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { useProductionsStore } from '@/stores/production1';
@@ -31,7 +29,8 @@ const statusMap = {
   v4: '작업취소'
 };
 
-const selectedPlan = ref(null); //모달에서 생산계획 하나 선택
+//모달에서 생산계획 하나 선택
+const selectedPlan = ref(null); 
 
 //초기 폼 (리셋에 사용)
 const emptyForm = {
@@ -134,7 +133,7 @@ onMounted(() => {
   store.fetchAllPrdDistinct();
 });
 
-//wko_code 번호 자동으로 만들어 삽입하기
+//wko_code 번호만들기
 //저장버튼 누르는 순간 실행!
 const saveWorkOrder = async () => {
   const now = new Date();
