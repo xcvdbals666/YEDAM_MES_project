@@ -46,15 +46,21 @@ const search = () => {
   qualityStore.fetchQiOrderList(qio_code.value);
 };
 
-//날짜 변경 형식
 const formatDate = (date) => {
   if (!date) return '';
-  return date.slice(0, 10); // YYYY-MM-DD
+
+  // date가 문자열이면 그냥 slice
+  if (typeof date === 'string') {
+    return date.slice(0, 10); // YYYY-MM-DD
+  }
+
+  // date가 Date 객체라면 로컬 날짜 기준으로 처리
+  return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
 };
 
 //검색조건에 따른 목록 필터링
 const filteredOrders = computed(() => {
-  // 모달 선택 우선
+  // 모달에서 선택한 지시서가 있으면 우선 필터링
   if (selectedOrders.value.length > 0) {
     const codes = selectedOrders.value.map((o) => o.qio_code);
     return qualityStore.qiOrderList.filter((o) => codes.includes(o.qio_code));
@@ -62,14 +68,19 @@ const filteredOrders = computed(() => {
 
   // 일반 검색
   return qualityStore.qiOrderList.filter((item) => {
-    const itemDate = item.qio_date ? new Date(item.qio_date) : null;
-
+    // 코드와 검사유형 조건
     const isCodeMatch = !qio_code.value || item.qio_code.includes(qio_code.value);
     const isTypeMatch = !inspect_type.value || item.inspect_type?.includes(inspect_type.value);
 
-    // 날짜 체크
-    const isStartDateMatch = !qio_date.value || (itemDate && itemDate >= new Date(qio_date.value));
-    const isEndDateMatch = !insp_date.value || (itemDate && itemDate <= new Date(insp_date.value));
+    // 날짜 비교용: ISO 문자열로 변환 (YYYY-MM-DD)
+    const itemStartDate = item.qio_date ? new Date(item.qio_date).toISOString().slice(0, 10) : null;
+    const itemEndDate = item.insp_date ? new Date(item.insp_date).toISOString().slice(0, 10) : null;
+
+    // 시작일: qio_date 기준, 선택하지 않으면 통과
+    const isStartDateMatch = !qio_date.value || (itemStartDate && itemStartDate >= new Date(qio_date.value).toISOString().slice(0, 10));
+
+    // 종료일: insp_date 기준, 선택하지 않으면 통과, 선택한 날짜와 정확히 일치해야 함
+    const isEndDateMatch = !insp_date.value || (itemEndDate && itemEndDate === new Date(insp_date.value).toISOString().slice(0, 10));
 
     return isCodeMatch && isTypeMatch && isStartDateMatch && isEndDateMatch;
   });
@@ -107,7 +118,7 @@ const filteredOrders = computed(() => {
 
       <!-- 종료일 -->
       <div class="flex flex-col gap-2">
-        <label class="font-semibold">지시일자 - 종료일</label>
+        <label class="font-semibold">완료일자 - 종료일</label>
         <DatePicker v-model="insp_date" class="w-full" inputClass="w-full" showIcon showButtonBar appendTo="body" placeholder="종료일" />
       </div>
     </div>
@@ -116,9 +127,9 @@ const filteredOrders = computed(() => {
     <div class="flex items-center justify-between mt-2">
       <!-- 왼쪽 영역 -->
       <div class="flex gap-4">
-        <Button label="전체" severity="contrast" @click="search" />
+        <Button label="전체조회" severity="contrast" @click="search" />
         <!--전체를 누르면 전체의 지시코드가 생김-->
-        <Button label="조회" severity="warn" @click="search" />
+        <Button label="검색조회" severity="warn" @click="search" />
       </div>
       <Button label="지시서 선택" severity="info" @click="openModal" />
     </div>
