@@ -31,7 +31,7 @@ onMounted(() => {
       <div class="layout-main h-200">
         <router-view />
       </div>
-      <Footer />
+      <!-- <Footer /> -->
     </div>
     <div class="layout-mask animate-fadein" @click="hideMobileMenu" />
   </div>
