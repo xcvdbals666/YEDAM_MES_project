@@ -171,15 +171,13 @@ const submitQiOrder = async () => {
         await quality1.submitMinbndQi({
           insp_date: quality1.qiMpoList[0].deadline,
           insp_vol: seletedMinbnd.value.req_qtt,
-          mpo_d_code: seletedMinbnd.value.mpo_d_code,
-          mat_type: seletedMinbnd.value.mat_type
+          mpo_d_code: seletedMinbnd.value.mpo_d_code
         });
       } else if (seletedMinbnd.value.mat_type == 'i1' || seletedMinbnd.value.mat_type == 'i1') {
         let data = {
           insp_date: realSelectedProdInfo.value.end_date,
           insp_vol: realSelectedProdInfo.value.production_qtt,
-          prdr_code: realSelectedProdInfo.value.prdr_code,
-          mat_type: realSelectedProdInfo.value.prod_type
+          prdr_code: realSelectedProdInfo.value.prdr_code
         };
         await quality1.submitMinbndQi(data);
       }

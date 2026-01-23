@@ -44,7 +44,7 @@ const addQiOrderForm = async (data) => {
   console.log("newQio_code: :", qio_code);
 
   try {
-    if (data.mpo_d_code != null || data.mpo_d_code != "") {
+    if (data.mpo_d_code != null || data.mpo_d_code != undefined) {
       const { insp_date, insp_vol, mpo_d_code } = data;
       console.log("전송 데이터:", [qio_code, insp_date, insp_vol, mpo_d_code]);
       let list = await mysql.query(
@@ -53,7 +53,7 @@ const addQiOrderForm = async (data) => {
         "quality1",
       );
       return list;
-    } else {
+    } else if (data.prdr_code != null || data.prdr_code != undefined) {
       const { insp_date, insp_vol, prdr_code } = data;
       console.log("전송 데이터:", [qio_code, insp_date, insp_vol, prdr_code]);
       let list = await mysql.query(
