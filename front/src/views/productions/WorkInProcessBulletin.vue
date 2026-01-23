@@ -94,6 +94,8 @@ const goDetail = (row) => {
   });
 };
 
+
+
 onMounted(async () => {
   loading.value = true;
   error.value = null;
