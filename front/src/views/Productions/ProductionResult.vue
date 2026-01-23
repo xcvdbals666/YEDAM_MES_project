@@ -41,7 +41,6 @@ const search = async () => {
   params.endDate = formatDate(data.endDate);
 
   const list = await store.fetchPrdrs(params);
-  console.log(list);
   prdrs.value = list.map((item) => ({
     ...item,
     start_date: `${item.start_date.slice(0, 10)} ${item.start_date.slice(11, 19)}`,
