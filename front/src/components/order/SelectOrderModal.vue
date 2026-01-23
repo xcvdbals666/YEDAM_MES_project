@@ -1,3 +1,4 @@
+<!-- src/components/order/SelectOrderModal.vue -->
 <script setup>
 import { computed, ref, watch } from 'vue';
 import { useOrderStore2 } from '@/stores/order2';
@@ -38,7 +39,7 @@ watch(
   () => props.visible,
   (val) => {
     if (val) {
-      store.fetctOrdCode({ keyword: '' });
+      store.fetchOrdCode({ keyword: '' });
       selectedOrder.value = null;
       keyword.value = '';
     }
@@ -47,7 +48,7 @@ watch(
 
 // 검색어 변경될 때
 watch(keyword, (val) => {
-  store.fetctOrdCode({ keyword: val });
+  store.fetchOrdCode({ keyword: val });
 });
 
 // 모달 닫기

@@ -7,31 +7,6 @@ const findAllOutreqtbl = async () => {
   return list;
 };
 
-// 주문 선택 모달
-const findByOrderOrdTbl = async (keyword) => {
-  let sql = `
-    SELECT o.ord_code, od.prod_code, p.prod_name, od.ord_amount, o.ord_name, o.ord_date
-    FROM ord_tbl o
-    JOIN ord_d_tbl od ON o.ord_code = od.ord_code
-    JOIN prod_tbl p ON od.prod_code = p.prod_code
-    WHERE 1=1
-  `;
-  const params = [];
-
-  if (keyword) {
-    sql += `
-      AND (
-        o.ord_code LIKE ?
-        OR o.ord_name LIKE ?
-      )
-    `;
-    const like = `%${keyword}%`;
-    params.push(like, like);
-  }
-  sql += ` ORDER BY o.ord_code `;
-  return mysql.rquery(sql, params);
-};
-
 // 출고 번호 선택 모달
 const findByOutcodeOutTbl = async (keyword) => {
   let sql = `
@@ -154,6 +129,31 @@ const findSearchOutreqtbl = async (params) => {
   return list;
 };
 
+// 주문 선택 모달
+const findByOrderOrdTbl = async (keyword) => {
+  let sql = `
+    SELECT o.ord_code, od.prod_code, p.prod_name, od.ord_amount, o.ord_name, o.ord_date
+    FROM ord_tbl o
+    JOIN ord_d_tbl od ON o.ord_code = od.ord_code
+    JOIN prod_tbl p ON od.prod_code = p.prod_code
+    WHERE 1=1
+  `;
+  const params = [];
+
+  if (keyword) {
+    sql += `
+      AND (
+        o.ord_code LIKE ?
+        OR o.ord_name LIKE ?
+      )
+    `;
+    const like = `%${keyword}%`;
+    params.push(like, like);
+  }
+  sql += ` ORDER BY o.ord_code `;
+  return mysql.rquery(sql, params);
+};
+
 // 주문 정보 단건 조회
 const findByOrdcode = async (ord_code) => {
   let info = await mysql.query("selectByOrdcode", [ord_code], "order2");
@@ -175,11 +175,98 @@ const findOrderDetailForOutbound = async (ord_code) => {
     mysql.query("generateOutCode", [], "order2"),
   ]);
 
+  // 제품 목록의 숫자 필드들을 Number로 변환
+  const processedProducts = products.map((product) => ({
+    ...product,
+    ord_amount: Number(product.ord_amount),
+    current_stock: Number(product.current_stock) || 0,
+    already_out_amount: Number(product.already_out_amount) || 0,
+    pending_amount: Number(product.pending_amount) || 0,
+  }));
+
   return {
     orderInfo: orderInfo[0] || null, // 주문 정보는 1개
-    products: products, // 제품은 배열
+    products: processedProducts, // 변환된 배열
     out_req_code: outCode[0].new_out_req_code,
   };
+};
+
+// 출고 요청 생성
+const createOutboundRequest = async (requestData) => {
+  const { outReqInfo, products } = requestData;
+
+  try {
+    // 1. 출고요청 기본정보 INSERT
+    await mysql.query(
+      "insertOutReq",
+      [
+        outReqInfo.out_req_code,
+        outReqInfo.out_req_date,
+        outReqInfo.ord_predict_date,
+        outReqInfo.note,
+        outReqInfo.ord_code,
+        outReqInfo.mcode,
+        outReqInfo.client_code,
+      ],
+      "order2",
+    );
+
+    // 2. 출고요청 상세 INSERT (제품별 반복)
+    for (let i = 0; i < products.length; i++) {
+      const detailCode = `${outReqInfo.out_req_code}-D${String(i + 1).padStart(4, "0")}`;
+
+      await mysql.query(
+        "insertOutReqDetail",
+        [
+          detailCode,
+          products[i].out_req_d_amount,
+          products[i].ord_amount,
+          outReqInfo.out_req_code,
+          products[i].prod_code,
+          products[i].com_value,
+        ],
+        "order2",
+      );
+    }
+
+    // 3. 주문 상태 UPDATE
+    await mysql.query("updateOrdStat", [outReqInfo.ord_code], "order2");
+
+    return {
+      success: true,
+      message: "출고 요청이 완료되었습니다.",
+      out_req_code: outReqInfo.out_req_code,
+    };
+  } catch (error) {
+    console.error("출고 요청 생성 오류:", error);
+    throw error;
+  }
+};
+
+// 출고요청 선택 모달
+const findAllOutReq = async (keyword) => {
+  let sql = `
+    SELECT o.out_req_code, p.prod_name, ord.ord_name, o.out_req_date, ord.ord_stat
+    FROM out_req_tbl o
+    JOIN out_req_d_tbl od ON od.out_req_code = o.out_req_code
+    JOIN prod_tbl p ON od.prod_code = p.prod_code
+    JOIN ord_tbl ord ON ord.ord_code = o.ord_code
+    WHERE 1=1
+  `;
+  const params = [];
+
+  if (keyword) {
+    sql += `
+      AND (
+        o.out_req_code LIKE ?
+        OR ord.ord_name LIKE ?
+      )
+    `;
+    const like = `%${keyword}%`;
+    params.push(like, like);
+  }
+  sql += ` ORDER BY o.out_req_code `;
+  return mysql.rquery(sql, params);
 };
 
 module.exports = {
@@ -193,4 +280,6 @@ module.exports = {
   findByOrdcode,
   findProductsByOrdcode,
   findOrderDetailForOutbound,
+  createOutboundRequest,
+  findAllOutReq,
 };

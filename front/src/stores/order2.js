@@ -15,7 +15,9 @@ export const useOrderStore2 = defineStore('order2', {
     selectedOrder: null,
     orderDetail: null,
     products: [],
-    outReqCode: ''
+    outReqCode: '',
+    requestCode: [],
+    selectedOutReq: null
   }),
   actions: {
     // 출고 조회 + 검색
@@ -54,13 +56,13 @@ export const useOrderStore2 = defineStore('order2', {
       }
     },
 
-    // 출고 번호 선택 모달
+    // 출고 선택 모달
     async fetctOutCode({ keyword }) {
       try {
         const response = await axios.get(`/api/order/outbound-code`, { params: { keyword: keyword || '' } });
         this.outboundCode = response.data;
       } catch (error) {
-        console.error('출고 번호 조회 실패:', error);
+        console.error('출고 코드 조회 실패:', error);
       }
     },
 
@@ -95,12 +97,12 @@ export const useOrderStore2 = defineStore('order2', {
     },
 
     // 주문 선택 모달
-    async fetctOrdCode({ keyword }) {
+    async fetchOrdCode({ keyword }) {
       try {
         const response = await axios.get(`/api/order/order-code`, { params: { keyword: keyword || '' } });
         this.orderCode = response.data;
       } catch (error) {
-        console.error('주문 번호 조회 실패:', error);
+        console.error('주문 코드 조회 실패:', error);
       }
     },
 
@@ -118,9 +120,22 @@ export const useOrderStore2 = defineStore('order2', {
         this.products = response.data.products;
         this.outReqCode = response.data.out_req_code;
 
+        console.log(this.products);
+
         return response.data;
       } catch (error) {
         console.error('주문 상세 조회 실패:', error);
+        throw error;
+      }
+    },
+
+    // 출고 요청 생성
+    async createOutboundRequest(requestData) {
+      try {
+        const response = await axios.post(`/api/order/outbound-request`, requestData);
+        return response.data;
+      } catch (error) {
+        console.error('출고 요청 생성 실패:', error);
         throw error;
       }
     },
@@ -131,6 +146,21 @@ export const useOrderStore2 = defineStore('order2', {
       this.orderDetail = null;
       this.products = [];
       this.outReqCode = '';
+    },
+
+    // 출고요청 선택 모달
+    async fetchOutReqCode({ keyword }) {
+      try {
+        const response = await axios.get(`/api/order/request-code`, { params: { keyword: keyword || '' } });
+        this.requestCode = response.data;
+      } catch (error) {
+        console.error('출고요청 코드 조회 실패:', error);
+      }
+    },
+
+    // 선택한 출고요청 코드 스토어에 저장
+    setSelectedOutReq(outReqData) {
+      this.selectedOutReq = outReqData;
     }
   },
   persist: true
