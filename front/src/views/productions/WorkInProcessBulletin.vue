@@ -14,7 +14,7 @@ const store = useProductionsStore();
 
 const { wipDetail, processOptions, lineEquipments, prdrStatusList } = storeToRefs(store);
 
-const wkoCode = computed(() => route.params.wko_code);
+const wkoCode = computed(() => route.params.wko_code); // 작업지시 번호
 
 const loading = ref(false);
 const error = ref(null);
@@ -121,6 +121,32 @@ onMounted(async () => {
 </script>
 
 <template>
+  <Fluid class="card">
+    <div class="justify-items-start pb-4">
+      <div class="flex gap-2 w-30">
+        <Button icon="pi pi-arrow-left" label="목록으로" severity="secondary"></Button>
+      </div>
+    </div>
+    <div class="font-semibold text-xl">작업진행</div>
+    <div class="text-sm text-gray-500 pb-4">작업지시번호: {{ wkoCode }}</div>
+    <DataTable :value="prdrs" :paginator="true" :rows="8" dataKey="prdr_code" :rowHover="true" showGridlines>
+      <template #empty>
+        <div class="text-center py-6 text-gray-400">진행 작업 없음</div>
+      </template>
+      <Column field="" header="공정명" headerClass="table-header truncate" bodyClass="table-body text-[14px] truncate" style="width: 60px" />
+      <Column field="" header="진행률" headerClass="table-header truncate" bodyClass="table-body text-[14px] truncate" style="width: 120px">
+        <template #body="{ data }">
+          <ProgressBar :value="data.perform_rate"></ProgressBar>
+        </template>
+      </Column>
+      <Column field="" header="설비" headerClass="table-header truncate" bodyClass="table-body text-[14px] truncate" style="width: 100px" />
+      <Column field="" header="시작일시" headerClass="table-header truncate" bodyClass="table-body text-[14px] truncate" style="width: 120px" />
+      <Column field="" header="종료일시" headerClass="table-header truncate" bodyClass="table-body text-[14px] truncate" style="width: 120px" />
+      <Column field="" header="투입량" headerClass="table-header truncate" bodyClass="table-body text-[14px] truncate" style="width: 120px" />
+      <Column field="" header="불량량" headerClass="table-header truncate" bodyClass="table-body text-[14px] truncate" style="width: 100px" />
+      <Column field="" header="생산량" headerClass="table-header truncate" bodyClass="table-body text-[14px] truncate" style="width: 60px" />
+    </DataTable>
+  </Fluid>
   <div class="card">
     <div class="flex items-center justify-between mb-3">
       <div class="font-semibold text-xl">작업진행 불레틴</div>
