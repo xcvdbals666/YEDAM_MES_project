@@ -1,6 +1,7 @@
 <script setup>
 import { ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import { downloadExcel } from '@/utils/excel';
 
 const props = defineProps({
   list: {
@@ -16,6 +17,7 @@ const selectedRows = ref([]);
 
 // 날짜 포맷
 const formatDate = (val) => {
+  if (!val) return '';
   const d = new Date(val);
   const yyyy = d.getFullYear();
   const mm = String(d.getMonth() + 1).padStart(2, '0');
@@ -34,6 +36,17 @@ const goDetail = (row) => {
     params: { mprCode: row.mpr_code }
   });
 };
+
+// 엑셀 다운로드
+const handleExcelDownload = () => {
+  if (!props.list || props.list.length === 0) {
+    alert('다운로드할 데이터가 없습니다.');
+    return;
+  }
+  const headers = ['요청번호', '자재', '요청일자', '납기일자', 'MRP 계획번호', '요청자'];
+  const mapFunction = (item) => [item.mpr_code, item.mat_summary, item.reqdate ? formatDate(item.reqdate) : '', item.deadline ? formatDate(item.deadline) : '', item.mrp_code || '', item.mcode];
+  downloadExcel(selectedRows.value.length > 0 ? selectedRows.value : props.list, headers, mapFunction, '자재구매요청');
+};
 </script>
 <template>
   <div class="card mt-10 min-h-[520px]">
@@ -41,7 +54,7 @@ const goDetail = (row) => {
       <h4 class="m-0">요청 자재 목록</h4>
 
       <div class="flex gap-2">
-        <Button icon="pi pi-file-excel" label="엑셀 다운로드" class="px-3 py-1 h-[35px] text-sm gap-2" />
+        <Button icon="pi pi-file-excel" label="엑셀 다운로드" @click="handleExcelDownload" class="px-3 py-1 h-[35px] text-sm gap-2" />
       </div>
     </div>
 

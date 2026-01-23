@@ -92,6 +92,7 @@ export const useProductionsStore = defineStore('productions', () => {
     const res = await axios.get('/api/produce/allProductsList');
     allProducts.value = res.data;
   };
+
   //###################################
   //생산계획서 리스트 모달 끝
   //###################################
@@ -307,9 +308,9 @@ export const useProductionsStore = defineStore('productions', () => {
     fetchWorkInProcessDetail,
     lineEquipments,
     fetchEquipmentsByLine,
+    fetchProcessByWko,
     processOptions,
     selectedProcess,
-    fetchProcessByWko,
     startWork,
     prdrStatusList,
     fetchPrdrStatusByWko,
