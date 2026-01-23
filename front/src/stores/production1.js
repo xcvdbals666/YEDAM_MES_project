@@ -247,6 +247,8 @@ export const useProductionsStore = defineStore('productions', () => {
 
   // 설비 상세
   const prdrDDetail = ref(null);
+
+  //가져와서 채우기
   const fetchPrdrDDetail = async (prdrDCode) => {
     const res = await axios.get(`/api/produce/prdrDDetail/${prdrDCode}`);
     prdrDDetail.value = res.data;
