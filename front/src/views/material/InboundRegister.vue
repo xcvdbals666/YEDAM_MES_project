@@ -342,7 +342,7 @@ const submitInbound = async () => {
           <template #body="{ data }">{{ data.matCode }}</template>
         </Column>
 
-        <Column field="matName" header="자재명" sortable style="min-width: 150px">
+        <Column field="matName" header="자재명" sortable style="min-width: 120px">
           <template #body="{ data }">{{ data.matName }}</template>
         </Column>
 

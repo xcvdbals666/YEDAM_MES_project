@@ -427,6 +427,15 @@ const selectPassedQirList = `
     )
 `;
 
+// 발주서 상태 업데이트
+const updateMpoStatByQioCode = `
+  UPDATE mpo_tbl mpo
+  JOIN mpo_d_tbl mpod ON mpo.purchase_code = mpod.purchase_code
+  JOIN qir_tbl qir ON mpod.mpo_d_code = qir.mpo_d_code
+  SET mpo.stat = 'c2'
+  WHERE qir.qio_code = ?
+`;
+
 module.exports = {
   // 발주서 (MPO)
   selectAllMpoTbl,
@@ -453,6 +462,7 @@ module.exports = {
   selectNextMappCode,
   insertMprMappTbl,
   deleteMprMappByPurchaseCode,
+  updateMpoStatByQioCode,
 
   //입고관리
   selectNextLotNum,

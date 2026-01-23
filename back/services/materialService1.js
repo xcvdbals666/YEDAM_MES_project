@@ -149,7 +149,11 @@ const searchMpoTbl = async (keyword) => {
 
 // 발주서 등록 (기본정보 + 자재 상세)
 const addMpoTbl = async (data) => {
-  const statCode = data.statCode || "c1"; // data에서 statCode 꺼내기
+  // statCode 변환 추가
+  let statCode = data.statCode || "c1";
+  if (statCode === "요청완료") statCode = "c1";
+  if (statCode === "입고완료") statCode = "c2";
+
   const mpoData = data.mpoData;
   // 1. 발주서 번호 자동생성
   let nextCodeResult = await mysql.query("selectNextMpoCode", [], "material1");
@@ -217,6 +221,10 @@ const addMpoTbl = async (data) => {
 
 // 발주서 수정
 const updateMpoTbl = async (statCode, purchaseCode, mpoData) => {
+  // statCode 변환 추가
+  if (statCode === "요청완료") statCode = "c1";
+  if (statCode === "입고완료") statCode = "c2";
+
   // 1. 발주서 기본정보 수정
   let result = await mysql.query(
     "updateMpoTbl",
@@ -358,6 +366,10 @@ const addInbound = async (items) => {
       ],
       "material1",
     );
+    // 5. 발주서 상태 업데이트
+    if (item.qio_code) {
+      await mysql.query("updateMpoStatByQioCode", [item.qio_code], "material1");
+    }
 
     results.push({
       minbnd_code: minbndCode,
