@@ -75,15 +75,15 @@ const goDetail = (row) => {
       <tbody>
         <tr>
           <th>MRP코드</th>
-          <td><InputText placeholder="생산계획코드를 입력하세요" v-model="data.mrpCode"></InputText></td>
+          <td><InputText placeholder="MRP코드를 입력하세요" v-model="data.mrpCode"></InputText></td>
           <th>생산계획코드</th>
-          <td><InputText placeholder="계획명을 입력하세요" v-model="data.prdpCode"></InputText></td>
+          <td><InputText placeholder="생산계획코드를 입력하세요" v-model="data.prdpCode"></InputText></td>
         </tr>
         <tr>
           <th>자재명</th>
-          <td><InputText placeholder="생산계획코드를 입력하세요" v-model="data.matName"></InputText></td>
+          <td><InputText placeholder="자재를 입력하세요" v-model="data.matName"></InputText></td>
           <th>생산계획명</th>
-          <td><InputText placeholder="계획명을 입력하세요" v-model="data.prdpName"></InputText></td>
+          <td><InputText placeholder="생산계획명을 입력하세요" v-model="data.prdpName"></InputText></td>
         </tr>
         <tr>
           <th>MRP계획일자</th>

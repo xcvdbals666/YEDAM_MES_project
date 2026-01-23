@@ -99,8 +99,10 @@ WHERE prdp_d_code = ?`;
 
 // 자재 검색
 const selectByCodeOrNameMat = `
-SELECT mi.mat_code, mi.mat_name, mt.note AS mat_type, mi.save_inven, mu.note AS unit, mi.note
+SELECT mi.mat_code, mi.mat_name, mt.note AS mat_type, (i.inbnd - o.outbnd + mi.save_inven) AS inven, mu.note AS unit_note, mi.unit, mi.note
 FROM mat_tbl mi
+JOIN (SELECT mat_code, SUM(inbnd_qtt) AS inbnd FROM minbnd_tbl GROUP BY mat_code) i ON i.mat_code = mi.mat_code
+JOIN (SELECT mat_code, SUM(outbnd_qtt) AS outbnd FROM moutbnd_tbl GROUP BY mat_code) o ON o.mat_code = mi.mat_code
 JOIN common_code mt ON mt.com_value = mi.material_type_code
 JOIN common_code mu ON mu.com_value = mi.unit
 WHERE mi.mat_code LIKE ? OR mi.mat_name LIKE ?`;
@@ -119,8 +121,10 @@ WITH RECURSIVE bom_tree AS (
   JOIN bom_mat bm2 ON bm2.bom_code = bt2.bom_code
   WHERE btree.mat_code LIKE 'PROD-%'
 )
-SELECT b.mat_code, b.mat_name, b.req_qtt, m.save_inven, c.note AS unit
+SELECT b.mat_code, b.mat_name, b.req_qtt, (i.inbnd - o.outbnd + m.save_inven) AS inven, c.note AS unit_note, b.unit
 FROM bom_tree b
+JOIN (SELECT mat_code, SUM(inbnd_qtt) AS inbnd FROM minbnd_tbl GROUP BY mat_code) i ON i.mat_code = b.mat_code
+JOIN (SELECT mat_code, SUM(outbnd_qtt) AS outbnd FROM moutbnd_tbl GROUP BY mat_code) o ON o.mat_code = b.mat_code
 JOIN common_code c ON c.com_value = b.unit
 JOIN mat_tbl m ON m.mat_code = b.mat_code
 WHERE b.mat_code LIKE 'MAT-%'`;
@@ -134,8 +138,10 @@ WHERE mrp_code = ?`;
 
 // MRP 상세조회 - 자재목록
 const selectByCodeMrpDetail = `
-SELECT m.*, mt.mat_name, cu.note AS unit_note, mt.save_inven
+SELECT m.*, mt.mat_name, cu.note AS unit_note, (i.inbnd - o.outbnd + mt.save_inven) AS inven
 FROM mrp_d_tbl m
+JOIN (SELECT mat_code, SUM(inbnd_qtt) AS inbnd FROM minbnd_tbl GROUP BY mat_code) i ON i.mat_code = m.mat_code
+JOIN (SELECT mat_code, SUM(outbnd_qtt) AS outbnd FROM moutbnd_tbl GROUP BY mat_code) o ON o.mat_code = m.mat_code
 JOIN common_code cu ON cu.com_value = m.unit
 JOIN mat_tbl mt ON mt.mat_code = m.mat_code
 WHERE mrp_code = ?`;
