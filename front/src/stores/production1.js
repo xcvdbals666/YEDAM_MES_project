@@ -166,7 +166,7 @@ export const useProductionsStore = defineStore('productions', () => {
     } finally {
       wipLoading.value = false;
     }
-  }
+  };
 
   // 작업진행조회 검색 버튼
   const searchWip = async () => {
@@ -184,6 +184,73 @@ export const useProductionsStore = defineStore('productions', () => {
     await fetchWorkInProcess();
   };
 
+  const wipDetail = ref(null);
+  const wipDetailLoading = ref(false);
+  const wipDetailError = ref(null);
+
+  // 작업진행 상세 조회
+  const fetchWorkInProcessDetail = async (wkoCode) => {
+    if (!wkoCode) return;
+
+    wipDetailLoading.value = true;
+    wipDetailError.value = null;
+
+    try {
+      const res = await axios.get(`/api/produce/workInProcessDetail/${wkoCode}`);
+      wipDetail.value = res.data;
+    } catch (e) {
+      console.error(e);
+      wipDetailError.value = e;
+      wipDetail.value = null;
+    } finally {
+      wipDetailLoading.value = false;
+    }
+  };
+
+  //라인별 설비목록 불러오기 (하단 부분에)
+  const lineEquipments = ref([]);
+
+  const fetchEquipmentsByLine = async (lineCode) => {
+    if (!lineCode) return;
+
+    const res = await axios.get(`/api/produce/equipmentByLine/${lineCode}`);
+    lineEquipments.value = res.data;
+  };
+
+  //공정명 드롭다운에 표시하고 공정명 선택하면 그 공정에 대한 설비 자동선택
+  const processOptions = ref([]);
+  const selectedProcess = ref(null);
+
+  const fetchProcessByWko = async (wkoCode) => {
+    const res = await axios.get(`/api/produce/wkprocessByPrdCode/${wkoCode}`);
+    processOptions.value = res.data;
+  };
+
+  //작업시작 버튼 눌렀을 때
+  const startWork = async ({ wko_code, prdr_code, line_eq_code, input_qtt }) => {
+    const res = await axios.post('/api/produce/workStart', {
+      wko_code,
+      prdr_code,
+      line_eq_code,
+      input_qtt
+    });
+    return res.data;
+  };
+
+  // 설비 카드 상태 목록
+  const prdrStatusList = ref([]);
+
+  const fetchPrdrStatusByWko = async (wkoCode) => {
+    const res = await axios.get(`/api/produce/prdrByWko/${wkoCode}`);
+    prdrStatusList.value = res.data;
+  };
+
+  // 설비 상세
+  const prdrDDetail = ref(null);
+  const fetchPrdrDDetail = async (prdrDCode) => {
+    const res = await axios.get(`/api/produce/prdrDDetail/${prdrDCode}`);
+    prdrDDetail.value = res.data;
+  };
 
   return {
     wkoList,
@@ -219,5 +286,19 @@ export const useProductionsStore = defineStore('productions', () => {
     fetchWorkInProcess,
     searchWip,
     resetWip,
+    wipDetail,
+    wipDetailLoading,
+    wipDetailError,
+    fetchWorkInProcessDetail,
+    lineEquipments,
+    fetchEquipmentsByLine,
+    processOptions,
+    selectedProcess,
+    fetchProcessByWko,
+    startWork,
+    prdrStatusList,
+    fetchPrdrStatusByWko,
+    prdrDDetail,
+    fetchPrdrDDetail
   };
 });

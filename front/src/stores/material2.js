@@ -45,6 +45,11 @@ export const useMaterialStore = defineStore('material2', {
       return response.data;
     },
 
+    // 자재구매요청 삭제
+    async deleteMpr(mprCode) {
+      await axios.delete(`/api/material/mat-request/${mprCode}`);
+    },
+
     // 자재구매요청 조회
     async fetchRequest(keyword) {
       const response = await axios.get('/api/material/mpr-request', { params: keyword });

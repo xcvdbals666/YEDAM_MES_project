@@ -38,7 +38,6 @@ onMounted(async () => {
   mrpInfo.empName = info[0].emp_name;
   mrpInfo.note = info[0].mrp_note;
 
-  console.log(matList);
   for (const data of matList) {
     const row = {
       mrp_d_code: data.mrp_d_code,

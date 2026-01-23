@@ -41,6 +41,13 @@ const confirm = () => {
   emit('select', selectedMpo.value);
   close();
 };
+
+// 자재명 표시 함수
+const formatMaterialNames = (names) => {
+  if (!names) return '-';
+  const arr = names.split(', ');
+  return arr.length > 1 ? `${arr[0]} 외 ${arr.length - 1}건` : arr[0];
+};
 </script>
 
 <template>
@@ -55,7 +62,11 @@ const confirm = () => {
       <Column selectionMode="single" header="선택" style="width: 5rem" />
       <Column field="purchase_code" header="발주서 번호" />
       <Column field="purchase_req_date" header="발주제안일" />
-      <Column field="material_names" header="자재명" />
+      <Column field="material_names" header="자재명">
+        <template #body="{ data }">
+          {{ formatMaterialNames(data.material_names) }}
+        </template>
+      </Column>
     </DataTable>
 
     <template #footer>

@@ -111,10 +111,20 @@ export const useQuality1Store = defineStore('quality', {
     // 검사결과서 목록 불러오기
     async fetchQirList() {
       const response = await axios.get('/api/quality/qirlist/');
-      this.qirList = response;
+      response.data.forEach((data) => {
+        let date = new Date(data.start_date);
+        data.start_date = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+      });
+      this.qirList = response.data;
       console.log('결과서 목록: ', this.qirList);
 
       return this.qirList;
+    },
+
+    // 검사결과서 수정
+    async fetchModifyQirList(data) {
+      const response = await axios.put('/api/quality/modifyqirlist', data);
+      console.log('결과서 수정: ', response);
     }
   }
 });

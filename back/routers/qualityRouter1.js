@@ -79,4 +79,12 @@ router.get(`/qirlist`, async (req, res) => {
   res.send(list);
 });
 
+// 검사결과서 수정
+router.put(`/modifyqirlist`, async (req, res) => {
+  let data = req.body;
+  console.log("data: ", data);
+  let list = await qualityService.modifyQirList(data);
+  res.send(list);
+});
+
 module.exports = router;

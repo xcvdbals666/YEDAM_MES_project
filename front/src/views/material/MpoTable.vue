@@ -136,13 +136,27 @@ const resetForm = () => {
 
 //발주서 저장
 const saveMpo = async () => {
+  // 같은 자재 그룹화 및 수량 합치기
+  const groupedMaterials = mpoStore.materials.reduce((acc, m) => {
+    const existing = acc.find((item) => item.mat_code === m.mat_code);
+
+    if (existing) {
+      // 같은 자재 → 수량만 합치기
+      existing.req_qtt += m.req_qtt || 0;
+    } else {
+      // 새 자재 → 추가
+      acc.push({ ...m });
+    }
+    return acc;
+  }, []);
+
   const payload = {
     statCode: mpoStore.mpoData.stat,
     mpoData: {
       mcode: mpoStore.mpoData.mcode,
       note: mpoStore.mpoData.note || '',
       mpr_code: mpoStore.mpoData.mprCode || null,
-      materials: mpoStore.materials.map((m) => ({
+      materials: groupedMaterials.map((m) => ({
         mat_code: m.mat_code,
         unit: m.unit,
         req_qtt: m.req_qtt,
@@ -156,18 +170,11 @@ const saveMpo = async () => {
   try {
     let result;
 
-    // 발주서번호가 있으면 수정, 없으면 신규
     if (mpoStore.mpoData.purchaseCode) {
-      // 수정
       payload.purchase_code = mpoStore.mpoData.purchaseCode;
       result = await mpoStore.updateMpo(payload);
-      if (result.status === 'success') {
-        alert('수정되었습니다!');
-      } else {
-        alert('수정 실패');
-      }
+      alert(result.status === 'success' ? '수정되었습니다!' : '수정 실패');
     } else {
-      // 신규
       result = await mpoStore.saveMpo(payload);
       if (result.status === 'success') {
         alert('저장되었습니다!');

@@ -111,7 +111,7 @@ const insertQir_tblPro = `INSERT INTO qir_tbl SET qir_code = ?,
                                                qcr_code = ?`;
 
 // 검사지 정보 불러오기(생산일 경우)
-const selectQirProdInfo = `SELECT w.prdp_code, p.end_date, p.production_qtt, p.prdr_code, c.note, p4.po_code, p4.po_name, p7.prod_name, p7.prod_type, c2.note AS type  
+const selectQirProdInfo = `SELECT w.prdp_code,q.qio_code, p.end_date, p.production_qtt, p.prdr_code, c.note, p4.po_code, p4.po_name, p7.prod_name, p7.prod_type, c2.note AS type  
                              FROM prdr_tbl p 
                              LEFT JOIN qio_tbl q ON p.prdr_code = q.prdr_code
                              LEFT JOIN common_code c ON p.stat = c.com_value  
@@ -128,7 +128,21 @@ const selectQirProdInfo = `SELECT w.prdp_code, p.end_date, p.production_qtt, p.p
                              GROUP BY p.prdr_code`;
 
 // 검사결과서 정보 불러오기
-const selectQirList = `SELECT * FROM qir_tbl WHERE result IS NULL`;
+const selectQirList = `SELECT  , IFNULL((q2.insp_vol- IFNULL(q.pass_qtt, 0) - IFNULL(unpass_qtt,0)),0 ) AS 'remaining'
+                       FROM qir_tbl q
+                       LEFT JOIN emp_tbl e ON q.qir_emp_code = e.emp_code
+                       LEFT JOIN qio_tbl q2 ON q.qio_code = q2.qio_code
+                       WHERE q.result IS NULL
+                       GROUP BY q.qio_code`;
+
+// 검사 결과서 합격 불합격 수정
+const updateQirList = `UPDATE qir_tbl 
+                       SET result = ?,
+                           end_date = ?,
+                           unpass_qtt = ?,
+                           pass_qtt = ?,
+                           unpass_rate =?
+                       WHERE qio_code = ? AND qcr_code = ?`;
 
 const selectAllQirOrder = (module.exports = {
   selectAllQiOrderCheckList,
@@ -146,4 +160,5 @@ const selectAllQirOrder = (module.exports = {
   selectAllQirQioOrder,
   selectQirProdInfo,
   selectQirList,
+  updateQirList,
 });
