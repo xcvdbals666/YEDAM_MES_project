@@ -96,14 +96,35 @@ const selectedOrder = async (data) => {
     quality1.state = 1;
     console.log('selectedOrder: ', data);
     orderDisplay.value = false;
-    await quality1.fetchOrderItemInfo(data.qio_code);
     orderInput.value = data;
+    if (data.mpo_d_code != null) {
+      await quality1.fetchOrderItemInfo(data.qio_code);
 
-    if (quality1.qiOrderThing.length > 0) {
-      seletedMinbnd.value = quality1.qiOrderThing[0];
+      if (quality1.qiOrderThing.length > 0) {
+        seletedMinbnd.value = quality1.qiOrderThing[0];
 
+        allQiList.value.forEach((value) => {
+          if (value.com_value == quality1.qiOrderThing[0].mat_type) {
+            selectedQcrList.value.push(value);
+          }
+          console.log('selectedQcrList: ', selectedQcrList.value);
+        });
+      }
+    } else if (data.prdr_code != null) {
+      console.log('data', data);
+      await quality1.fetchOrderProdInfo(data.qio_code);
+      console.log('완제품', quality1.qiProdInfo);
+      realSelectedProdInfo.value = quality1.qiProdInfo;
+      seletedMinbnd.value = {
+        mpo_d_code: realSelectedProdInfo.value.prdp_code,
+        mat_code: realSelectedProdInfo.value.prdp_code,
+        mat_name: realSelectedProdInfo.value.prod_name,
+        req_qtt: realSelectedProdInfo.value.production_qtt,
+        note: realSelectedProdInfo.value.note,
+        mat_type: realSelectedProdInfo.value.prod_type
+      };
       allQiList.value.forEach((value) => {
-        if (value.com_value == quality1.qiOrderThing[0].mat_type) {
+        if (value.com_value == seletedMinbnd.value.mat_type) {
           selectedQcrList.value.push(value);
         }
         console.log('selectedQcrList: ', selectedQcrList.value);
@@ -154,7 +175,7 @@ const selectProd = (data) => {
   console.log(data);
   realSelectedProdInfo.value = data;
   produceDisplay.value = false;
-  seletedMinbnd.value = { mpo_d_code: data.prdp_code, mat_code: data.prdp_code, mat_name: data.prod_name, req_qtt: data.production_qtt, note: data.type, mat_type: data.prod_type };
+  seletedMinbnd.value = { mpo_d_code: data.prdp_code, mat_code: data.prdp_code, mat_name: data.prod_name, req_qtt: data.production_qtt, note: data.note, mat_type: data.prod_type };
   allQiList.value.forEach((value) => {
     if (value.com_value == seletedMinbnd.value.mat_type) {
       selectedQcrList.value.push(value);

@@ -23,6 +23,13 @@ router.get(`/qiorderiteminfo/:id`, async (req, res) => {
   res.send(list);
 });
 
+// 검사지에 해당하는 생산품 및 검사항목 불러오기
+router.get(`/qiorderProdinfo/:id`, async (req, res) => {
+  let id = req.params.id;
+  let list = await qualityService.findQiProdInfo(id);
+  res.send(list);
+});
+
 // 생산실적 전체 불러오기
 router.get(`/qiproducelist`, async (req, res) => {
   let list = await qualityService.findQiProduceList();

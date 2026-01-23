@@ -18,7 +18,6 @@ const props = defineProps({
       </template>
       <Column selectionMode="single" style="width: 3rem" :exportable="false"></Column>
       <Column field="prdp_code" header="생산계획 코드" sortable style="min-width: 12rem"></Column>
-      <Column field="po_name" header="공정명" sortable style="min-width: 12rem"></Column>
       <Column field="prod_name" header="제품명" sortable style="min-width: 12rem"></Column>
       <Column field="end_date" header="생산완료일" sortable style="min-width: 12rem"></Column>
       <Column field="production_qtt" header="생산량" sortable style="min-width: 12rem"></Column>
