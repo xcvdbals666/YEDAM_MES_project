@@ -27,16 +27,8 @@ let minbndList = ref([{ qio_code: '', mat_code: '', mat_name: '', inspection_ite
 let display = ref(false); // 모달창 오픈 위해서
 
 const searchMinbndList = async () => {
-  quality1.state = 1;
-
   await quality1.fetchQiMpoList();
   minbndList.value = quality1.qiMpoList;
-  if (quality1.qiMpoList.length > 0) {
-    if (quality1.qiMpoList[0].remaining_amount > 0) {
-      console.log('adsfafd');
-      minbndList.value[0].req_qtt = quality1.qiMpoList[0].remaining_amount;
-    }
-  }
 
   display.value = true;
 };
@@ -51,33 +43,30 @@ const closeMOdal = () => {
 
 // 선택된 값 불러오기
 const selectComp = (data) => {
+  if (data == null || data == undefined) {
+    alert('값을 선택해주세요');
+    return;
+  }
+  quality1.state = 1;
   callQiOrder.value = true;
   callQiProd.value = true;
 
   console.log('data: ', data);
-  if (data != null) {
-    console.log(data);
-    seletedMinbnd.value = data;
-    if (data.remaining_amount > 0) {
-      seletedMinbnd.value.req_qtt = data.remaining_amount;
-      console.log(quality1.qiMpoList.remaining_amount > 0);
-    }
 
-    console.log('seletedMinbnd: ', seletedMinbnd.value);
-    display.value = false;
-
-    allQiList.value.forEach((value) => {
-      console.log(data);
-      if (value.com_value == seletedMinbnd.value.mat_type) {
-        selectedQcrList.value.push(value);
-      }
-      console.log(selectedQcrList.value);
-    });
-  } else {
-    alert('값을 선택해주세요');
-    return;
-  }
   display.value = false;
+  console.log(data);
+  seletedMinbnd.value = data;
+
+  console.log('seletedMinbnd: ', seletedMinbnd.value);
+  display.value = false;
+
+  allQiList.value.forEach((value) => {
+    console.log(data);
+    if (value.com_value == seletedMinbnd.value.mat_type) {
+      selectedQcrList.value.push(value);
+    }
+    console.log(selectedQcrList.value);
+  });
 };
 
 // QiOrderItem의 항목 채우기(검사지 불러오기 모달창 선택값)
@@ -92,7 +81,6 @@ const searchOrderList = async () => {
   if (quality1.state != 1) {
     await quality1.fetchOrderList();
     orderDisplay.value = true;
-    quality1.state = 1;
   } else {
     alert('저장을 먼저 진행해주세요.');
   }
@@ -105,6 +93,7 @@ const selectedOrder = async (data) => {
   callQiProd.value = true;
 
   if (data != undefined) {
+    quality1.state = 1;
     console.log('selectedOrder: ', data);
     orderDisplay.value = false;
     await quality1.fetchOrderItemInfo(data.qio_code);
@@ -145,15 +134,20 @@ const resetQiOrder = async () => {
 let produceDisplay = ref(false);
 let produceList = ref({ prdr_code: '', end_date: '', production_qtt: '', note: '' });
 const searchProduceList = async () => {
-  quality1.state = 1;
   await quality1.fetchQiProduceList();
-  produceDisplay.value = true;
   produceList.value = quality1.qiProduceList;
+  produceDisplay.value = true;
 };
 
 // 생산실적 선택값 가져오기
 let realSelectedProdInfo = ref([]);
 const selectProd = (data) => {
+  if (data == undefined || data == null) {
+    alert('값을 선택해주세요.');
+    return;
+  }
+  quality1.state = 1;
+
   callQiOrder.value = true;
   callQiMinbnd.value = true;
 
@@ -169,18 +163,18 @@ const selectProd = (data) => {
   });
 };
 
-// 작업지시서 등록
+// 검사지시서 등록
 const submitQiOrder = async () => {
   if (quality1.state != 0) {
     if (seletedMinbnd.value.mpo_d_code != '' || seletedMinbnd.value.mpo_d_code != null) {
-      if (seletedMinbnd.value.mat_type == 'i3') {
+      if (seletedMinbnd.value.mat_type == 'i3' || seletedMinbnd.value.mat_type == 'i4') {
         await quality1.submitMinbndQi({
           insp_date: quality1.qiMpoList[0].deadline,
-          insp_vol: minbndList.value[0].req_qtt,
-          mpo_d_code: minbndList.value[0].mpo_d_code,
+          insp_vol: seletedMinbnd.value.req_qtt,
+          mpo_d_code: seletedMinbnd.value.mpo_d_code,
           mat_type: seletedMinbnd.value.mat_type
         });
-      } else {
+      } else if (seletedMinbnd.value.mat_type == 'i1' || seletedMinbnd.value.mat_type == 'i1') {
         let data = {
           insp_date: realSelectedProdInfo.value.end_date,
           insp_vol: realSelectedProdInfo.value.production_qtt,
@@ -189,7 +183,6 @@ const submitQiOrder = async () => {
         };
         await quality1.submitMinbndQi(data);
       }
-      alert('검사지시서 등록완료!');
       callQiMinbnd.value = false;
       callQiProd.value = false;
       callQiOrder.value = false;
@@ -220,6 +213,9 @@ const delQiOrder = async (data) => {
       seletedMinbnd.value = { mpo_d_code: '', mat_code: '', mat_name: '', req_qtt: '', mat_type: '' };
       selectedQcrList.value = [];
       orderInput.value = { qio_code: '', qio_date: '', emp_name: '' };
+      callQiMinbnd.value = false;
+      callQiProd.value = false;
+      callQiOrder.value = false;
     });
   await quality1.fetchQiMpoList();
   await quality1.fetchQiProduceList();
@@ -233,7 +229,16 @@ let callQiProd = ref(false);
 </script>
 
 <template>
-  <QiOrderHeader :order-input="orderInput" :key="orderInput" :call-qi-order="callQiOrder" @search-order-list="searchOrderList" @del-qi-order="delQiOrder" @reset-qi-order="resetQiOrder" @submit-qi-order="submitQiOrder"></QiOrderHeader>
+  <QiOrderHeader
+    :quality-state="quality1.state"
+    :order-input="orderInput"
+    :key="orderInput"
+    :call-qi-order="callQiOrder"
+    @search-order-list="searchOrderList"
+    @del-qi-order="delQiOrder"
+    @reset-qi-order="resetQiOrder"
+    @submit-qi-order="submitQiOrder"
+  ></QiOrderHeader>
   <QiOrderItem :selected-minbnd="seletedMinbnd" :key="seletedMinbnd" :call-qi-minbnd="callQiMinbnd" :call-qi-prod="callQiProd" @search-list="searchMinbndList" @search-produce-list="searchProduceList"></QiOrderItem>
   <QiOrderMain :all-qi-list="allQiList" :selected-qcr-list="selectedQcrList" :key="selectedQcrList"></QiOrderMain>
   <SelectQiOrderModal :display="orderDisplay" :qi-order-list="quality1.qiOrderList" @close="closeMOdal" @selected-order="selectedOrder"></SelectQiOrderModal>

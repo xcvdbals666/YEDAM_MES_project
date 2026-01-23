@@ -119,7 +119,7 @@ WHERE ld.line_code = ?
 ORDER BY ld.eq_code
 `;
 
-//선택한 wko_tbl의 prod_code로 타고가서 po_tbl에서 공정명 드롭다운 뽑기
+//선택한 wko_tbl의 prod_code로 타고가서 po_tbl에서 공정명 뽑기
 const selectProcessDropdownByWko = `
     SELECT DISTINCT
       d.po_code,
@@ -137,7 +137,7 @@ const selectProcessDropdownByWko = `
     ORDER BY d.no
   `;
 
-//작업시작 버튼 누르면 필요한 쿼리
+//###############작업시작 버튼 누르면 필요한 쿼리#########################
 //prdr 테이블 번호생성
 const selectNextPrdrSeq = `
 SELECT IFNULL(
@@ -169,7 +169,16 @@ INSERT INTO prdr_d_tbl
 VALUES
   (?, ?, ?, NOW(), ?)
 `;
-//작업시작버튼 끝
+
+//bom_save 테이블 삽입 
+const insertBomSave = `
+INSERT INTO bom_save
+  (bom_save_code, mat_type, req_qtt, unit, spec, loss_rate, copy_date, wko_code, mat_code)
+VALUES
+  (?, ?, ?, ?, NULL, NULL, ?, ?, ?)
+`
+
+//###############작업시작버튼 끝########################################
 
 //#####제정신아님. . .
 // 특정 작업지시서의 설비별 생산실적 조회 (wko_tbl의 code기준으로)
@@ -198,13 +207,63 @@ const selectPrdrDDetail = `
 SELECT
   pd.prdr_d_code,
   pd.prdr_code,
-  pd.input_qtt,
+  pd.input_qtt      AS input_qtt,
   pd.start_date,
   pd.end_date,
   pd.line_eq_code
 FROM prdr_d_tbl pd
 WHERE pd.prdr_d_code = ?
 `;
+
+// 공정 전체 bulletin (wko_code 기준)
+const selectWipBulletinByWko = `
+SELECT
+  d.po_code,
+  po.po_name,
+  d.no,
+
+  ld.line_eq_code,
+  ld.eq_code,
+  e.eq_name,
+  e.eq_type,
+
+  pd.prdr_d_code,
+  pd.start_date,
+  pd.end_date,
+  pd.input_qtt
+
+FROM wko_tbl w
+JOIN prod_proc_tbl pp
+  ON pp.prod_code = w.prod_code
+JOIN prod_proc_d_tbl d
+  ON d.prod_proc_code = pp.prod_proc_code
+JOIN po_tbl po
+  ON po.po_code = d.po_code
+
+LEFT JOIN line_d_tbl ld
+  ON ld.line_code = w.line_code
+LEFT JOIN eq_tbl e
+  ON e.eq_code = ld.eq_code
+  AND e.eq_type = d.eq_type
+
+LEFT JOIN (
+  SELECT x.*
+  FROM prdr_d_tbl x
+  JOIN (
+    SELECT line_eq_code, MAX(start_date) AS max_start
+    FROM prdr_d_tbl
+    GROUP BY line_eq_code
+  ) y
+    ON y.line_eq_code = x.line_eq_code
+   AND y.max_start = x.start_date
+) pd
+  ON pd.line_eq_code = ld.line_eq_code
+
+WHERE w.wko_code = ?
+ORDER BY d.no, ld.eq_code
+`;
+
+
 
 module.exports = {
   selectAllLinesDJ,
@@ -222,6 +281,8 @@ module.exports = {
   selectNextPrdrDSeq,
   insertPrdrStart,
   insertPrdrDStart,
+  insertBomSave,
   selectPrdrStatusByWko,
   selectPrdrDDetail,
+  selectWipBulletinByWko
 };

@@ -87,4 +87,12 @@ router.put(`/modifyqirlist`, async (req, res) => {
   res.send(list);
 });
 
+// 검사결과서 삭제
+router.delete("/removeqir/:id", async (req, res) => {
+  let id = req.params.id;
+  console.log(id);
+  let list = await qualityService.removeqir(id);
+  res.send(list);
+});
+
 module.exports = router;

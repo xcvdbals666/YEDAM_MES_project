@@ -344,6 +344,63 @@ const getPrdrDDetail = async (prdr_d_code) => {
   return rows.length ? rows[0] : null;
 };
 
+//Bulletin 공정 조회
+const getWipBulletin = async (wkoCode) => {
+  const rows = await mysql.query('selectWipBulletinByWko', [wkoCode], 'produce1');
+
+  // 공정별로 묶어서 화면에 맞게 정리
+  const map = new Map();
+
+  for (const r of rows) {
+    if (!map.has(r.po_code)) {
+      map.set(r.po_code, {
+        po_code: r.po_code,
+        po_name: r.po_name,
+        no: r.no,
+
+        line_eq_code: r.line_eq_code,
+        eq_code: r.eq_code,
+        eq_name: r.eq_name,
+
+        // 최신 작업정보
+        prdr_d_code: r.prdr_d_code,
+        start_date: r.start_date,
+        end_date: r.end_date,
+        input_qtt: r.input_qtt,
+
+        equipments: []
+      });
+    }
+
+    const item = map.get(r.po_code);
+    if (r.line_eq_code) {
+      item.equipments.push({
+        line_eq_code: r.line_eq_code,
+        eq_code: r.eq_code,
+        eq_name: r.eq_name,
+        prdr_d_code: r.prdr_d_code,
+        start_date: r.start_date,
+        end_date: r.end_date,
+        input_qtt: r.input_qtt
+      });
+
+      // 대표 설비가 비어있으면 첫 설비를 대표로 채움
+      if (!item.eq_code) {
+        item.line_eq_code = r.line_eq_code;
+        item.eq_code = r.eq_code;
+        item.eq_name = r.eq_name;
+        item.prdr_d_code = r.prdr_d_code;
+        item.start_date = r.start_date;
+        item.end_date = r.end_date;
+        item.input_qtt = r.input_qtt;
+      }
+    }
+  }
+
+  return Array.from(map.values()).sort((a, b) => (a.no ?? 0) - (b.no ?? 0));
+};
+
+
 module.exports = {
   searchWorkOrders,
   findAllLinesDJ,
@@ -360,4 +417,5 @@ module.exports = {
   startWork,
   getPrdrStatusByWko,
   getPrdrDDetail,
+  getWipBulletin
 };

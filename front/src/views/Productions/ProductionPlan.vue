@@ -40,7 +40,7 @@ const planInfo = reactive({
   empName: user.emp_name,
   startDate: '',
   endDate: '',
-  ordCode: '',
+  ordCode: null,
   dueDate: '',
   note: ''
 });
@@ -72,7 +72,7 @@ const reset = () => {
   planInfo.empName = user.emp_name;
   planInfo.startDate = '';
   planInfo.endDate = '';
-  planInfo.ordCode = '';
+  planInfo.ordCode = null;
   planInfo.dueDate = '';
   planInfo.note = '';
   planProdList.value = [];
@@ -99,8 +99,7 @@ const save = async () => {
     alert('납기일자를 입력해 주십시오.');
     return;
   }
-
-  for (const prod of planProdList) {
+  for (const prod of planProdList.value) {
     if (!prod.prod_code) {
       alert('제품이 선택되지 않은 행이 존재합니다.');
       return;

@@ -55,6 +55,7 @@ SELECT
     qcr.inspection_item,
     qcr.range_top,
     qcr.range_bot,
+    qir.qir_emp_code,
 
     -- 단위
     CASE c1.com_value

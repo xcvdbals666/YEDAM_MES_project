@@ -94,4 +94,18 @@ router.put(`/mrp`, async (req, res) => {
   res.send(result);
 });
 
+// 생산실적 조회
+router.get(`/prdr`, async (req, res) => {
+  const data = req.query;
+  let list = await produceService.findAllPrdr(data);
+  res.send(list);
+});
+
+// 작업진행 조회
+router.get(`/prdr/:wkoCode`, async (req, res) => {
+  const data = req.params;
+  let list = await produceService.findByCodePrdrDetail(data);
+  res.send(list);
+});
+
 module.exports = router;

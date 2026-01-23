@@ -70,7 +70,7 @@ watch(
 
 // 최초 진입 시 1행 보장
 onMounted(() => {
-  if (!rows.value.length) {
+  if (!rows.value.length && !props.isEditMode) {
     addRow();
   }
 });
@@ -90,6 +90,9 @@ const rowClass = (data) => {
   }
   return '';
 };
+
+// MRP 자재인지 수동추가 자재인지 구분
+// const isMrpRow = (row) => row.sourceType === 'mrp';
 </script>
 
 <template>
@@ -106,7 +109,6 @@ const rowClass = (data) => {
     <DataTable
       :value="visibleRows"
       v-model:selection="selectedRows"
-      :selectionMode="isEditable ? 'checkbox' : null"
       :rowSelectable="rowSelectable"
       dataKey="__key"
       showGridlines

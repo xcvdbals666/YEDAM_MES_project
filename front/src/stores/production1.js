@@ -92,6 +92,7 @@ export const useProductionsStore = defineStore('productions', () => {
     const res = await axios.get('/api/produce/allProductsList');
     allProducts.value = res.data;
   };
+
   //###################################
   //생산계획서 리스트 모달 끝
   //###################################
@@ -247,10 +248,25 @@ export const useProductionsStore = defineStore('productions', () => {
 
   // 설비 상세
   const prdrDDetail = ref(null);
+
+  //가져와서 채우기
   const fetchPrdrDDetail = async (prdrDCode) => {
     const res = await axios.get(`/api/produce/prdrDDetail/${prdrDCode}`);
     prdrDDetail.value = res.data;
   };
+
+
+  const wipBulletin = ref([]);
+
+  const fetchWipBulletin = async (wkoCode) => {
+    if (!wkoCode) return;
+
+    const res = await axios.get(`/api/produce/wipBulletin/${wkoCode}`);
+    wipBulletin.value = Array.isArray(res.data) ? res.data : [];
+    return wipBulletin.value;
+
+  };
+
 
   return {
     wkoList,
@@ -292,13 +308,14 @@ export const useProductionsStore = defineStore('productions', () => {
     fetchWorkInProcessDetail,
     lineEquipments,
     fetchEquipmentsByLine,
+    fetchProcessByWko,
     processOptions,
     selectedProcess,
-    fetchProcessByWko,
     startWork,
     prdrStatusList,
     fetchPrdrStatusByWko,
     prdrDDetail,
-    fetchPrdrDDetail
+    fetchPrdrDDetail,
+    fetchWipBulletin
   };
 });

@@ -27,11 +27,11 @@ onMounted(() => {
   <div class="layout-wrapper" :class="containerClass">
     <Header />
     <Sidebar />
-    <div class="layout-main-container">
-      <div class="layout-main h-200">
+    <div class="layout-main-container flex flex-col min-h-screen">
+      <div class="layout-main flex-1 pb-10">
         <router-view />
       </div>
-      <Footer />
+      <!-- <Footer /> -->
     </div>
     <div class="layout-mask animate-fadein" @click="hideMobileMenu" />
   </div>
