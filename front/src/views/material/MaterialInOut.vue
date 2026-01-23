@@ -1,9 +1,11 @@
 <script setup>
 import { ref, watch, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { downloadExcel } from '@/utils/excel';
 import { useMaterialStore } from '@/stores/material2';
 
 const store = useMaterialStore();
+const router = useRouter();
 
 // 검색 조건
 const searchValue = ref({
@@ -84,17 +86,24 @@ const handleExcelDownload = () => {
   ];
   downloadExcel(selectedRows.value.length > 0 ? selectedRows.value : list.value, headers, mapFunction, '입출고내역');
 };
+
+// 탭 관련
+const activeTab = ref(0);
+
+const tabs = [{ label: '자재 입출고' }, { label: '완제품 입출고' }];
 </script>
 
 <template>
   <div class="card">
     <div class="flex justify-between items-center pb-4">
-      <h4 class="m-0 font-semibold">자재 입출고 내역 조회</h4>
+      <h4 class="m-0 font-semibold">입출고 내역 조회</h4>
       <div class="flex gap-3">
         <Button label="초기화" severity="contrast" @click="reset" class="px-4 py-2" />
         <Button label="조회" @click="search" class="px-4 py-2" />
       </div>
     </div>
+
+    <TabMenu :model="tabs" v-model:activeIndex="activeTab" class="mb-4" />
 
     <!-- 검색 조건 영역 -->
     <div class="search-section">
@@ -143,7 +152,7 @@ const handleExcelDownload = () => {
     </div>
   </div>
 
-  <div class="card mt-6 h-[600px]">
+  <div class="card mt-6 h-[560px]">
     <div class="flex justify-between align-items-center mb-3">
       <h4 class="m-0">입출고 내역</h4>
       <Button icon="pi pi-file-excel" label="엑셀 다운로드" @click="handleExcelDownload" class="px-3 py-1 h-[35px] gap-2" />
@@ -156,7 +165,7 @@ const handleExcelDownload = () => {
       >
     </div>
 
-    <DataTable :value="list" dataKey="io_code" v-model:selection="selectedRows" selectionMode="checkbox" showGridlines scrollable scroll-height="400px" paginator :rows="10" class="p-datatable-sm">
+    <DataTable :value="list" dataKey="io_code" v-model:selection="selectedRows" selectionMode="checkbox" showGridlines scrollable scroll-height="380px" paginator :rows="10" class="p-datatable-sm">
       <template #empty>
         <div class="text-center py-6 text-gray-400">데이터 없음</div>
       </template>
