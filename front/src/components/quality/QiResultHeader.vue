@@ -2,20 +2,21 @@
 import { defineProps } from 'vue';
 const props = defineProps({
   qualityState: { type: Number, required: true },
-  qirBasicInfo: { type: Object, required: true }
+  qirBasicInfo: { type: Object, required: true },
+  callQiOrder: { type: Boolean, required: true }
 });
 </script>
 <template>
   <div class="flex">
     <div class="card flex flex-col gap-4 w-full">
       <div class="font-semibold text-xl flex justify-between">
-        <h4>기본 정보</h4>
+        <p>기본 정보</p>
         <div class="flex flex-row gap-2">
-          <Button type="button" label="삭제" severity="danger" />
-          <Button type="button" label="초기화" severity="secondary" />
-          <Button v-if="qualityState == 0" type="button" label="등록" @click="$emit('submitQiResult')" severity="success" />
+          <Button v-if="qualityState == 1" @click="$emit('removeQiResult')" type="button" label="삭제" severity="danger" />
+          <Button type="button" @click="$emit('resetQiResult')" label="초기화" severity="secondary" />
+          <Button v-if="qualityState == 0 && !props.callQiOrder" type="button" label="등록" @click="$emit('submitQiResult')" severity="success" />
           <Button v-else type="button" label="저장" @click="$emit('updateQiResult')" severity="success" />
-          <Button type="button" @click="$emit('callQiResult')" label="검사결과 불러오기" />
+          <Button type="button" @click="$emit('callQiResult')" label="검사결과 불러오기" :disabled="props.callQiOrder" />
         </div>
       </div>
       <div class="grid grid-cols-9 gap-20" style="margin-top: 20px">

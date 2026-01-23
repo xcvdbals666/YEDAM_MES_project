@@ -12,6 +12,7 @@ export const useQuality1Store = defineStore('quality', {
     // 결과서 관리
     qirProdInfo: [], // 검사지시서 불러오기(생산일경우)
     qirList: [], // 검사결과서서 불러오기
+    realQirList: [], // 검사결과서 원본 목록
     state: 0 // 상태 판별
   }),
   actions: {
@@ -69,7 +70,10 @@ export const useQuality1Store = defineStore('quality', {
     async submitMinbndQi(data) {
       console.log('전송데이터: ', data);
       const response = await axios.post('api/quality/submitqiorderform', data);
-      console.log('검사지시서 등록완료', response);
+
+      if (response.data.affectedRows == 1) {
+        alert('검사지시서 등록완료');
+      }
     },
 
     // 검사결과서 관리
@@ -88,16 +92,9 @@ export const useQuality1Store = defineStore('quality', {
 
     // 검사결과서 등록
     async submitQiResult(data) {
-      const sleep = (ms) => {
-        return new Promise((resolve) => {
-          setTimeout(resolve, ms);
-        });
-      };
       console.log('전송데이터: ', data);
       const response = await axios.post('api/quality/submitqiresult', data);
-      await sleep(200);
-
-      console.log('검사지시서 등록완료', response);
+      console.log('전송결과: ', response);
     },
 
     // 검사지 정보 불러오기(생산일 경우)
@@ -115,7 +112,17 @@ export const useQuality1Store = defineStore('quality', {
         let date = new Date(data.start_date);
         data.start_date = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
       });
+      this.realQirList = response.data;
       this.qirList = response.data;
+      for (let i = 0; i < this.qirList.length; i++) {
+        console.log(this.qirList[i].qio_code);
+        if (i > 0) {
+          if (this.qirList[i].qio_code == this.qirList[i - 1].qio_code) {
+            response.data.splice(i, 1);
+            i--;
+          }
+        }
+      }
       console.log('결과서 목록: ', this.qirList);
 
       return this.qirList;
@@ -125,6 +132,15 @@ export const useQuality1Store = defineStore('quality', {
     async fetchModifyQirList(data) {
       const response = await axios.put('/api/quality/modifyqirlist', data);
       console.log('결과서 수정: ', response);
+    },
+
+    // 검사 결과서 삭제
+    async fetchRemoveQir(data) {
+      console.log(data);
+      const response = await axios.delete('/api/quality/removeqir/' + data);
+      if ((response.data.affectedRows = 1)) {
+        alert('삭제완료');
+      }
     }
   }
 });

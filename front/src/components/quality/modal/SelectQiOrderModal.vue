@@ -24,7 +24,8 @@ const props = defineProps({
     <p v-else class="leading-normal m-0">현재 죄회할 내용이 없습니다.</p>
 
     <template #footer>
-      <Button label="확인" @click="$emit('selectedOrder', selectedProducts)" />
+      <Button label="확인" v-if="props.qiOrderList.length > 0" @click="$emit('selectedOrder', selectedProducts)" />
+      <Button label="확인" v-else @click="$emit('close')" />
       <Button label="취소" severity="secondary" @click="$emit('close')" />
     </template>
   </Dialog>

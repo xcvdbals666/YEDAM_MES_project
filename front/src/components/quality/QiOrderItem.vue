@@ -14,7 +14,7 @@ let QiOrderItemInput = ref({ mpo_d_code: '', mat_code: '', mat_name: '', req_qtt
 QiOrderItemInput.value = props.selectedMinbnd;
 </script>
 <template>
-  <div class="flex">
+  <div class="flex mt-8">
     <div class="card flex flex-col gap-4 w-full">
       <div class="font-semibold text-xl flex justify-between">
         <div>기본 정보</div>
@@ -48,7 +48,7 @@ QiOrderItemInput.value = props.selectedMinbnd;
         <div class="col-span-2">
           <div class="grid grid-cols-3">
             <label for="checkNum" class="col-span-1">검사수량</label>
-            <InputText id="checkNum" type="text" class="col-span-2" v-model="QiOrderItemInput.req_qtt" />
+            <InputText id="checkNum" type="text" class="col-span-2" v-model="QiOrderItemInput.req_qtt" readonly />
           </div>
         </div>
       </div>
