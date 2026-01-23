@@ -368,7 +368,7 @@ INSERT INTO mpr_mapp_tbl (
 `;
 
 //입고관리
-// LOT 번호 자동생성
+// LOT 번호 자동생성 - 자재
 const selectNextLotNum = `
   SELECT CONCAT('LOT-100-', DATE_FORMAT(NOW(), '%Y%m%d'), '-', 
     LPAD(IFNULL(MAX(CAST(SUBSTRING(lot_num, -3) AS UNSIGNED)), 0) + 1, 3, '0')
@@ -377,9 +377,24 @@ const selectNextLotNum = `
   WHERE lot_num LIKE CONCAT('LOT-100-', DATE_FORMAT(NOW(), '%Y%m%d'), '%')
 `;
 
-// LOT 등록
+// LOT 번호 자동생성 - 완제품
+const selectNextProductLotNum = `
+  SELECT CONCAT('LOT-400-', DATE_FORMAT(NOW(), '%Y%m%d'), '-', 
+    LPAD(IFNULL(MAX(CAST(SUBSTRING(lot_num, -3) AS UNSIGNED)), 0) + 1, 3, '0')
+  ) AS next_lot_num
+  FROM lot_tbl
+  WHERE lot_num LIKE CONCAT('LOT-400-', DATE_FORMAT(NOW(), '%Y%m%d'), '%')
+`;
+
+// LOT 등록 - 자재
 const insertMatLot = `
   INSERT INTO mat_lot_tbl (lot_num, issdate, item_type_code, mat_code)
+  VALUES (?, NOW(), ?, ?)
+`;
+
+// LOT 등록 - 완재품
+const insertProductLot = `
+  INSERT INTO lot_tbl (lot_num, issdate, item_type_code, mat_code)
   VALUES (?, NOW(), ?, ?)
 `;
 
@@ -400,40 +415,97 @@ const insertMinbnd = `
   ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `;
 
+// 입고코드 자동생성 - 완제품
+const selectNextPinbndCode = `
+  SELECT CONCAT('PIN-', DATE_FORMAT(NOW(), '%Y%m%d'), '-', 
+    LPAD(IFNULL(MAX(CAST(SUBSTRING(pinbnd_code, -3) AS UNSIGNED)), 0) + 1, 3, '0')
+  ) AS next_code
+  FROM pinbnd_tbl
+  WHERE pinbnd_code LIKE CONCAT('PIN-', DATE_FORMAT(NOW(), '%Y%m%d'), '%')
+`;
+
+// 입고 등록 - 완제품
+const insertPinbnd = `
+INSERT INTO pinbnd_tbl (
+  pinbnd_code,
+  prod_code,
+  qtt,
+  pinbnd_date,
+  lot_num,
+  qio_code,
+  mcode
+) VALUES (?, ?, ?, NOW(), ?, ?, ?)
+`;
+
+// 생산실적 중 품질검사 합격 목록 조회 (입고 안 된 것만) - 완제품
+const selectPassedProductList = `
+SELECT 
+  qio.qio_code AS qio_code,
+  qir.qir_code,
+  qir.pass_qtt,
+  qio.prdr_code AS prod_code,
+  e.emp_name
+FROM qir_tbl qir
+JOIN qio_tbl qio 
+  ON qir.qio_code = qio.qio_code
+LEFT JOIN emp_tbl e 
+  ON qio.emp_code = e.emp_code
+WHERE qir.result = 'g2'
+AND NOT EXISTS (
+  SELECT 1
+  FROM pinbnd_tbl p
+  WHERE p.qir_code = qir.qir_code
+)
+ORDER BY qio.qio_code DESC
+`;
+
 // 품질검사 합격 목록 조회 (입고 안 된 것만)
 const selectPassedQirList = `
-  SELECT 
-    qir.qir_code,
-    qir.qio_code,
-    qir.pass_qtt,
-    qir.mpo_d_code,
-    qio.emp_code,
-    e.emp_name,
-    mpod.mat_code,
-    m.mat_name,
-    m.material_type_code,
-    mpod.unit,
-    mpod.client_code,
-    c.client_name
-  FROM qir_tbl qir
-  JOIN qio_tbl qio ON qir.qio_code = qio.qio_code
-  LEFT JOIN mpo_d_tbl mpod ON qir.mpo_d_code = mpod.mpo_d_code
-  LEFT JOIN mat_tbl m ON mpod.mat_code = m.mat_code
-  LEFT JOIN client_tbl c ON mpod.client_code = c.client_code
-  LEFT JOIN emp_tbl e ON qio.emp_code = e.emp_code
-  WHERE qir.result = 'g2'
-    AND qir.qir_code NOT IN (
-      SELECT qio_code FROM minbnd_tbl WHERE qio_code IS NOT NULL
-    )
+SELECT 
+  qio.qio_code,
+  qir.qir_code,
+  qir.pass_qtt,
+  mpod.mat_code,
+  m.mat_name,
+  m.material_type_code,
+  mpod.unit,
+  mpod.client_code,
+  c.client_name,
+  e.emp_name
+FROM qir_tbl qir
+JOIN qio_tbl qio 
+  ON qir.qio_code = qio.qio_code
+LEFT JOIN mpo_d_tbl mpod 
+  ON qir.mpo_d_code = mpod.mpo_d_code
+LEFT JOIN mat_tbl m 
+  ON mpod.mat_code = m.mat_code
+LEFT JOIN client_tbl c 
+  ON mpod.client_code = c.client_code
+LEFT JOIN emp_tbl e 
+  ON qio.emp_code = e.emp_code
+WHERE qir.result = 'g2'
+AND qio.qio_code NOT IN (
+  SELECT qio_code FROM minbnd_tbl WHERE qio_code IS NOT NULL
+)
+ORDER BY qio.qio_code DESC
 `;
 
 // 발주서 상태 업데이트
+// const updateMpoStatByQioCode = `
+//   UPDATE mpo_tbl mpo
+//   JOIN mpo_d_tbl mpod ON mpo.purchase_code = mpod.purchase_code
+//   JOIN qir_tbl qir ON mpod.mpo_d_code = qir.mpo_d_code
+//   SET mpo.stat = 'c2'
+//   WHERE qir.qio_code = ?
+// `;
 const updateMpoStatByQioCode = `
-  UPDATE mpo_tbl mpo
-  JOIN mpo_d_tbl mpod ON mpo.purchase_code = mpod.purchase_code
-  JOIN qir_tbl qir ON mpod.mpo_d_code = qir.mpo_d_code
-  SET mpo.stat = 'c2'
-  WHERE qir.qio_code = ?
+UPDATE mpo_tbl mpo
+JOIN mpo_d_tbl mpod 
+  ON mpo.purchase_code = mpod.purchase_code
+JOIN qio_tbl qio 
+  ON mpod.mpo_d_code = qio.mpo_d_code
+SET mpo.stat = 'c2'
+WHERE qio.qio_code = ?
 `;
 
 module.exports = {
@@ -470,4 +542,11 @@ module.exports = {
   selectNextMinbndCode,
   insertMinbnd,
   selectPassedQirList,
+
+  //입관관리-완제품
+  selectNextProductLotNum,
+  insertProductLot,
+  selectNextPinbndCode,
+  insertPinbnd,
+  selectPassedProductList,
 };

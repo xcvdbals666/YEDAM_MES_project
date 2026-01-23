@@ -380,6 +380,66 @@ const addInbound = async (items) => {
   return { status: "success", results };
 };
 
+// 완제품 품질검사 합격 목록 조회
+const findPassedProductQirList = async () => {
+  let list = await mysql.query("selectPassedProductList", [], "material1");
+  return list;
+};
+
+// 완제품 입고 등록 (여러 건)
+const addProductInbound = async (items) => {
+  const results = [];
+
+  for (let item of items) {
+    // 1. 완제품 LOT번호 생성 (LOT-200)
+    let lotResult = await mysql.query(
+      "selectNextProductLotNum",
+      [],
+      "material1",
+    );
+    let lotNum = lotResult[0].next_lot_num;
+
+    // 2. LOT 등록
+    await mysql.query(
+      "insertProductLot",
+      [lotNum, item.prod_type, item.prod_code],
+      "material1",
+    );
+
+    // 3. 완제품 입고코드 생성
+    let pinbndResult = await mysql.query(
+      "selectNextPinbndCode",
+      [],
+      "material1",
+    );
+    let pinbndCode = pinbndResult[0].next_code;
+
+    // 4. 완제품 입고 등록
+    await mysql.query(
+      "insertPinbnd",
+      [
+        pinbndCode,
+        item.prod_code,
+        item.prod_type,
+        item.unit,
+        item.inbnd_qtt,
+        formatDate(item.inbnd_date),
+        lotNum,
+        item.qio_code || null,
+        item.mcode,
+      ],
+      "material1",
+    );
+
+    results.push({
+      pinbnd_code: pinbndCode,
+      lot_num: lotNum,
+    });
+  }
+
+  return { status: "success", results };
+};
+
 module.exports = {
   // 발주서 (MPO)
   findAllMpoTbl,
@@ -402,4 +462,8 @@ module.exports = {
   //입고
   findPassedQirList,
   addInbound,
+
+  //입고 완제품
+  findPassedProductQirList,
+  addProductInbound,
 };

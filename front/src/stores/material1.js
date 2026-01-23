@@ -23,7 +23,8 @@ export const useMaterialStore = defineStore('material', {
     //mpo 모달용
     mpoList: [],
     // 입고 관련
-    passedQirList: []
+    passedQioList: [],
+    passedProductQioList: []
   }),
 
   // getters
@@ -61,7 +62,6 @@ export const useMaterialStore = defineStore('material', {
       this.materials = [];
       this.mprList = [];
       this.matList = [];
-      //this.mpoList = [];
     },
 
     // MPR 목록 조회 (모달용)
@@ -122,9 +122,6 @@ export const useMaterialStore = defineStore('material', {
     async fetchMpoDetail(purchaseCode) {
       const [mpoRes, detailRes] = await Promise.all([axios.get(`/api/material/mpo/${purchaseCode}`), axios.get(`/api/material/mpo/${purchaseCode}/detail`)]);
 
-      console.log('기본정보:', mpoRes.data);
-      console.log('자재상세:', detailRes.data); // 이거 뭐라고 나와?
-
       // 기본정보 세팅
       const mpo = mpoRes.data[0];
       this.mpoData = {
@@ -180,6 +177,19 @@ export const useMaterialStore = defineStore('material', {
     async addInbound(items) {
       const response = await axios.post('/api/material/inbound', items);
       return response.data;
+    },
+    // 완제품 입고 관련
+    // 품질검사 합격 목록 조회 (완제품)
+    async fetchPassedQioList() {
+      const response = await axios.get('/api/material/inbound/passed');
+      this.passedQioList = response.data;
+      return this.passedQioList;
+    },
+
+    async fetchPassedProductQioList() {
+      const response = await axios.get('/api/material/inbound/product/passed');
+      this.passedProductQioList = response.data;
+      return this.passedProductQioList;
     }
   },
   persist: true
