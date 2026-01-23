@@ -75,15 +75,15 @@ const goDetail = (row) => {
       <tbody>
         <tr>
           <th>MRP코드</th>
-          <td><InputText placeholder="생산계획코드를 입력하세요" v-model="data.mrpCode"></InputText></td>
+          <td><InputText placeholder="MRP코드를 입력하세요" v-model="data.mrpCode"></InputText></td>
           <th>생산계획코드</th>
-          <td><InputText placeholder="계획명을 입력하세요" v-model="data.prdpCode"></InputText></td>
+          <td><InputText placeholder="생산계획코드를 입력하세요" v-model="data.prdpCode"></InputText></td>
         </tr>
         <tr>
           <th>자재명</th>
-          <td><InputText placeholder="생산계획코드를 입력하세요" v-model="data.matName"></InputText></td>
+          <td><InputText placeholder="자재를 입력하세요" v-model="data.matName"></InputText></td>
           <th>생산계획명</th>
-          <td><InputText placeholder="계획명을 입력하세요" v-model="data.prdpName"></InputText></td>
+          <td><InputText placeholder="생산계획명을 입력하세요" v-model="data.prdpName"></InputText></td>
         </tr>
         <tr>
           <th>MRP계획일자</th>
@@ -122,17 +122,17 @@ const goDetail = (row) => {
   </Fluid>
   <Fluid class="card">
     <div class="font-semibold text-xl pb-4">제품</div>
-    <DataTable :value="MRP" :paginator="true" :rows="8" dataKey="mrp_d_code" :rowHover="true" showGridlines @row-click="goDetail($event.data)">
+    <DataTable :value="MRP" :paginator="true" sortField="mrp_code" :sortOrder="-1" :rows="8" dataKey="mrp_d_code" :rowHover="true" showGridlines @row-click="goDetail($event.data)">
       <template #empty>
         <div class="text-center py-6 text-gray-400">데이터 없음</div>
       </template>
-      <Column field="mrp_code" header="MRP코드" headerClass="table-header truncate" bodyClass="table-body text-[14px] truncate" style="width: 100px"></Column>
-      <Column field="prdp_code" header="생산계획코드" headerClass="table-header truncate" bodyClass="table-body text-[14px] truncate" style="width: 100px"></Column>
+      <Column field="mrp_code" sortable header="MRP코드" headerClass="table-header truncate" bodyClass="table-body text-[14px] truncate" style="width: 100px"></Column>
+      <Column field="prdp_code" sortable header="생산계획코드" headerClass="table-header truncate" bodyClass="table-body text-[14px] truncate" style="width: 100px"></Column>
       <Column field="prdp_name" header="생산계획명" headerClass="table-header truncate" bodyClass="table-body text-[14px] truncate" style="width: 100px"></Column>
       <Column field="mat_name" header="자재명" headerClass="table-header truncate" bodyClass="table-body text-[14px] truncate" style="width: 100px"></Column>
       <Column field="req_qtt" header="필요수량" headerClass="table-header truncate" bodyClass="table-body text-[14px] truncate" style="width: 80px"></Column>
       <Column field="unit" header="단위" headerClass="table-header truncate" bodyClass="table-body text-[14px] truncate" style="width: 60px"></Column>
-      <Column field="plan_date" header="MRP계획일자" headerClass="table-header truncate" bodyClass="table-body text-[14px] truncate" style="width: 120px"></Column>
+      <Column field="plan_date" sortable header="MRP계획일자" headerClass="table-header truncate" bodyClass="table-body text-[14px] truncate" style="width: 120px"></Column>
       <Column field="mrp_note" header="비고" headerClass="table-header truncate" bodyClass="table-body text-[14px] truncate" style="width: 140px"></Column>
     </DataTable>
   </Fluid>

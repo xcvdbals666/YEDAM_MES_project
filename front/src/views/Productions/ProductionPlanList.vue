@@ -119,16 +119,16 @@ const goDetail = (row) => {
   </Fluid>
   <Fluid class="card">
     <div class="font-semibold text-xl pb-4">제품</div>
-    <DataTable :value="plans" :paginator="true" :rows="8" dataKey="prdp_code" :rowHover="true" showGridlines @row-click="goDetail($event.data)">
+    <DataTable :value="plans" :paginator="true" :rows="8" sortField="prdp_code" :sortOrder="-1" dataKey="prdp_code" :rowHover="true" showGridlines @row-click="goDetail($event.data)">
       <template #empty>
         <div class="text-center py-6 text-gray-400">데이터 없음</div>
       </template>
-      <Column field="prdp_code" header="생산계획코드" headerClass="table-header truncate" bodyClass="table-body text-[14px] truncate" style="width: 140px"></Column>
+      <Column field="prdp_code" sortable header="생산계획코드" headerClass="table-header truncate" bodyClass="table-body text-[14px] truncate" style="width: 140px"></Column>
       <Column field="prdp_name" header="계획명" headerClass="table-header truncate" bodyClass="table-body text-[14px] truncate" style="width: 140px"></Column>
-      <Column field="prdp_date" header="계획일자" headerClass="table-header truncate" bodyClass="table-body text-[14px] truncate" style="width: 95px"></Column>
-      <Column field="start_date" header="계획시작일" headerClass="table-header truncate" bodyClass="table-body text-[14px] truncate" style="width: 95px"></Column>
-      <Column field="end_date" header="계획종료일" headerClass="table-header truncate" bodyClass="table-body text-[14px] truncate" style="width: 95px"></Column>
-      <Column field="due_date" header="납기일자" headerClass="table-header truncate" bodyClass="table-body text-[14px] truncate" style="width: 95px"></Column>
+      <Column field="prdp_date" sortable header="계획일자" headerClass="table-header truncate" bodyClass="table-body text-[14px] truncate" style="width: 95px"></Column>
+      <Column field="start_date" sortable header="계획시작일" headerClass="table-header truncate" bodyClass="table-body text-[14px] truncate" style="width: 95px"></Column>
+      <Column field="end_date" sortable header="계획종료일" headerClass="table-header truncate" bodyClass="table-body text-[14px] truncate" style="width: 95px"></Column>
+      <Column field="due_date" sortable header="납기일자" headerClass="table-header truncate" bodyClass="table-body text-[14px] truncate" style="width: 95px"></Column>
       <Column field="reg" header="작성자" headerClass="table-header truncate" bodyClass="table-body text-[14px] truncate" style="width: 100px"></Column>
       <Column field="note" header="비고" headerClass="table-header truncate" bodyClass="table-body text-[14px] truncate" style="width: 100px"></Column>
     </DataTable>
