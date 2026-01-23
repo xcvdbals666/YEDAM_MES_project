@@ -398,6 +398,7 @@ const deleteMpr = async () => {
       @select-employee="showWriterModal = true"
       :isSaved="isSaved"
       :isEditable="isEditable"
+      :isEditMode="isEditMode"
       @save="save"
       @delete="deleteMpr"
       @reset="reset"
