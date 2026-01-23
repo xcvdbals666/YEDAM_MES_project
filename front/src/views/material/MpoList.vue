@@ -19,6 +19,13 @@ const searchData = ref({
   stat: '전체'
 });
 
+// 자재명 표시 함수
+const formatMaterialNames = (names) => {
+  if (!names) return '-';
+  const arr = names.split(', ');
+  return arr.length > 1 ? `${arr[0]} 외 ${arr.length - 1}건` : arr[0];
+};
+
 // 발주 목록
 const mpoList = ref([]);
 const selectedRows = ref([]);
@@ -164,7 +171,12 @@ const handleExcelDownload = () => {
     <!-- 발주 목록 테이블 -->
     <div class="card mt-4 min-h-[450px]">
       <div class="flex justify-between align-items-center mb-3">
-        <h4 class="m-0">검색 결과 {{ mpoList.length }}건</h4>
+        <div class="flex justify-between items-center mb-2">
+          <span
+            >총 <span class="font-black">{{ mpoList.length }}</span
+            >건</span
+          >
+        </div>
 
         <div class="flex gap-2">
           <Button icon="pi pi-file-excel" label="엑셀 다운로드" class="px-3 py-1 h-[35px] text-sm gap-2" @click="handleExcelDownload" />
@@ -198,16 +210,20 @@ const handleExcelDownload = () => {
           <template #body="{ data }">{{ formatDate(data.purchase_req_date) }}</template>
         </Column>
 
-        <Column header="자재유형" field="material_type" sortable headerStyle="width: 100px; background-color: #f9fafb; padding: 10px;">
+        <Column header="자재유형" field="material_type" headerStyle="width: 100px; background-color: #f9fafb; padding: 10px;">
           <template #body="{ data }">{{ data.material_type || '-' }}</template>
         </Column>
 
-        <Column header="자재명" field="material_names" sortable headerStyle="width: 200px; background-color: #f9fafb; padding: 10px;">
-          <template #body="{ data }">{{ data.material_names }}</template>
+        <Column header="자재명" field="material_names" headerStyle="width: 200px; background-color: #f9fafb; padding: 10px;">
+          <template #body="{ data }">
+            {{ formatMaterialNames(data.material_names) }}
+          </template>
         </Column>
 
-        <Column header="공급업체" field="supplier_name" sortable headerStyle="width: 150px; background-color: #f9fafb; padding: 10px;">
-          <template #body="{ data }">{{ data.supplier_name || '-' }}</template>
+        <Column header="공급업체" field="supplier_name" headerStyle="width: 150px; background-color: #f9fafb; padding: 10px;">
+          <template #body="{ data }">
+            {{ formatMaterialNames(data.supplier_name) }}
+          </template>
         </Column>
 
         <Column header="필요수량" field="req_qtt" sortable headerStyle="width: 100px; background-color: #f9fafb; padding: 10px;">
@@ -218,11 +234,11 @@ const handleExcelDownload = () => {
           <template #body="{ data }">{{ formatDate(data.deadline) }}</template>
         </Column>
 
-        <Column header="발주상태" field="stat" sortable headerStyle="width: 100px; background-color: #f9fafb; padding: 10px;">
+        <Column header="발주상태" field="stat" headerStyle="width: 100px; background-color: #f9fafb; padding: 10px;">
           <template #body="{ data }">{{ data.stat }}</template>
         </Column>
 
-        <Column header="작성자" field="emp_name" sortable headerStyle="width: 100px; background-color: #f9fafb; padding: 10px;">
+        <Column header="작성자" field="emp_name" headerStyle="width: 100px; background-color: #f9fafb; padding: 10px;">
           <template #body="{ data }">{{ data.emp_name }}</template>
         </Column>
 

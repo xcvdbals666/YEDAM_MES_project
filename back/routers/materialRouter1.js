@@ -109,4 +109,17 @@ router.post("/inbound", async (req, res) => {
   res.send(result);
 });
 
+//완제품 입고
+//생산 실적 품질검사 합격 목록 조회
+router.get("/inbound/product/passed", async (req, res) => {
+  const list = await materialService.findPassedProductQirList();
+  res.send(list);
+});
+
+//품질검사 입고 등록(여러건)
+router.post("/inbound/product", async (req, res) => {
+  const result = await materialService.addProductInbound(req.body);
+  res.send(result);
+});
+
 module.exports = router;
