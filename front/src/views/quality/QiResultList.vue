@@ -15,6 +15,7 @@ const inspection_item = ref(''); //검사항목
 const com_value = ref(''); //품목명
 const result = ref(''); //결과
 const end_date = ref(''); //검사일자
+const qir_emp_code = ref(''); //검사자
 
 const dropdownValues = ref([
   { name: '전체', code: '' },
@@ -163,14 +164,17 @@ const filteredResults = computed(() => {
             </span>
           </template>
         </Column>
-        <Column header="검사일자" field="end_date" headerClass="table-header" bodyClass="table-body" sortable style="min-width: 1rem">
+        <Column header="검사일자" field="end_date" headerClass="table-header" bodyClass="table-body text-center" sortable style="min-width: 1rem">
           <template #body="slotProps">
-            <span class="block w-full text-center text-gray-400" v-if="!slotProps.data.end_date"> 없음 </span>
-            <span v-else>
+            <template v-if="!slotProps.data.end_date">
+              <span class="text-gray-400">없음</span>
+            </template>
+            <template v-else>
               {{ formatDate(slotProps.data.end_date) }}
-            </span>
+            </template>
           </template>
         </Column>
+        <Column header="검사자" field="qir_emp_code" headerClass="table-header" sortable style="min-width: 1rem" />
       </DataTable>
     </div>
   </section>
