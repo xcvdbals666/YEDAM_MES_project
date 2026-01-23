@@ -367,6 +367,66 @@ INSERT INTO mpr_mapp_tbl (
 ) VALUES (?, ?, ?, ?, NOW())
 `;
 
+//입고관리
+// LOT 번호 자동생성
+const selectNextLotNum = `
+  SELECT CONCAT('LOT-100-', DATE_FORMAT(NOW(), '%Y%m%d'), '-', 
+    LPAD(IFNULL(MAX(CAST(SUBSTRING(lot_num, -3) AS UNSIGNED)), 0) + 1, 3, '0')
+  ) AS next_lot_num
+  FROM mat_lot_tbl
+  WHERE lot_num LIKE CONCAT('LOT-100-', DATE_FORMAT(NOW(), '%Y%m%d'), '%')
+`;
+
+// LOT 등록
+const insertMatLot = `
+  INSERT INTO mat_lot_tbl (lot_num, issdate, item_type_code, mat_code)
+  VALUES (?, NOW(), ?, ?)
+`;
+
+// 입고코드 자동생성
+const selectNextMinbndCode = `
+  SELECT CONCAT('MIN-', DATE_FORMAT(NOW(), '%Y%m%d'), '-', 
+    LPAD(IFNULL(MAX(CAST(SUBSTRING(minbnd_code, -3) AS UNSIGNED)), 0) + 1, 3, '0')
+  ) AS next_code
+  FROM minbnd_tbl
+  WHERE minbnd_code LIKE CONCAT('MIN-', DATE_FORMAT(NOW(), '%Y%m%d'), '%')
+`;
+
+// 입고 등록
+const insertMinbnd = `
+  INSERT INTO minbnd_tbl (
+    minbnd_code, mat_code, mat_type, unit, inbnd_qtt, 
+    inbnd_date, ord_qtt, lot_num, mat_sup, qio_code, mcode
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+`;
+
+// 품질검사 합격 목록 조회 (입고 안 된 것만)
+const selectPassedQirList = `
+  SELECT 
+    qir.qir_code,
+    qir.qio_code,
+    qir.pass_qtt,
+    qir.mpo_d_code,
+    qio.emp_code,
+    e.emp_name,
+    mpod.mat_code,
+    m.mat_name,
+    m.material_type_code,
+    mpod.unit,
+    mpod.client_code,
+    c.client_name
+  FROM qir_tbl qir
+  JOIN qio_tbl qio ON qir.qio_code = qio.qio_code
+  LEFT JOIN mpo_d_tbl mpod ON qir.mpo_d_code = mpod.mpo_d_code
+  LEFT JOIN mat_tbl m ON mpod.mat_code = m.mat_code
+  LEFT JOIN client_tbl c ON mpod.client_code = c.client_code
+  LEFT JOIN emp_tbl e ON qio.emp_code = e.emp_code
+  WHERE qir.result = 'g2'
+    AND qir.qir_code NOT IN (
+      SELECT qio_code FROM minbnd_tbl WHERE qio_code IS NOT NULL
+    )
+`;
+
 module.exports = {
   // 발주서 (MPO)
   selectAllMpoTbl,
@@ -393,4 +453,11 @@ module.exports = {
   selectNextMappCode,
   insertMprMappTbl,
   deleteMprMappByPurchaseCode,
+
+  //입고관리
+  selectNextLotNum,
+  insertMatLot,
+  selectNextMinbndCode,
+  insertMinbnd,
+  selectPassedQirList,
 };

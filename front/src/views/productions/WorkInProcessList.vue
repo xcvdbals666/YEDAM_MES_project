@@ -96,15 +96,7 @@ onMounted(async () => {
 
       <div class="col-span-12 lg:col-span-4 flex items-center gap-3">
         <label class="w-28 shrink-0 text-lg font-semibold">라인코드</label>
-        <Dropdown
-          v-model="line"
-          :options="lines"
-          optionLabel="line_code"
-          optionValue="line_code"
-          placeholder="라인 선택"
-          class="w-full"
-          showClear
-        />
+        <Dropdown v-model="line" :options="lines" optionLabel="line_code" optionValue="line_code" placeholder="라인 선택" class="w-full" showClear />
       </div>
 
       <div class="col-span-12 lg:col-span-4 flex items-center gap-3">
@@ -118,9 +110,7 @@ onMounted(async () => {
       <div class="col-span-12 lg:col-span-4"></div>
     </div>
 
-    <div v-if="wipError" class="mt-3 text-red-500">
-      작업진행 목록을 불러오지 못했습니다.
-    </div>
+    <div v-if="wipError" class="mt-3 text-red-500">작업진행 목록을 불러오지 못했습니다.</div>
   </div>
 
   <div class="card">
@@ -128,16 +118,7 @@ onMounted(async () => {
       <div class="font-semibold text-xl">작업진행 조회</div>
     </div>
 
-    <DataTable
-      :value="wipList"
-      :loading="wipLoading"
-      dataKey="wko_code"
-      scrollable
-      scrollHeight="520px"
-      selectionMode="single"
-      @rowClick="(e) => goDetail(e.data)"
-      class="w-full"
-    >
+    <DataTable :value="wipList" :loading="wipLoading" dataKey="wko_code" scrollable scrollHeight="520px" selectionMode="single" @rowClick="(e) => goDetail(e.data)" class="w-full">
       <Column field="wko_code" header="작업지시코드" style="min-width: 160px" />
       <Column field="wko_name" header="작업지시명" style="min-width: 180px" />
       <Column field="prod_code" header="제품코드" style="min-width: 120px" />

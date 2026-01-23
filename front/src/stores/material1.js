@@ -21,7 +21,9 @@ export const useMaterialStore = defineStore('material', {
     //mat 모달용
     matList: [],
     //mpo 모달용
-    mpoList: []
+    mpoList: [],
+    // 입고 관련
+    passedQirList: []
   }),
 
   // getters
@@ -165,6 +167,19 @@ export const useMaterialStore = defineStore('material', {
       const response = await axios.get('/api/material/mat');
       this.matList = response.data;
       return this.matList;
+    },
+    //입고 쪽
+    // 품질검사 합격 목록 조회
+    async fetchPassedQirList() {
+      const response = await axios.get('/api/material/inbound/passed');
+      this.passedQirList = response.data;
+      return this.passedQirList;
+    },
+
+    // 입고 등록
+    async addInbound(items) {
+      const response = await axios.post('/api/material/inbound', items);
+      return response.data;
     }
   },
   persist: true

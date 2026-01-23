@@ -80,7 +80,7 @@ const filteredResults = computed(() => {
       <!-- 검사코드 -->
       <div class="flex flex-col gap-2">
         <label class="font-semibold">검사코드</label>
-        <InputText v-model="qir_code" placeholder="검사코드 선택" class="w-full cursor-pointer" />
+        <InputText v-model="qir_code" placeholder="QIR-뒤의 번호 입력" class="w-full cursor-pointer" />
       </div>
 
       <!-- 검사항목 -->
@@ -102,8 +102,8 @@ const filteredResults = computed(() => {
 
       <!-- 결과 -->
       <div class="flex flex-col gap-2">
-        <label class="font-semibold">결과-드랍다운</label>
-        <InputText v-model="result" placeholder="결과" class="w-full" />
+        <label class="font-semibold">결과</label>
+        <InputText v-model="result" placeholder="합격/불합격/미검사" class="w-full" />
       </div>
 
       <!-- 종료일 -->
@@ -145,15 +145,30 @@ const filteredResults = computed(() => {
         <Column selectionMode="multiple" headerStyle="width:48px" />
         <Column header="검사결과 코드" field="qir_code" headerClass="table-header" bodyClass="table-body" sortable style="min-width: 1rem" />
         <Column header="품질기준 정보 코드" field="qcr_code" headerClass="table-header" bodyClass="table-body" sortable style="min-width: 1rem" />
+        <Column header="품목명(공통코드)" field="com_value" headerClass="table-header" bodyClass="table-body" sortable style="min-width: 1rem" />
         <Column header="검사항목" field="inspection_item" headerClass="table-header" bodyClass="table-body" sortable style="min-width: 1rem" />
         <Column header="품질 상한값" field="range_top" headerClass="table-header" bodyClass="table-body" sortable style="min-width: 1rem" />
         <Column header="품질 하한값" field="range_bot" headerClass="table-header" bodyClass="table-body" sortable style="min-width: 1rem" />
         <Column header="단위(공통코드)" field="unit" headerClass="table-header" bodyClass="table-body" sortable style="min-width: 1rem" />
-        <Column header="품목명(공통코드)" field="com_value" headerClass="table-header" bodyClass="table-body" sortable style="min-width: 1rem" />
-        <Column header="품질결과" field="result" headerClass="table-header" bodyClass="table-body" sortable style="min-width: 1rem" />
+        <Column header="품질결과" field="result" headerClass="table-header" sortable style="min-width: 1rem">
+          <template #body="slotProps">
+            <span
+              :class="{
+                'text-green-600 font-semibold': slotProps.data.result === '합격',
+                'text-red-600 font-semibold': slotProps.data.result === '불합격',
+                'text-blue-500 font-semibold': slotProps.data.result !== '합격' && slotProps.data.result !== '불합격'
+              }"
+            >
+              {{ slotProps.data.result }}
+            </span>
+          </template>
+        </Column>
         <Column header="검사일자" field="end_date" headerClass="table-header" bodyClass="table-body" sortable style="min-width: 1rem">
           <template #body="slotProps">
-            {{ formatDate(slotProps.data.end_date) }}
+            <span class="block w-full text-center text-gray-400" v-if="!slotProps.data.end_date"> 없음 </span>
+            <span v-else>
+              {{ formatDate(slotProps.data.end_date) }}
+            </span>
           </template>
         </Column>
       </DataTable>

@@ -96,4 +96,17 @@ router.get("/mpo", async (req, res) => {
   res.send(list);
 });
 
+//입고
+// 품질검사 합격 목록 조회
+router.get("/inbound/passed", async (req, res) => {
+  const list = await materialService.findPassedQirList();
+  res.send(list);
+});
+
+// 입고 등록 (여러 건)
+router.post("/inbound", async (req, res) => {
+  const result = await materialService.addInbound(req.body);
+  res.send(result);
+});
+
 module.exports = router;

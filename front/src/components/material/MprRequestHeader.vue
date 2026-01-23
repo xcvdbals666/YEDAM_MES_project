@@ -6,7 +6,8 @@ const props = defineProps({
   selectedMrpValue: Object,
   mrpFilteredValue: Array,
   isSaved: Boolean,
-  isEditable: Boolean
+  isEditable: Boolean,
+  canSelectMrp: Boolean
 });
 const emit = defineEmits(['update:modelValue', 'update:selectedMrpValue', 'selectEmployee', 'save', 'reset', 'delete', 'open-mpr', 'search-mrp']);
 
@@ -77,9 +78,9 @@ const data = computed({
             <AutoComplete
               :modelValue="selectedMrpValue"
               :suggestions="mrpFilteredValue"
-              :disabled="!isEditable"
+              :disabled="!canSelectMrp"
               optionLabel="mrp_code"
-              placeholder="MRP 계획번호"
+              placeholder="MRP 선택"
               dropdown
               completeOnFocus
               @complete="emit('search-mrp', $event)"
