@@ -211,14 +211,15 @@ const findAllMrp = async (data) => {
   let sql = `
   SELECT d.mrp_d_code, m.mrp_code, m.prdp_code, p.prdp_name, mt.mat_name, d.req_qtt, cu.note AS unit, m.plan_date, m.mrp_note
   FROM mrp_tbl m
-  JOIN mrp_d_tbl d ON m.mrp_code = d.mrp_code
-  JOIN prdp_tbl p ON p.prdp_code = m.prdp_code
+  LEFT JOIN mrp_d_tbl d ON m.mrp_code = d.mrp_code
+  LEFT JOIN prdp_tbl p ON p.prdp_code = m.prdp_code
   JOIN common_code cu ON cu.com_value = d.unit
   JOIN mat_tbl mt ON mt.mat_code = d.mat_code
   WHERE 1=1`;
+
   const params = [];
   if (mrpCode) {
-    sql += ` AND mrp_code LIKE ?`;
+    sql += ` AND m.mrp_code LIKE ?`;
     params.push(`%${mrpCode}%`);
   }
   if (prdpCode) {
@@ -233,7 +234,7 @@ const findAllMrp = async (data) => {
     sql += ` AND mt.mat_name LIKE ?`;
     params.push(`%${matName}%`);
   }
-  sql += ` AND plan_date BETWEEN ? AND ?`;
+  sql += ` AND m.plan_date BETWEEN ? AND ?`;
   params.push(mrpStart, mrpEnd);
 
   let list = await mysql.rquery(sql, params);
@@ -265,11 +266,11 @@ const modifyMrp = async (data) => {
       mrpResult = await mysql.query(
         "updateMrp",
         [
-          info.planDate,
-          info.startDate,
+          info.planDate.slice(0, 10),
+          info.startDate.slice(0, 10),
           info.note,
           info.prdpCode,
-          info.empCode,
+          info.reg,
           info.mrpCode,
         ],
         "produce2",
@@ -285,11 +286,11 @@ const modifyMrp = async (data) => {
         "insertMrp",
         [
           mrpCode,
-          info.planDate,
-          info.startDate,
+          info.planDate.slice(0, 10),
+          info.startDate.slice(0, 10),
           info.note,
           info.prdpCode,
-          info.empCode,
+          info.reg,
         ],
         "produce2",
       );
@@ -330,6 +331,35 @@ const modifyMrp = async (data) => {
     resObj.status = "fail";
     console.log(err);
   }
+  return resObj;
+};
+
+// 생산실적 조회
+const findAllPrdr = async (data) => {
+  const { prdrCode, prodName, startDate, endDate, workOrderCode } = data;
+  let sql = `
+  SELECT pr.*, pd.prod_name
+  FROM prdr_tbl pr
+  JOIN prod_tbl pd ON pr.prod_code = pd.prod_code
+  WHERE 1=1`;
+  const params = [];
+  if (prdrCode) {
+    sql += ` AND pr.prdr_code LIKE ?`;
+    params.push(`%${prdrCode}%`);
+  }
+  if (prodName) {
+    sql += ` AND pd.prod_name LIKE ?`;
+    params.push(`%${prodName}%`);
+  }
+  if (workOrderCode) {
+    sql += ` AND pr.work_order_code LIKE ?`;
+    params.push(`%${workOrderCode}%`);
+  }
+  sql += ` AND pr.start_date >= ? AND pr.end_date <= ?`;
+  params.push(startDate, `${endDate} 23:59:59`);
+
+  let list = await mysql.rquery(sql, params);
+  return list;
 };
 
 module.exports = {
@@ -346,4 +376,5 @@ module.exports = {
   findAllMrp,
   findByCodeMrpDetail,
   modifyMrp,
+  findAllPrdr,
 };
