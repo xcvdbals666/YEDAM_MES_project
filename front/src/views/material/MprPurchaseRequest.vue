@@ -135,49 +135,31 @@ const selectMpr = async (mprCode) => {
     console.log('items:', items);
 
     /*
-      3. MRP 기준 자재 Set 생성
-      - 이 MPR이 어떤 MRP를 기준으로 만들어졌는지 확인
-      - MRP 계산 결과에 포함된 자재인지 판별하기 위한 용도
-    */
-    let mrpMatSet = null;
-    if (h.mrp_code) {
-      const mrpList = await store.fetchMrpList(h.mrp_code);
-      mrpMatSet = new Set(mrpList.map((x) => x.mat_code));
-    }
-
-    /*
-      4. MPR 상세 + sourceType 구분
+      3. MPR 상세 + sourceType 구분
       - MRP 기준 자재  : sourceType = 'mrp'   (읽기 전용, 저장 대상 아님)
       - 수동 추가 자재 : sourceType = 'manual' (수정/삭제/저장 대상)
     */
-    requestDetailInfo.value = items.map((d) => {
-      const isMrpMat = mrpMatSet && mrpMatSet.has(d.mat_code);
+    requestDetailInfo.value = items.map((d) => ({
+      __key: `${d.mpr_d_code}-${Math.random()}`,
+      sourceType: d.source_type,
+      is_deleted: false,
 
-      return {
-        __key: `${d.mpr_d_code}-${Math.random()}`,
-        sourceType: isMrpMat ? 'mrp' : 'manual',
-        is_deleted: false,
-
-        // MPR 상세 식별자
-        mprDCode: d.mpr_d_code,
-
-        // 자재 정보
-        materialName: d.mat_name,
-        matCode: d.mat_code,
-        matSup: d.mat_sup || d.client_code,
-        clientName: d.client_name,
-
-        // 수량 / 단위
-        curQtt: d.current_qty,
-        lackQtt: d.req_lack_qty,
-        reqQtt: d.req_qtt,
-        unitCode: d.unit,
-        unitLabel: d.unit_label,
-
-        // 비고
-        note: d.note
-      };
-    });
+      // MPR 상세 식별자
+      mprDCode: d.mpr_d_code,
+      // 자재 정보
+      materialName: d.mat_name,
+      matCode: d.mat_code,
+      matSup: d.client_code,
+      clientName: d.client_name,
+      // 수량 / 단위
+      curQtt: d.current_qty,
+      lackQtt: d.req_lack_qty,
+      reqQtt: d.req_qtt,
+      unitCode: d.unit,
+      unitLabel: d.unit_label,
+      // 비고
+      note: d.note
+    }));
 
     // 수정 모드 진입
     showMprModal.value = false;
@@ -357,6 +339,7 @@ const save = async () => {
       .map((v) => ({
         mprDCode: v.mprDCode || null,
         is_deleted: v.is_deleted || false,
+        sourceType: v.sourceType,
         reqQtt: v.reqQtt,
         unitCode: v.unitCode,
         note: v.note,
