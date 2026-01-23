@@ -154,7 +154,7 @@ SELECT IFNULL(
 FROM prdr_d_tbl;
 `;
 
-//prdr_tbl
+//prdr_tbl 삽입
 const insertPrdrStart = `
 INSERT INTO prdr_tbl
   (prdr_code, prod_code, start_date, work_order_code, stat, ord_qtt, emp_code)
@@ -162,16 +162,17 @@ VALUES
   (?, ?, NOW(), ?, 'b1', ?, 'EMP-10001')
 `;
 
-//prdr_d_tbl
+//prdr_d_tbl 삽입
 const insertPrdrDStart = `
 INSERT INTO prdr_d_tbl
   (prdr_d_code, prdr_code, input_qtt, start_date, line_eq_code)
 VALUES
   (?, ?, ?, NOW(), ?)
 `;
+//작업시작버튼 끝
 
 //#####제정신아님. . .
-// 특정 작업지시서의 설비별 생산실적 조회
+// 특정 작업지시서의 설비별 생산실적 조회 (wko_tbl의 code기준으로)
 const selectPrdrStatusByWko = `
 SELECT
   ld.line_eq_code,
