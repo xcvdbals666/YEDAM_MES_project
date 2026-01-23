@@ -110,7 +110,10 @@ const removeOrder = async (ordCode) => {
 
   return result;
 };
-
+// 상태 가져오기
+const findStats = async () => {
+  let result = await mysql.query("");
+};
 // ai활용
 module.exports = {
   findAllOrder,
