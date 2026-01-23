@@ -10,7 +10,8 @@ export const useOrderStore = defineStore('order', {
     employees: [],
     products: [],
     orders: [],
-    details: []
+    details: [],
+    stats: []
   }),
   actions: {
     // 거래처 목록 불러오기
@@ -76,6 +77,12 @@ export const useOrderStore = defineStore('order', {
       let result = await axios.delete(`${url}/order/${orderCode}`);
       console.log(result.data);
       return result.data;
+    },
+    // 상태 목록 불러오기(공통코드)
+    async getStatOptions() {
+      let result = await axios.get(`${url}/orderStats`);
+      console.log(result.data);
+      this.stats = result.data;
     }
   },
   persist: true

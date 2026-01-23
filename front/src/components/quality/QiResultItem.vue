@@ -1,7 +1,8 @@
 <script setup>
 import { ref, defineProps } from 'vue';
 const props = defineProps({
-  selectedMinbnd: { type: Object, required: true }
+  selectedMinbnd: { type: Object, required: true },
+  checkCallQir: { type: Boolean, required: true }
 });
 let QiOrderItemInput = ref({ mpo_d_code: '', mat_code: '', mat_name: '', req_qtt: '', note: '', mat_type: '' });
 QiOrderItemInput.value = props.selectedMinbnd;
@@ -37,7 +38,7 @@ QiOrderItemInput.value = props.selectedMinbnd;
         <div class="col-span-2">
           <div class="grid grid-cols-2">
             <label for="checkNum" class="col-span-1">검사수량</label>
-            <InputText id="checkNum" type="text" class="col-span-2" v-model="QiOrderItemInput.req_qtt" readonly />
+            <InputText id="checkNum" type="text" class="col-span-2" v-model="QiOrderItemInput.req_qtt" :readonly="checkCallQir" />
           </div>
         </div>
       </div>

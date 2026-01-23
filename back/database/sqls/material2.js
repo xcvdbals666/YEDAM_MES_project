@@ -153,6 +153,17 @@ const updateMprDTbl = `UPDATE mpr_d_tbl
                        SET req_qtt = ?, unit = ?, note = ?, mat_sup = ?, mat_code = ?
                        WHERE mpr_d_code = ?`;
 
+// 수정 시 기존 MPR이 참조하던 MRP 코드 확인용 (MRP 변경/추가 방지)
+const selectByMprCodeIsMrpCode = `SELECT mpr_code, mrp_code
+                                  FROM mpr_tbl
+                                  WHERE mpr_code = ?`;
+
+// 구매요청 삭제
+const deleteMpr = `DELETE FROM mpr_tbl WHERE mpr_code = ?`;
+
+// 구매요청 삭제 전 상세 삭제
+const deleteDetailMpr = `DELETE FROM mpr_d_tbl WHERE mpr_code = ?`;
+
 module.exports = {
   selectByMatCodeMatTbl,
   selectByMprCodeMprTbl,
@@ -171,4 +182,7 @@ module.exports = {
   updateMprTbl,
   deleteMprDTbl,
   updateMprDTbl,
+  selectByMprCodeIsMrpCode,
+  deleteMpr,
+  deleteDetailMpr,
 };

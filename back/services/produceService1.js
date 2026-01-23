@@ -163,7 +163,6 @@ const saveWorkOrder = async (data) => {
     const result = await mysql.query("updateWorkOrder", params, "produce1");
     return { ok: true, mode: "update", wko_code, result };
   } else {
-
     const params = [
       wko_code,
       start_date,
@@ -182,8 +181,14 @@ const saveWorkOrder = async (data) => {
 
 //작업진행조회 페이지에서 작업지시서, 생산실적 테이블로 검색조회
 const getWorkInProcessList = async (q = {}) => {
-
-  const { wko = '', wkoName = '', name = '', line = '', from = '', to = '' } = q;
+  const {
+    wko = "",
+    wkoName = "",
+    name = "",
+    line = "",
+    from = "",
+    to = "",
+  } = q;
 
   let sql = `
   SELECT 
@@ -241,6 +246,103 @@ const getWorkInProcessList = async (q = {}) => {
   return await mysql.rquery(sql, params);
 };
 
+// 작업진행 상세 조회
+const getWorkInProcessDetail = async (wko_code) => {
+  const rows = await mysql.query("selectWipDetail", [wko_code], "produce1");
+
+  return rows.length > 0 ? rows[0] : null;
+};
+
+//라인 기준 사용해야 할 설비 목록 뽑아오기
+//ex. LINE-001에 매핑된 eq_code전부의 eq_name 띄우기
+const getEquipmentsByLine = async (lineCode) => {
+  const rows = await mysql.query("selectEqnameByLine", [lineCode], "produce1");
+  return rows;
+};
+
+//선택한 wko_tbl의 prod_code로 타고가서 po_tbl에서 공정명 드롭다운 뽑기
+const getProcessesByWko = async (wkoCode) => {
+  const rows = await mysql.query(
+    "selectProcessDropdownByWko",
+    [wkoCode],
+    "produce1",
+  );
+  return rows;
+};
+
+//작업시작 버튼 눌렀을때
+// prdr 번호 생성
+const getNextPrdrCode = async () => {
+  const rows = await mysql.query("selectNextPrdrSeq", [], "produce1");
+  const maxSeq = rows?.[0]?.maxSeq ?? 0;
+  const next = Number(maxSeq) + 1;
+
+  const seq = String(next).padStart(3, "0");
+  return `PRDR-${seq}`;
+};
+
+//prdr_d 번호생성
+const getNextPrdrDCode = async () => {
+  const rows = await mysql.query("selectNextPrdrDSeq", [], "produce1");
+  const maxSeq = rows?.[0]?.maxSeq ?? 0;
+  const next = Number(maxSeq) + 1;
+
+  const seq = String(next).padStart(3, "0");
+  return `PRDR-D-${seq}`;
+};
+
+//작업시작 누르면 실행
+const startWork = async ({ wko_code, line_eq_code, input_qtt }) => {
+  if (!wko_code || !line_eq_code) throw new Error("필수값 누락");
+  if (!input_qtt || Number(input_qtt) <= 0) throw new Error("투입량 오류");
+
+  // wko 정보 가져오기 selectWipDetail 재사용
+  const rows = await mysql.query("selectWipDetail", [wko_code], "produce1");
+  const wko = rows?.[0];
+  if (!wko) throw new Error("작업지시서를 찾을 수 없음");
+
+  // prdr이 있으면 재사용
+  let prdr_code = wko.prdr_code;
+  if (!prdr_code) {
+    prdr_code = await getNextPrdrCode();
+
+    await mysql.query(
+      "insertPrdrStart",
+      [prdr_code, wko.prod_code, wko.wko_code, wko.wko_qtt],
+      "produce1",
+    );
+  }
+
+  const prdr_d_code = await getNextPrdrDCode();
+  await mysql.query(
+    "insertPrdrDStart",
+    [prdr_d_code, prdr_code, Number(input_qtt), line_eq_code],
+    "produce1",
+  );
+
+  return { ok: true, prdr_code, prdr_d_code };
+};
+
+//####어어어...
+// 설비 카드 상태 조회
+const getPrdrStatusByWko = async (wko_code) => {
+  const rows = await mysql.query(
+    "selectPrdrStatusByWko",
+    [wko_code],
+    "produce1",
+  );
+  return rows;
+};
+
+// 설비 작업 상세
+const getPrdrDDetail = async (prdr_d_code) => {
+  const rows = await mysql.query(
+    "selectPrdrDDetail",
+    [prdr_d_code],
+    "produce1",
+  );
+  return rows.length ? rows[0] : null;
+};
 
 module.exports = {
   searchWorkOrders,
@@ -252,4 +354,10 @@ module.exports = {
   removeWorkOrder,
   saveWorkOrder,
   getWorkInProcessList,
+  getWorkInProcessDetail,
+  getEquipmentsByLine,
+  getProcessesByWko,
+  startWork,
+  getPrdrStatusByWko,
+  getPrdrDDetail,
 };
