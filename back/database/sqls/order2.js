@@ -83,7 +83,6 @@ const selectProdList = `
 SELECT 
   p.prod_name,
   p.com_value AS prod_type_code,
-
   c_type.note AS prod_type,
   c_spec.note AS spec, 
   c_unit.note AS unit,
@@ -94,8 +93,9 @@ SELECT
   od.spec AS spec_code,
   od.unit AS unit_code,   
 
-  (COALESCE(stock_in.total_in, 0)
-  - COALESCE(out_req.total_req, 0)) AS current_stock
+ (COALESCE(stock_in.total_in, 0) - COALESCE(out_req.total_req, 0)) AS current_stock,  
+  COALESCE(already_out.already_out_amount, 0) AS already_out_amount,  
+ (od.ord_amount - COALESCE(already_out.already_out_amount, 0)) AS pending_amount
 
 FROM ord_d_tbl od
 
@@ -115,6 +115,17 @@ LEFT JOIN (
   FROM out_req_d_tbl
   GROUP BY prod_code
 ) out_req ON out_req.prod_code = od.prod_code
+
+LEFT JOIN (
+  SELECT 
+    ore.ord_code,
+    ord.prod_code,
+    SUM(ord.out_req_d_amount) AS already_out_amount
+  FROM out_req_d_tbl ord
+  JOIN out_req_tbl ore ON ord.out_req_code = ore.out_req_code
+  GROUP BY ore.ord_code, ord.prod_code
+) already_out ON already_out.ord_code = od.ord_code 
+              AND already_out.prod_code = od.prod_code
 
 WHERE od.ord_code = ?
 `;
@@ -136,10 +147,72 @@ SELECT CONCAT(
 ) as new_out_req_code
 `;
 
+// 출고 요청 insert
+const insertOutReq = `
+INSERT INTO out_req_tbl (
+  out_req_code,
+  out_req_date,
+  ord_predict_date,
+  note,
+  ord_code,
+  mcode,
+  client_code
+) VALUES (?, ?, ?, ?, ?, ?, ?)
+`;
+
+// 출고 요청 상세 insert
+const insertOutReqDetail = `
+INSERT INTO out_req_d_tbl (
+  out_req_d_code,
+  out_req_d_amount,
+  ord_amount,
+  out_req_code,
+  prod_code,
+  com_value
+) VALUES (?, ?, ?, ?, ?, ?)
+`;
+
+// 주문 상태 UPDATE
+const updateOrdStat = `
+UPDATE ord_tbl
+SET ord_stat = 'q1'
+WHERE ord_code = ?
+`;
+
+// 출고요청 기본 정보
+const selectByOutReqCode = `
+SELECT r.out_req_code, 
+       r.out_req_date, 
+       r.ord_code,        
+       r.client_code, 
+       r.mcode, 
+       r.note,
+
+       ord.ord_date, 
+
+       c.client_name, 
+
+       e.emp_name,
+
+FROM out_req_tbl r
+JOIN ord_tbl ord ON ord.ord_code = r.ord_code
+JOIN client_tbl c ON c.client_code = r.client_code
+JOIN emp_tbl e ON e.emp_code = r.mcode
+WHERE r.out_req_code = ?
+`;
+
+// 출고요청 제품 조회
+const selectProdListByOutreq = `
+
+`;
+
 module.exports = {
   selectAllOutreqtbl,
   searchOutreqtbl,
   selectByOrdcode,
   selectProdList,
   generateOutCode,
+  insertOutReq,
+  insertOutReqDetail,
+  updateOrdStat,
 };

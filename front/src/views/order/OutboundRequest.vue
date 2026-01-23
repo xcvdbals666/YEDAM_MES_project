@@ -6,23 +6,20 @@ const user = JSON.parse(localStorage.getItem('user'));
 
 const orderStore = useOrderStore2();
 const showOrderModal = ref(false); // 모달 표시 여부
+const productList = ref([]); // 제품 목록
 
 // 초기 상태 정의
 const getInitialOutInfo = () => ({
   out_code: '',
-  out_req_date: '',
+  out_req_date: new Date().toISOString().split('T')[0],
   ord_code: '',
   ord_date: '',
   client_name: '',
-  emp_name: '',
+  emp_name: user.emp_name,
   note: ''
 });
 
-// 출고 요청 정보
-const outInfo = ref(getInitialOutInfo());
-
-// 제품 목록
-const productList = ref([]);
+const outInfo = ref(getInitialOutInfo()); // 출고 요청 정보
 
 // 모달 열기
 const openOrderModal = () => {
@@ -50,17 +47,11 @@ const selectOrder = async (selectedOrder) => {
   // 4. 제품 목록 복사
   productList.value = orderStore.products.map((product) => ({
     ...product,
-    out_amount: 0, // 출고수량
-    pending_amount: product.ord_amount // 미출고수량(초기값은 주문수량)
+    out_amount: 0 // 출고 요청 수량(사용자 입력값)
   }));
 
-  // 4. 모달 닫기
+  // 5. 모달 닫기
   showOrderModal.value = false;
-};
-
-// 출고수량 변경 시 미출고수량 자동 계산
-const updatePendingAmount = (product) => {
-  product.pending_amount = product.ord_amount - (product.out_amount || 0);
 };
 
 // 초기화
@@ -71,15 +62,78 @@ const resetFrom = () => {
       return;
     }
   }
+  outInfo.value = getInitialOutInfo(); // 출고 정보 초기화
+  productList.value = []; // 제품 목록 초기화
+  orderStore.resetOutboundRequest(); // 스토어 초기화
+};
 
-  // 출고 정보 초기화
-  outInfo.value = getInitialOutInfo();
+// 출고 요청하기 버튼 클릭 시
+const requestOutbound = async () => {
+  // 1. 유효성 검사
+  if (!outInfo.value.ord_code) {
+    alert('주문 정보를 먼저 불러와주세요.');
+    return;
+  }
 
-  // 제품 목록 초기화
-  productList.value = [];
+  // 2. 출고수량이 있는 제품만 필터링
+  const validProducts = productList.value.filter((p) => p.out_amount > 0);
 
-  // 스토어 초기화
-  orderStore.resetOutboundRequest();
+  if (validProducts.length === 0) {
+    alert('출고할 제품의 수량을 입력해주세요.');
+    return;
+  }
+
+  // 3. 확인 메시지
+  if (!confirm('출고 요청을 진행하시겠습니까?')) {
+    return;
+  }
+
+  try {
+    // 4. 백엔드로 보낼 데이터 구성
+    const requestData = {
+      outReqInfo: {
+        out_req_code: outInfo.value.out_code,
+        out_req_date: outInfo.value.out_req_date,
+        ord_predict_date: outInfo.value.ord_date,
+        note: outInfo.value.note || '',
+        ord_code: outInfo.value.ord_code,
+        mcode: user.emp_code,
+        client_code: orderStore.orderDetail.client_code
+      },
+      products: validProducts.map((p) => ({
+        prod_code: p.prod_code,
+        out_req_d_amount: p.out_amount,
+        ord_amount: p.ord_amount,
+        com_value: p.prod_type_code
+      }))
+    };
+
+    // 5. API 호출
+    const result = await orderStore.createOutboundRequest(requestData);
+
+    // 6. 성공 처리
+    if (result.success) {
+      alert(result.message || '출고 요청이 완료되었습니다.');
+
+      // 컨펌 없이 바로 초기화
+      outInfo.value = getInitialOutInfo();
+      productList.value = [];
+      orderStore.resetOutboundRequest();
+    }
+  } catch (error) {
+    // 7. 에러 처리
+    console.error('출고 요청 실패:', error);
+    alert('출고 요청에 실패했습니다. 다시 시도해주세요.');
+  }
+};
+
+// 최대 출고 수량 실시간 체크
+const handleOutAmountInput = (data, event) => {
+  if (event.value > data.pending_amount) {
+    data.out_amount = data.pending_amount;
+  } else if (event.value < 0) {
+    data.out_amount = 0;
+  }
 };
 
 // 날짜 포맷
@@ -100,8 +154,6 @@ const formatDate = (v) => {
       <div class="text-2xl font-semibold">출고 요청</div>
       <div class="button-group">
         <Button label="초기화" severity="contrast" @click="resetFrom" />
-        <Button label="삭제" severity="danger" />
-        <Button label="출고 요청하기" severity="info" />
         <Button label="주문정보 불러오기" @click="openOrderModal" />
         <Button label="출고요청 불러오기" />
       </div>
@@ -120,15 +172,15 @@ const formatDate = (v) => {
           <th>출고코드</th>
           <td><InputText class="w-full" v-model="outInfo.out_code" disabled /></td>
 
-          <th>주문일자</th>
-          <td><InputText class="w-full" disabled v-model="outInfo.ord_date" /></td>
-        </tr>
-        <tr>
           <th>주문코드</th>
           <td><InputText class="w-full" disabled v-model="outInfo.ord_code" /></td>
-
+        </tr>
+        <tr>
           <th>출고요청일</th>
           <td><InputText class="w-full" v-model="outInfo.out_req_date" disabled /></td>
+
+          <th>주문일자</th>
+          <td><InputText class="w-full" disabled v-model="outInfo.ord_date" /></td>
         </tr>
         <tr>
           <th>거래처</th>
@@ -145,11 +197,16 @@ const formatDate = (v) => {
         </tr>
       </tbody>
     </table>
+
+    <div class="button-group2">
+      <Button label="출고 요청하기" severity="info" @click="requestOutbound" />
+      <Button label="삭제" severity="danger" />
+    </div>
   </Fluid>
 
   <!-- 제품 목록 -->
   <Fluid class="card min-h-[500px]">
-    <div class="border-b pb-2 mb-4">
+    <div>
       <h4 class="font-semibold">제품</h4>
     </div>
 
@@ -159,18 +216,18 @@ const formatDate = (v) => {
       </template>
       <Column header="제품명" field="prod_name" headerStyle="width: 200px; padding: 8px 20px;" bodyStyle="padding: 8px 20px;" />
       <Column header="유형" field="prod_type" headerStyle="width: 100px;" bodyStyle="white-space: nowrap;" />
-      <Column header="규격" field="spec" headerStyle="width: 100px" />
-      <Column header="단위" field="unit" headerStyle="width: 100px" />
+      <Column header="규격" field="spec" headerStyle="width: 80px" />
+      <Column header="단위" field="unit" headerStyle="width: 80px" />
       <Column header="주문 수량" field="ord_amount" headerStyle="width: 100px;" />
 
-      <!-- 출고수량 입력 시 미출고수량 자동 계산 -->
-      <Column header="출고 수량" headerStyle="width: 100px;">
+      <Column header="기출고 수량" field="already_out_amount" headerStyle="width: 100px;" />
+      <Column header="미출고 수량" field="pending_amount" headerStyle="width: 100px;" />
+      <Column header="출고 요청 수량" headerStyle="width: 100px;">
         <template #body="{ data }">
-          <InputNumber v-model="data.out_amount" :min="0" :max="Math.min(data.ord_amount, data.current_stock)" @update:modelValue="updatePendingAmount(data)" />
+          <InputNumber v-model="data.out_amount" :min="0" :max="data.pending_amount" @input="(e) => handleOutAmountInput(data, e)" />
         </template>
       </Column>
-      <Column header="미출고 수량" field="pending_amount" headerStyle="width: 100px;" />
-      <Column header="현재 재고" field="current_stock" headerStyle="width: 100px;" />
+      <Column header="남은 재고" field="current_stock" headerStyle="width: 100px;" />
       <Column header="납기일" headerStyle="width: 100px;">
         <template #body="{ data }">
           {{ formatDate(data.delivery_date) }}
@@ -205,5 +262,18 @@ td {
   width: auto;
   min-width: auto;
   padding: 7px 15px;
+}
+
+.button-group2 {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 10px;
+}
+
+.button-group2 :deep(.p-button) {
+  width: auto;
+  min-width: auto;
+  padding: 10px 20px;
 }
 </style>

@@ -42,13 +42,6 @@ router.get(`/outbounds`, async (req, res) => {
   }
 });
 
-// 주문 선택 모달
-router.get("/order-code", async (req, res) => {
-  const { keyword = "" } = req.query;
-  let list = await orderService.findByOrderOrdTbl(keyword);
-  res.send(list);
-});
-
 // 출고 번호 선택 모달
 router.get("/outbound-code", async (req, res) => {
   const { keyword = "" } = req.query;
@@ -77,6 +70,13 @@ router.get("/outbound-emp", async (req, res) => {
   res.send(list);
 });
 
+// 주문 선택 모달
+router.get("/order-code", async (req, res) => {
+  const { keyword = "" } = req.query;
+  let list = await orderService.findByOrderOrdTbl(keyword);
+  res.send(list);
+});
+
 // 주문 정보 단건 조회
 router.get("/order-code/:ord_code", async (req, res) => {
   const ord_code = req.params.ord_code;
@@ -96,6 +96,28 @@ router.get("/order-detail/:ord_code", async (req, res) => {
   const ord_code = req.params.ord_code;
   let result = await orderService.findOrderDetailForOutbound(ord_code);
   res.send(result);
+});
+
+// 출고 요청 생성
+router.post("/outbound-request", async (req, res) => {
+  try {
+    const requestData = req.body;
+    let result = await orderService.createOutboundRequest(requestData);
+    res.send(result);
+  } catch (error) {
+    console.error("출고 요청 생성 실패:", error);
+    res.status(500).send({
+      success: false,
+      message: "출고 요청 생성에 실패했습니다.",
+    });
+  }
+});
+
+// 출고 요청 선택 모달
+router.get("/request-code", async (req, res) => {
+  const { keyword = "" } = req.query;
+  let list = await orderService.findAllOutReq(keyword);
+  res.send(list);
 });
 
 module.exports = router;

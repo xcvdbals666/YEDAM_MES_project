@@ -1,4 +1,4 @@
-<!-- src/components/order/SelectEmployeeModal.vue -->
+<!-- src/components/order/SelectProductModal.vue -->
 <script setup>
 import { ref, watch } from 'vue';
 import { useOrderStore2 } from '@/stores/order2';
