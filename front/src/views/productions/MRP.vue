@@ -266,9 +266,9 @@ const importBOM = async () => {
             </tr>
             <tr>
               <th>계획수립일</th>
-              <td><DatePicker :showIcon="true" :showButtonBar="true" v-model="mrpInfo.planDate" disabled></DatePicker></td>
+              <td><DatePicker :showIcon="true" :showButtonBar="true" v-model="mrpInfo.planDate" dateFormat="yy-mm-dd" disabled></DatePicker></td>
               <th>생산시작일</th>
-              <td><DatePicker :showIcon="true" :showButtonBar="true" v-model="mrpInfo.startDate" disabled></DatePicker></td>
+              <td><DatePicker :showIcon="true" :showButtonBar="true" v-model="mrpInfo.startDate" dateFormat="yy-mm-dd" disabled></DatePicker></td>
             </tr>
             <tr>
               <th>작성자</th>

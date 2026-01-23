@@ -90,11 +90,11 @@ const goDetail = (row) => {
           <td>
             <Fluid class="flex gap-2 items-center">
               <div class="flex-1">
-                <DatePicker :showIcon="true" :showButtonBar="true" v-model="data.mrpStart"></DatePicker>
+                <DatePicker :showIcon="true" :showButtonBar="true" dateFormat="yy-mm-dd" v-model="data.mrpStart"></DatePicker>
               </div>
               <span>-</span>
               <div class="flex-1">
-                <DatePicker :showIcon="true" :showButtonBar="true" v-model="data.mrpEnd"></DatePicker>
+                <DatePicker :showIcon="true" :showButtonBar="true" dateFormat="yy-mm-dd" v-model="data.mrpEnd"></DatePicker>
               </div>
             </Fluid>
           </td>
