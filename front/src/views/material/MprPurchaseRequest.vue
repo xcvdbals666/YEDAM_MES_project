@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, computed } from 'vue';
 import { useMaterialStore } from '@/stores/material2';
 import axios from 'axios';
 import MprRequestHeader from '@/components/material/MprRequestHeader.vue';
@@ -100,54 +100,90 @@ const selectMaterial = (m) => {
   selectedRow.value = null;
 };
 
-// 선택된 Mpr input에 넣기
+// 선택된 MPR(자재구매요청서) 불러오기
 const selectMpr = async (mprCode) => {
   try {
     console.log('선택한 mprCode:', mprCode);
-    // 헤더 조회
-    const header = await store.fetchMprHeader(mprCode);
-    console.log('header:', header);
 
-    // response.data 가 배열이면 [0] 써야 함
+    /*
+      1. MPR 헤더 조회 - 구매요청서 기본 정보 (작성자, 납기일, 참조 MRP 등)
+    */
+    const header = await store.fetchMprHeader(mprCode);
     const h = Array.isArray(header) ? header[0] : header;
 
+    // MPR 기본 정보 세팅
     requestInfo.value.mprCode = h.mpr_code;
     requestInfo.value.reqDate = formatDate(h.reqdate);
     requestInfo.value.deadline = formatDate(h.deadline);
     requestInfo.value.mrpCode = h.mrp_code;
-
-    if (h.mrp_code) {
-      selectedMrpValue.value = {
-        mrp_code: h.mrp_code
-      };
-    }
     requestInfo.value.writer = h.emp_name;
     requestInfo.value.mCode = h.mcode;
     requestInfo.value.department = h.dept_name;
 
-    // 재고 조회
+    /*
+      selectedMrpValue 세팅
+      - 수정 모드에서도 MRP 참조 정보는 표시용으로 유지
+      - watch(selectedMrpValue)에서 isEditMode로 가드됨
+    */
+    selectedMrpValue.value = h.mrp_code ? { mrp_code: h.mrp_code } : null;
+
+    /*
+      2. MPR 상세 조회
+      - 이미 저장된 구매요청 자재 목록
+    */
     const items = await store.fetchDetailItem(mprCode);
     console.log('items:', items);
 
-    requestDetailInfo.value = items.map((d) => ({
-      __key: `${d.mpr_d_code}-${Math.random()}`,
-      sourceType: 'manual',
-      is_deleted: false,
-      mprDCode: d.mpr_d_code,
-      materialName: d.mat_name,
-      curQtt: d.current_qty,
-      lackQtt: d.req_lack_qty,
-      reqQtt: d.req_qtt,
-      unitCode: d.unit,
-      unitLabel: d.unit_label,
-      note: d.note,
-      matSup: d.mat_sup || d.client_code,
-      clientName: d.client_name,
-      matCode: d.mat_code
-    }));
+    /*
+      3. MRP 기준 자재 Set 생성
+      - 이 MPR이 어떤 MRP를 기준으로 만들어졌는지 확인
+      - MRP 계산 결과에 포함된 자재인지 판별하기 위한 용도
+    */
+    let mrpMatSet = null;
+    if (h.mrp_code) {
+      const mrpList = await store.fetchMrpList(h.mrp_code);
+      mrpMatSet = new Set(mrpList.map((x) => x.mat_code));
+    }
 
+    /*
+      4. MPR 상세 + sourceType 구분
+      - MRP 기준 자재  : sourceType = 'mrp'   (읽기 전용, 저장 대상 아님)
+      - 수동 추가 자재 : sourceType = 'manual' (수정/삭제/저장 대상)
+    */
+    requestDetailInfo.value = items.map((d) => {
+      const isMrpMat = mrpMatSet && mrpMatSet.has(d.mat_code);
+
+      return {
+        __key: `${d.mpr_d_code}-${Math.random()}`,
+        sourceType: isMrpMat ? 'mrp' : 'manual',
+        is_deleted: false,
+
+        // MPR 상세 식별자
+        mprDCode: d.mpr_d_code,
+
+        // 자재 정보
+        materialName: d.mat_name,
+        matCode: d.mat_code,
+        matSup: d.mat_sup || d.client_code,
+        clientName: d.client_name,
+
+        // 수량 / 단위
+        curQtt: d.current_qty,
+        lackQtt: d.req_lack_qty,
+        reqQtt: d.req_qtt,
+        unitCode: d.unit,
+        unitLabel: d.unit_label,
+
+        // 비고
+        note: d.note
+      };
+    });
+
+    // 수정 모드 진입
     showMprModal.value = false;
     isEditMode.value = true;
+
+    // 발주 진행 여부에 따라 수정 가능 여부 판단
     isEditable.value = await store.checkEditable(mprCode);
   } catch (e) {
     console.error(e);
@@ -203,10 +239,10 @@ watch(selectedMrpValue, async (val) => {
   //MRP 자재 조회
   const mrpItems = await store.fetchMrpList(val.mrp_code);
 
-  requestDetailInfo.value = mrpItems.map((d2) => ({
+  const mrpRows = mrpItems.map((d2) => ({
     __key: `${d2.mat_code}-${Math.random()}`,
     sourceType: 'mrp',
-    mprDCode: null, // 아직 구매요청 아님
+    mprDCode: null,
     is_deleted: false,
     materialName: d2.mat_name,
     curQtt: d2.current_qty,
@@ -219,6 +255,18 @@ watch(selectedMrpValue, async (val) => {
     clientName: d2.client_name,
     matCode: d2.mat_code
   }));
+
+  const manualRows = requestDetailInfo.value.filter((r) => r.sourceType !== 'mrp');
+
+  requestDetailInfo.value = [...mrpRows, ...manualRows];
+});
+
+const canSelectMrp = computed(() => {
+  // 수정 + 이미 MRP 있음 → 선택 불가
+  if (isEditMode.value && requestInfo.value.mrpCode) return false;
+
+  // 나머지는 전부 가능
+  return true;
 });
 
 // 자재 선택 모달 열렸을 때 값 세팅
@@ -233,6 +281,11 @@ const doReset = async (askConfirm = true) => {
     if (!confirm('입력한 검색 조건을 모두 초기화하시겠습니까?')) return;
   }
 
+  // 1. 먼저 모드 초기화
+  isEditMode.value = false;
+  isEditable.value = true;
+
+  // 2. 데이터 초기화
   requestInfo.value = initialRequestInfo();
   selectedMrpValue.value = null;
 
@@ -240,9 +293,6 @@ const doReset = async (askConfirm = true) => {
   requestInfo.value.mprCode = response.data.mprCode;
 
   requestDetailInfo.value = [initialDetailRow()];
-
-  isEditMode.value = false;
-  isEditable.value = true;
 };
 
 // 초기화 버튼
@@ -263,7 +313,13 @@ const save = async () => {
     return;
   }
 
-  const validItems = requestDetailInfo.value.filter((m) => !m.is_deleted && m.matCode);
+  const validItems = requestDetailInfo.value.filter((m) => m.matCode);
+  const aliveItems = validItems.filter((m) => !m.is_deleted);
+
+  if (aliveItems.length === 0) {
+    alert('자재를 한 개 이상 선택하세요');
+    return;
+  }
 
   console.log(
     validItems.map((v) => ({
@@ -273,7 +329,7 @@ const save = async () => {
     }))
   );
 
-  if (validItems.length === 0) {
+  if (aliveItems.length === 0) {
     alert('자재를 한 개 이상 선택하세요');
     return;
   }
@@ -296,15 +352,17 @@ const save = async () => {
       mrpCode: requestInfo.value.mrpCode,
       mCode: requestInfo.value.mCode
     },
-    requestDetail: validItems.map((val) => ({
-      mprDCode: val.mprDCode || null, // 신규인지 수정인지
-      is_deleted: val.is_deleted || false, //삭제 플래그
-      reqQtt: val.reqQtt,
-      unitCode: val.unitCode,
-      note: val.note,
-      matSup: val.matSup,
-      matCode: val.matCode
-    }))
+    requestDetail: requestDetailInfo.value
+      .filter((v) => v.matCode) // 자재 있는 것만
+      .map((v) => ({
+        mprDCode: v.mprDCode || null,
+        is_deleted: v.is_deleted || false,
+        reqQtt: v.reqQtt,
+        unitCode: v.unitCode,
+        note: v.note,
+        matSup: v.matSup,
+        matCode: v.matCode
+      }))
   };
 
   isSaved.value = true;
@@ -337,6 +395,7 @@ watch(isEditable, (val) => {
       @update:selectedMrpValue="selectedMrpValue = $event"
       @search-mrp="searchMrp"
       @open-mpr="showMprModal = true"
+      :canSelectMrp="canSelectMrp"
       @select-employee="showWriterModal = true"
       :isSaved="isSaved"
       :isEditable="isEditable"

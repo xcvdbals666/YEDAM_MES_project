@@ -22,4 +22,10 @@ router.get(`/qiorderlist`, async (req, res) => {
   res.send(list);
 });
 
+// 품질 검사 결과 목록 조회
+router.get(`/qioresultlist`, async (req, res) => {
+  let list = await qualityService2.findAllResultList();
+  res.send(list);
+});
+
 module.exports = router;

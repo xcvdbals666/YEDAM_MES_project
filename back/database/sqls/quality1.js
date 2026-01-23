@@ -12,10 +12,10 @@ const selectAllQiOrderList = `SELECT *
 // 검사지에 해당하는 자재 및 검사항목 불러오기
 const selectQiOrderItem = `SELECT q.qio_code, m.deadline, b.mat_name, b.mat_code, b.mat_type, m.req_qtt, c.note, c2.com_value, c2.note, q2.inspection_item    
                            FROM qio_tbl q
-                           JOIN mpo_d_tbl m ON q.mpo_d_code = m.mpo_d_code
-                           JOIN bom_mat b ON m.mat_code = b.mat_code
-                           JOIN common_code c ON b.unit = c.com_value
-                           JOIN common_code c2 ON b.mat_type = c2.com_value
+                           LEFT JOIN mpo_d_tbl m ON q.mpo_d_code = m.mpo_d_code
+                           LEFT JOIN bom_mat b ON m.mat_code = b.mat_code
+                           LEFT JOIN common_code c ON b.unit = c.com_value
+                           LEFT JOIN common_code c2 ON b.mat_type = c2.com_value
                            LEFT JOIN qcr_tbl q2 ON b.mat_type = q2.com_value
                            WHERE q.qio_code = ?
                            GROUP BY q.qio_code, q2.inspection_item`;
@@ -78,7 +78,59 @@ const insertQio_tblPro = `INSERT INTO qio_tbl SET qio_code = ?,
 const deleteQiOrder = `DELETE FROM qio_tbl
                        WHERE qio_code = ?`;
 
-module.exports = {
+// 검사 결과서 관리
+
+// 검사 지시서 불러오기
+const selectAllQirQioOrder = `SELECT q.qio_code, qio_date, e.emp_name, q.prdr_code, q.mpo_d_code
+                          FROM qio_tbl q
+                          left JOIN emp_tbl e ON q.emp_code = e.emp_code
+                          left join qir_tbl q2 ON q.qio_code = q2.qio_code
+                          WHERE qir_code IS NULL`;
+
+// 검사결과서 코드 생성(qir_code)
+const createQirCode = `SELECT concat(
+                              'QIR-',
+                               LPAD(ifnull((SELECT MAX(SUBSTR(qir_code, -3))
+                                            FROM qir_tbl										
+                                            FOR UPDATE),0) + 1
+                                     , 3 , '0')) AS newQir`;
+
+// 검사결과서 등록(자재)
+const insertQir_tbl = `INSERT INTO qir_tbl SET qir_code = ?,
+                                               qio_code = ?,
+                                               start_date = current_timestamp(),
+                                               qir_emp_code = 'EMP-10005',
+                                               qcr_code = ?,
+                                               mpo_d_code = ?`;
+
+// 검사결과서 등록(생산)
+const insertQir_tblPro = `INSERT INTO qir_tbl SET qir_code = ?,
+                                               qio_code = ?,
+                                               start_date = current_timestamp(),
+                                               qir_emp_code = 'EMP-10005',
+                                               qcr_code = ?`;
+
+// 검사지 정보 불러오기(생산일 경우)
+const selectQirProdInfo = `SELECT w.prdp_code, p.end_date, p.production_qtt, p.prdr_code, c.note, p4.po_code, p4.po_name, p7.prod_name, p7.prod_type, c2.note AS type  
+                             FROM prdr_tbl p 
+                             LEFT JOIN qio_tbl q ON p.prdr_code = q.prdr_code
+                             LEFT JOIN common_code c ON p.stat = c.com_value  
+                             LEFT JOIN  wko_tbl w ON p.work_order_code = w.wko_code
+                             LEFT JOIN prdr_d_tbl p2 ON p.prdr_code = p2.prdr_code
+                             LEFT JOIN line_d_tbl l ON p2.line_eq_code = l.line_eq_code
+                             LEFT JOIN prod_proc_d_tbl p3 ON l.pp_code = p3.pp_code
+                             LEFT JOIN po_tbl p4 ON p3.po_code = p4.po_code
+                             LEFT JOIN prdp_tbl p5 ON w.prdp_code = p5.prdp_code
+                             LEFT JOIN prdp_d_tbl p6 ON p5.prdp_code = p6.prdp_code
+                             LEFT JOIN prod_tbl p7 ON p6.prod_code = p7.prod_code
+                             LEFT JOIN common_code c2 ON p7.prod_type = c2.com_value
+                             WHERE q.qio_code = ?
+                             GROUP BY p.prdr_code`;
+
+// 검사결과서 정보 불러오기
+const selectQirList = `SELECT * FROM qir_tbl WHERE result IS NULL`;
+
+const selectAllQirOrder = (module.exports = {
   selectAllQiOrderCheckList,
   createQioCode,
   selectAllQiOrderList,
@@ -88,4 +140,10 @@ module.exports = {
   insertQio_tbl,
   deleteQiOrder,
   insertQio_tblPro,
-};
+  createQirCode,
+  insertQir_tbl,
+  insertQir_tblPro,
+  selectAllQirQioOrder,
+  selectQirProdInfo,
+  selectQirList,
+});

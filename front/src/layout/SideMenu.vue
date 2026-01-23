@@ -105,9 +105,19 @@ const model = ref([
             to: '/qiorder'
           },
           {
-            label: '품질검사 목록조회',
+            label: '품질검사 지시 목록조회',
             icon: 'pi pi-fw pi-sign-in',
             to: '/qiorderlist'
+          },
+          {
+            label: '품질검사 결과관리',
+            icon: 'pi pi-fw pi-sign-in',
+            to: '/qiresult'
+          },
+          {
+            label: '품질검사 결과 목록조회',
+            icon: 'pi pi-fw pi-sign-in',
+            to: '/qioresultlist'
           }
         ]
       },
