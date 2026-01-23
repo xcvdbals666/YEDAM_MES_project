@@ -5,12 +5,15 @@ const selectAllQiOrderCheckList = `SELECT q.qcr_code ,q.inspection_item, q.range
                                    JOIN common_code c ON q.unit = c.com_value`;
 
 // 검사지 전체 불러오기
-const selectAllQiOrderList = `SELECT *
+const selectAllQiOrderList = `SELECT q.qio_code, qio_date, e.emp_name, q.prdr_code, q.mpo_d_code
                               FROM qio_tbl q
-                              JOIN emp_tbl e ON q.emp_code = e.emp_code`;
+                              JOIN emp_tbl e ON q.emp_code = e.emp_code
+                              LEFT JOIN qir_tbl q2 ON q.qio_code = q2.qio_code
+                              WHERE q2.qir_code IS NULL
+                              GROUP BY q.qio_code`;
 
 // 검사지에 해당하는 자재 및 검사항목 불러오기
-const selectQiOrderItem = `SELECT q.qio_code, m.deadline, b.mat_name, b.mat_code, b.mat_type, m.req_qtt, c.note, c2.com_value, c2.note, q2.inspection_item    
+const selectQiOrderItem = `SELECT q.qio_code, q.insp_vol, m.deadline, b.mat_name, b.mat_code, b.mat_type, m.req_qtt, c.note, c2.com_value, c2.note, q2.inspection_item    
                            FROM qio_tbl q
                            LEFT JOIN mpo_d_tbl m ON q.mpo_d_code = m.mpo_d_code
                            LEFT JOIN bom_mat b ON m.mat_code = b.mat_code
@@ -34,18 +37,16 @@ const selectQiProduceList = `SELECT w.prdp_code, p.end_date, p.production_qtt, p
                              LEFT JOIN prdp_d_tbl p6 ON p5.prdp_code = p6.prdp_code
                              LEFT JOIN prod_tbl p7 ON p6.prod_code = p7.prod_code
                              LEFT JOIN common_code c2 ON p7.prod_type = c2.com_value
-                             WHERE q.qio_code is null
-                             GROUP BY p.prdr_code`;
+                             WHERE q.qio_code is null AND p.stat = 'b3'
+                             GROUP BY p5.prdp_code`;
 
 // 발주서상세 불러오기
-const selectQiMpoList = `SELECT m.mpo_d_code, m.deadline, sum(q.insp_vol) sum, b.mat_code, b.mat_name, b.mat_type, m.req_qtt, c2.note, m.req_qtt - sum(q.insp_vol) as remaining_amount
+const selectQiMpoList = `SELECT m.mpo_d_code, m.deadline, q.qio_code, ifnull(q.insp_vol,0) insp_vol, b.mat_code, b.mat_name, b.mat_type, m.req_qtt, c2.note, m.req_qtt - ifnull(q.insp_vol,0) as remaining_amount
                          FROM mpo_d_tbl m 
                          LEFT JOIN qio_tbl q ON m.mpo_d_code = q.mpo_d_code 
                          JOIN bom_mat b ON m.mat_code = b.mat_code
                          JOIN common_code c2 ON b.mat_type = c2.com_value
-                         WHERE qio_code IS NULL or m.req_qtt - q.insp_vol > 0
-                         group by m.mpo_d_code
-                         HAVING  m.req_qtt > sum
+                         WHERE qio_code IS NULL                         
                           `;
 
 // qio_code 생성
@@ -128,12 +129,11 @@ const selectQirProdInfo = `SELECT w.prdp_code,q.qio_code, p.end_date, p.producti
                              GROUP BY p.prdr_code`;
 
 // 검사결과서 정보 불러오기
-const selectQirList = `SELECT  *, IFNULL((q2.insp_vol- IFNULL(q.pass_qtt, 0) - IFNULL(unpass_qtt,0)),0 ) AS 'remaining'
+const selectQirList = `SELECT  e.emp_name, q.end_date, IFNULL(q2.insp_vol,0) insp_vol, q2.mpo_d_code, q2.prdr_code, q.qcr_code, q.qio_code, q2.qio_date, q.qir_code, q.start_date, IFNULL(q.unpass_qtt,0) unpass_qtt, IFNULL(q.pass_qtt, 0) pass_qtt, IFNULL((q2.insp_vol- IFNULL(q.pass_qtt, 0) - IFNULL(unpass_qtt,0)),0 ) AS 'remaining'
                        FROM qir_tbl q
                        LEFT JOIN emp_tbl e ON q.qir_emp_code = e.emp_code
                        LEFT JOIN qio_tbl q2 ON q.qio_code = q2.qio_code
-                       WHERE q.result IS NULL
-                       `;
+                                              `;
 
 // 검사 결과서 합격 불합격 수정
 const updateQirList = `UPDATE qir_tbl 
@@ -143,6 +143,10 @@ const updateQirList = `UPDATE qir_tbl
                            pass_qtt = ?,
                            unpass_rate =?
                        WHERE qio_code = ? AND qcr_code = ?`;
+
+// 검사결과서 삭제
+const deleteQir = `DELETE FROM qir_tbl
+                       WHERE qio_code = ?`;
 
 const selectAllQirOrder = (module.exports = {
   selectAllQiOrderCheckList,
@@ -161,4 +165,5 @@ const selectAllQirOrder = (module.exports = {
   selectQirProdInfo,
   selectQirList,
   updateQirList,
+  deleteQir,
 });

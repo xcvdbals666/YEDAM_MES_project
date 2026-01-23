@@ -44,8 +44,8 @@ const addQiOrderForm = async (data) => {
   console.log("newQio_code: :", qio_code);
 
   try {
-    if (data.mat_type == "i3") {
-      const { insp_date, insp_vol, mpo_d_code, mat_type } = data;
+    if (data.mpo_d_code != null || data.mpo_d_code != "") {
+      const { insp_date, insp_vol, mpo_d_code } = data;
       console.log("전송 데이터:", [qio_code, insp_date, insp_vol, mpo_d_code]);
       let list = await mysql.query(
         "insertQio_tbl",
@@ -54,7 +54,7 @@ const addQiOrderForm = async (data) => {
       );
       return list;
     } else {
-      const { insp_date, insp_vol, prdr_code, mat_type } = data;
+      const { insp_date, insp_vol, prdr_code } = data;
       console.log("전송 데이터:", [qio_code, insp_date, insp_vol, prdr_code]);
       let list = await mysql.query(
         "insertQio_tblPro",
@@ -142,6 +142,12 @@ const modifyQirList = async (data) => {
   return list;
 };
 
+// 검사결과서 삭제
+const removeqir = async (id) => {
+  let list = await mysql.query("deleteQir", [id], "quality1");
+  return list;
+};
+
 module.exports = {
   findAllQiOrderCheckList,
   findAllQiOrderList,
@@ -155,4 +161,5 @@ module.exports = {
   findQirProdInfo,
   findQirList,
   modifyQirList,
+  removeqir,
 };

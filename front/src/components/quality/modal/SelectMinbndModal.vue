@@ -27,7 +27,8 @@ console.log(selectedProducts.value);
     <p v-else class="leading-normal m-0">현재 죄회할 내용이 없습니다.</p>
 
     <template #footer>
-      <Button label="확인" @click="$emit('selectComp', selectedProducts)" />
+      <Button label="확인" @click="$emit('selectComp', selectedProducts)" v-if="props.minbnd.length > 0" />
+      <Button label="확인" @click="$emit('close')" v-else />
       <Button label="취소" severity="secondary" @click="$emit('close')" />
     </template>
   </Dialog>

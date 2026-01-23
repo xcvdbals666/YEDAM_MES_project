@@ -14,17 +14,18 @@ const quality1 = useQuality1Store();
 
 // 검사지시지 불러오기 버튼
 let orderDisplay = ref(false);
+
 const selectQiOrder = async () => {
-  console.log('adadfsda');
   await quality1.fetchQirQioOrderList();
   orderDisplay.value = true;
 };
 
 // 선택값 불러오기
 let orderInput = ref({ qio_code: '', qio_date: '', emp_name: '' }); // 검사지 불러오기 선택값
-let seletedMinbnd = ref({ mpo_d_code: '', mat_code: '', mat_name: '', req_qtt: '', note: '', mat_type: '' }); // Item 컴포넌트에 들어갈 값
+let seletedMinbnd = ref({ mpo_d_code: '', mat_code: '', mat_name: '', insp_vol: '', note: '', mat_type: '' }); // Item 컴포넌트에 들어갈 값
 let allQiList = ref([]); // main 컴포넌트에 들어갈 값(검사항목들)
 let realSelectedProdInfo = ref([]);
+let callQiOrder = ref(false);
 
 const selectedOrder = async (data) => {
   allQiList.value = [];
@@ -39,7 +40,7 @@ const selectedOrder = async (data) => {
     if (quality1.qiOrderThing.length > 0) {
       seletedMinbnd.value = quality1.qiOrderThing[0];
       if (data.remaining > 0) {
-        seletedMinbnd.value.req_qtt = data.remaining;
+        seletedMinbnd.value.insp_vol = data.remaining;
       }
 
       quality1.qcrInfo.forEach((item) => {
@@ -47,6 +48,7 @@ const selectedOrder = async (data) => {
           allQiList.value.push(item);
         }
       });
+      console.log('allQiList: ', allQiList);
     }
   } else if (data != undefined && data.prdr_code != null) {
     realSelectedProdInfo.value = data;
@@ -56,7 +58,7 @@ const selectedOrder = async (data) => {
       mpo_d_code: quality1.qirProdInfo[0].prdp_code,
       mat_code: quality1.qirProdInfo[0].prdp_code,
       mat_name: quality1.qirProdInfo[0].prod_name,
-      req_qtt: quality1.qirProdInfo[0].production_qtt,
+      insp_vol: quality1.qirProdInfo[0].production_qtt,
       note: quality1.qirProdInfo[0].type,
       mat_type: quality1.qirProdInfo[0].prod_type,
       qio_code: quality1.qirProdInfo[0].qio_code
@@ -80,43 +82,71 @@ const selectedOrder = async (data) => {
 const closeMOdal = () => {
   orderDisplay.value = false;
   qirDisplay.value = false;
+  callQiOrder.value = false;
 };
 
 // 결과서 등록
+const sleep = (ms) => {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+    console.log('전송중');
+  });
+};
 const submitQiResult = async () => {
   if (seletedMinbnd.value.mat_type == 'i3' || seletedMinbnd.value.mat_type == 'i4') {
-    allQiList.value.forEach(async (submitQirInfo) => {
+    for (let submitQirInfo of allQiList.value) {
       let data = { qio_code: orderInput.value.qio_code, qcr_code: submitQirInfo.qcr_code, mpo_d_code: orderInput.value.mpo_d_code, mat_type: submitQirInfo.com_value };
       await quality1.submitQiResult(data);
-    });
+
+      await sleep(500);
+    }
   } else {
     for (let submitQirInfo of allQiList.value) {
       let data = { qio_code: orderInput.value.qio_code, qcr_code: submitQirInfo.qcr_code, mat_type: submitQirInfo.com_value };
       await quality1.submitQiResult(data);
+      await sleep(500);
     }
   }
+  alert('등록완료');
   await quality1.fetchQirQioOrderList();
-  orderInput.value = { qir_code: '', qio_date: '', emp_name: '' };
-  seletedMinbnd.value = { mpo_d_code: '', mat_code: '', mat_name: '', req_qtt: '', note: '', mat_type: '' };
-  allQiList.value = [];
+  orderInput.value = { qio_code: '', qio_date: '', emp_name: '' }; // 검사지 불러오기 선택값
+  seletedMinbnd.value = { mpo_d_code: '', mat_code: '', mat_name: '', req_qtt: '', note: '', mat_type: '' }; // Item 컴포넌트에 들어갈 값
+  qirBasicInfo = { qir_code: '', qio_date: '', emp_name: '' }; // 검사 결과서 불러오기 기본정보
+
+  allQiList.value = []; // main 컴포넌트에 들어갈 값(검사항목들)
+  realSelectedProdInfo.value = [];
+  quality1.state = 0;
+  callQiOrder.value = false;
 };
 
 // 검사결과서 불러오기
 let qirDisplay = ref(false);
 const callQiResult = async () => {
   await quality1.fetchQirList();
-  quality1.state = 1;
+  if (quality1.qirList.length > 0) {
+    quality1.state = 1;
+  }
   qirDisplay.value = true;
 };
 
 // 검사결과서 선택값 가져오기
 let checkCallQir = ref(true);
-let qirBasicInfo = ref({ qio_code: '', qio_date: '', emp_name: '' }); // 검사 결과서 불러오기 기본정보
+let callQirList = ref(false);
+let qirBasicInfo = ref({ qir_code: '', qio_date: '', emp_name: '' }); // 검사 결과서 불러오기 기본정보
 const selectQirList = (data) => {
   qirDisplay.value = false;
+  callQirList.value = true;
   console.log('검사결과서 선택값: ', data);
-
   qirBasicInfo.value = data;
+  qirBasicInfo.value.qir_code = qirBasicInfo.value.qir_code;
+
+  for (let i = 0; i < quality1.realQirList.length; i++) {
+    console.log(quality1.realQirList[i].qir_code);
+    // if (qirBasicInfo.value.qio_code == quality1.realQirList[i].qio_code) {
+    //   qirBasicInfo.value.qir_code.push(quality1.realQirList[i].qir_code);
+    //   console.log(qirBasicInfo.value.qir_code);
+    // }
+  }
 
   selectedOrder(data);
   checkCallQir.value = false;
@@ -128,7 +158,7 @@ const updateQiResult = async () => {
   console.log('결과값 수정', allQiList.value, seletedMinbnd.value, orderInput.value);
   let date = new Date();
   let dDay = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
-  // 처음검사
+
   if (quality1.qirProdInfo.length > 0) {
     if (seletedMinbnd.value.req_qtt > quality1.qirProdInfo[0].production_qtt) {
       alert('수량이 초과했습니다. 다시 지정해주세요.');
@@ -169,9 +199,9 @@ const updateQiResult = async () => {
       } else if (quality1.qirProdInfo[0].production_qtt == seletedMinbnd.value.req_qtt) {
         for (let data of allQiList.value) {
           if (data.result == '합격') {
-            info.value = { result: 'g2', end_date: dDay, unpass_qtt: 0, pass_qtt: seletedMinbnd.value.req_qtt, unpass_rate: null, qio_code: seletedMinbnd.value.qio_code, qcr_code: data.qcr_code };
+            info.value = { result: 'g2', end_date: dDay, unpass_qtt: 0, pass_qtt: seletedMinbnd.value.req_qtt, unpass_rate: countRate(), qio_code: seletedMinbnd.value.qio_code, qcr_code: data.qcr_code };
           } else if (data.result == '불합격') {
-            info.value = { result: 'g1', end_date: dDay, unpass_qtt: seletedMinbnd.value.req_qtt, pass_qtt: null, unpass_rate: null, qio_code: seletedMinbnd.value.qio_code, qcr_code: data.qcr_code };
+            info.value = { result: 'g1', end_date: dDay, unpass_qtt: seletedMinbnd.value.req_qtt, pass_qtt: 0, unpass_rate: countRate(), qio_code: seletedMinbnd.value.qio_code, qcr_code: data.qcr_code };
           }
           await quality1.fetchModifyQirList(info.value);
         }
@@ -193,9 +223,9 @@ const updateQiResult = async () => {
       } else if (quality1.qiOrderThing[0].req_qtt == seletedMinbnd.value.req_qtt) {
         for (let data of allQiList.value) {
           if (data.result == '합격') {
-            info.value = { result: 'g2', end_date: dDay, unpass_qtt: null, pass_qtt: seletedMinbnd.value.req_qtt, unpass_rate: null, qio_code: seletedMinbnd.value.qio_code, qcr_code: data.qcr_code };
+            info.value = { result: 'g2', end_date: dDay, unpass_qtt: null, pass_qtt: seletedMinbnd.value.req_qtt, unpass_rate: countRate(), qio_code: seletedMinbnd.value.qio_code, qcr_code: data.qcr_code };
           } else if (data.result == '불합격') {
-            info.value = { result: 'g1', end_date: dDay, unpass_qtt: seletedMinbnd.value.req_qtt, pass_qtt: null, unpass_rate: null, qio_code: seletedMinbnd.value.qio_code, qcr_code: data.qcr_code };
+            info.value = { result: 'g1', end_date: dDay, unpass_qtt: seletedMinbnd.value.req_qtt, pass_qtt: null, unpass_rate: countRate(), qio_code: seletedMinbnd.value.qio_code, qcr_code: data.qcr_code };
           }
           await quality1.fetchModifyQirList(info.value);
         }
@@ -233,17 +263,20 @@ const updateQiResult = async () => {
               end_date: dDay,
               unpass_qtt: orderInput.value.unpass_qtt,
               pass_qtt: orderInput.value.pass_qtt + seletedMinbnd.value.req_qtt,
-              unpass_rate: null,
+              unpass_rate: countRate(),
               qio_code: seletedMinbnd.value.qio_code,
               qcr_code: data.qcr_code
             };
+            if (orderInput.value.unpass_qtt > 0) {
+              info.value.result = 'g1';
+            }
           } else if (data.result == '불합격') {
             info.value = {
               result: 'g1',
               end_date: dDay,
               unpass_qtt: orderInput.value.unpass_qtt + seletedMinbnd.value.req_qtt,
               pass_qtt: orderInput.value.pass_qtt,
-              unpass_rate: null,
+              unpass_rate: countRate(),
               qio_code: seletedMinbnd.value.qio_code,
               qcr_code: data.qcr_code
             };
@@ -272,17 +305,20 @@ const updateQiResult = async () => {
               end_date: dDay,
               unpass_qtt: orderInput.value.unpass_qtt,
               pass_qtt: orderInput.value.pass_qtt + seletedMinbnd.value.req_qtt,
-              unpass_rate: null,
+              unpass_rate: countRate(),
               qio_code: seletedMinbnd.value.qio_code,
               qcr_code: data.qcr_code
             };
+            if (orderInput.value.unpass_qtt > 0) {
+              info.value.result = 'g1';
+            }
           } else if (data.result == '불합격') {
             info.value = {
               result: 'g1',
               end_date: dDay,
               unpass_qtt: orderInput.value.unpass_qtt + seletedMinbnd.value.req_qtt,
               pass_qtt: orderInput.value.pass_qtt,
-              unpass_rate: null,
+              unpass_rate: countRate(),
               qio_code: seletedMinbnd.value.qio_code,
               qcr_code: data.qcr_code
             };
@@ -292,12 +328,82 @@ const updateQiResult = async () => {
       }
     }
   }
+  alert('합격, 불합격 등록 완료');
+  orderInput.value = { qio_code: '', qio_date: '', emp_name: '' }; // 검사지 불러오기 선택값
+  seletedMinbnd.value = { mpo_d_code: '', mat_code: '', mat_name: '', req_qtt: '', note: '', mat_type: '' }; // Item 컴포넌트에 들어갈 값
+  qirBasicInfo = { qir_code: '', qio_date: '', emp_name: '' }; // 검사 결과서 불러오기 기본정보
+
+  allQiList.value = []; // main 컴포넌트에 들어갈 값(검사항목들)
+  realSelectedProdInfo.value = [];
+  quality1.state = 0;
+  callQiOrder.value = false;
+};
+
+// 불합격률 계산
+const countRate = () => {
+  if (orderInput.value.unpass_qtt == null) {
+    orderInput.value.unpass_qtt = 0;
+  } else if (orderInput.value.pass_qtt == null) {
+    orderInput.value.pass_qtt = 0;
+  }
+
+  if (orderInput.value.unpass_qtt > 0) {
+    return (orderInput.value.unpass_qtt + seletedMinbnd.value.req_qtt) / orderInput.value.insp_vol;
+  } else {
+    return orderInput.value.unpass_qtt / orderInput.value.insp_vol;
+  }
+};
+
+// 검사 결과서 삭제
+const removeQiResult = async () => {
+  if (quality1.qiOrderThing.length > 0) {
+    await quality1.fetchRemoveQir(quality1.qiOrderThing[0].qio_code);
+    orderInput.value = { qio_code: '', qio_date: '', emp_name: '' }; // 검사지 불러오기 선택값
+    seletedMinbnd.value = { mpo_d_code: '', mat_code: '', mat_name: '', req_qtt: '', note: '', mat_type: '' }; // Item 컴포넌트에 들어갈 값
+    qirBasicInfo = { qir_code: '', qio_date: '', emp_name: '' }; // 검사 결과서 불러오기 기본정보
+
+    allQiList.value = []; // main 컴포넌트에 들어갈 값(검사항목들)
+    realSelectedProdInfo.value = [];
+    quality1.state = 0;
+    callQiOrder.value = false;
+  } else if (quality1.qirProdInfo.length > 0) {
+    await quality1.fetchRemoveQir(quality1.qirProdInfo[0].qio_code);
+    orderInput.value = { qio_code: '', qio_date: '', emp_name: '' }; // 검사지 불러오기 선택값
+    seletedMinbnd.value = { mpo_d_code: '', mat_code: '', mat_name: '', req_qtt: '', note: '', mat_type: '' }; // Item 컴포넌트에 들어갈 값
+    qirBasicInfo = { qir_code: '', qio_date: '', emp_name: '' }; // 검사 결과서 불러오기 기본정보
+
+    allQiList.value = []; // main 컴포넌트에 들어갈 값(검사항목들)
+    realSelectedProdInfo.value = [];
+    quality1.state = 0;
+    callQiOrder.value = false;
+  }
+};
+
+// 검사 결과서 초기화버튼
+const resetQiResult = () => {
+  orderInput.value = { qio_code: '', qio_date: '', emp_name: '' }; // 검사지 불러오기 선택값
+  seletedMinbnd.value = { mpo_d_code: '', mat_code: '', mat_name: '', req_qtt: '', note: '', mat_type: '' }; // Item 컴포넌트에 들어갈 값
+  qirBasicInfo = { qir_code: '', qio_date: '', emp_name: '' }; // 검사 결과서 불러오기 기본정보
+
+  allQiList.value = []; // main 컴포넌트에 들어갈 값(검사항목들)
+  realSelectedProdInfo.value = [];
+  quality1.state = 0;
+  callQiOrder.value = false;
 };
 </script>
 <template>
-  <QiResultHeader :quality-state="quality1.state" :qir-basic-info="qirBasicInfo" @submit-qi-result="submitQiResult" @update-qi-result="updateQiResult" @call-qi-result="callQiResult"></QiResultHeader>
-  <QiResultItem :selected-minbnd="seletedMinbnd" :key="seletedMinbnd" :check-call-qir="checkCallQir" @select-qi-order="selectQiOrder"></QiResultItem>
-  <QiResultMain :all-qi-list="allQiList"></QiResultMain>
+  <QiResultHeader
+    :quality-state="quality1.state"
+    :qir-basic-info="qirBasicInfo"
+    :call-qi-order="callQiOrder"
+    @reset-qi-result="resetQiResult"
+    @remove-qi-result="removeQiResult"
+    @submit-qi-result="submitQiResult"
+    @update-qi-result="updateQiResult"
+    @call-qi-result="callQiResult"
+  ></QiResultHeader>
+  <QiResultItem :selected-minbnd="seletedMinbnd" :key="seletedMinbnd" :check-call-qir="checkCallQir" :call-qir-list="callQirList" @select-qi-order="selectQiOrder"></QiResultItem>
+  <QiResultMain :all-qi-list="allQiList" :quality-state="quality1.state"></QiResultMain>
   <SelectQiOrderModal :display="orderDisplay" :qi-order-list="quality1.qiOrderList" @close="closeMOdal" @selected-order="selectedOrder"></SelectQiOrderModal>
   <SelectQirListModal :display="qirDisplay" :qi-order-list="quality1.qirList" @close="closeMOdal" @select-qir-list="selectQirList"></SelectQirListModal>
 </template>
