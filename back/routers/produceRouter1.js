@@ -131,4 +131,15 @@ router.get("/prdrDDetail/:prdr_d_code", async (req, res) => {
   res.json(data);
 });
 
+//Bulletin 공정 조회
+router.get('/wipBulletin/:wkoCode', async (req, res) => {
+  try {
+    const { wkoCode } = req.params;
+    const data = await produceService.getWipBulletin(wkoCode);
+    res.json(data);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'bulletin 조회 실패', error: String(err.message || err) });
+  }
+});
 module.exports = router;

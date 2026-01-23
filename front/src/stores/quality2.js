@@ -14,8 +14,10 @@ export const useQualityStore2 = defineStore('quality2', {
   //action
   actions: {
     // 품질검사 목록조회
-    async fetchQiOrderList({ keyword }) {
-      const res = await axios.get(`/api/quality/qi-order`, { params: keyword });
+    async fetchQiOrderList({ keyword } = {}) {
+      const res = await axios.get(`/api/quality/qi-order`, {
+        params: { keyword }
+      });
       this.qiOrderList = res.data;
     },
 
@@ -40,8 +42,10 @@ export const useQualityStore2 = defineStore('quality2', {
     },
 
     // 품질 검사 결과 목록 조회
-    async fetchQiResultList({ keyword }) {
-      const res = await axios.get(`/api/quality/qioresultlist`, { params: keyword });
+    async fetchQiResultList({ keyword } = {}) {
+      const res = await axios.get(`/api/quality/qioresultlist`, {
+        params: { keyword }
+      });
       this.qiResultList = res.data;
     }
   },

@@ -149,7 +149,11 @@ const searchMpoTbl = async (keyword) => {
 
 // 발주서 등록 (기본정보 + 자재 상세)
 const addMpoTbl = async (data) => {
-  const statCode = data.statCode || "c1"; // data에서 statCode 꺼내기
+  // statCode 변환 추가
+  let statCode = data.statCode || "c1";
+  if (statCode === "요청완료") statCode = "c1";
+  if (statCode === "입고완료") statCode = "c2";
+
   const mpoData = data.mpoData;
   // 1. 발주서 번호 자동생성
   let nextCodeResult = await mysql.query("selectNextMpoCode", [], "material1");
@@ -217,6 +221,10 @@ const addMpoTbl = async (data) => {
 
 // 발주서 수정
 const updateMpoTbl = async (statCode, purchaseCode, mpoData) => {
+  // statCode 변환 추가
+  if (statCode === "요청완료") statCode = "c1";
+  if (statCode === "입고완료") statCode = "c2";
+
   // 1. 발주서 기본정보 수정
   let result = await mysql.query(
     "updateMpoTbl",
@@ -353,14 +361,78 @@ const addInbound = async (items) => {
         item.inbnd_qtt, // ord_qtt = inbnd_qtt
         lotNum,
         item.mat_sup,
-        item.qio_code || "",
+        item.qio_code || null,
+        item.mcode,
+      ],
+      "material1",
+    );
+    // 5. 발주서 상태 업데이트
+    if (item.qio_code) {
+      await mysql.query("updateMpoStatByQioCode", [item.qio_code], "material1");
+    }
+
+    results.push({
+      minbnd_code: minbndCode,
+      lot_num: lotNum,
+    });
+  }
+
+  return { status: "success", results };
+};
+
+// 완제품 품질검사 합격 목록 조회
+const findPassedProductQirList = async () => {
+  let list = await mysql.query("selectPassedProductList", [], "material1");
+  return list;
+};
+
+// 완제품 입고 등록 (여러 건)
+const addProductInbound = async (items) => {
+  const results = [];
+
+  for (let item of items) {
+    // 1. 완제품 LOT번호 생성 (LOT-200)
+    let lotResult = await mysql.query(
+      "selectNextProductLotNum",
+      [],
+      "material1",
+    );
+    let lotNum = lotResult[0].next_lot_num;
+
+    // 2. LOT 등록
+    await mysql.query(
+      "insertProductLot",
+      [lotNum, item.prod_type, item.prod_code],
+      "material1",
+    );
+
+    // 3. 완제품 입고코드 생성
+    let pinbndResult = await mysql.query(
+      "selectNextPinbndCode",
+      [],
+      "material1",
+    );
+    let pinbndCode = pinbndResult[0].next_code;
+
+    // 4. 완제품 입고 등록
+    await mysql.query(
+      "insertPinbnd",
+      [
+        pinbndCode,
+        item.prod_code,
+        item.prod_type,
+        item.unit,
+        item.inbnd_qtt,
+        formatDate(item.inbnd_date),
+        lotNum,
+        item.qio_code || null,
         item.mcode,
       ],
       "material1",
     );
 
     results.push({
-      minbnd_code: minbndCode,
+      pinbnd_code: pinbndCode,
       lot_num: lotNum,
     });
   }
@@ -390,4 +462,8 @@ module.exports = {
   //입고
   findPassedQirList,
   addInbound,
+
+  //입고 완제품
+  findPassedProductQirList,
+  addProductInbound,
 };

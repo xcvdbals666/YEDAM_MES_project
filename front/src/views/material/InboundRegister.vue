@@ -235,17 +235,15 @@ const submitInbound = async () => {
 <template>
   <div>
     <!-- 페이지 헤더 -->
-    <div class="flex justify-between items-center mb-4">
-      <h2 class="text-2xl font-bold">자재 입고 등록</h2>
-      <span class="text-sm text-gray-500">자재 관리 > 입고 등록</span>
-    </div>
+    <div class="flex justify-between items-center mb-4"></div>
 
     <!-- 입고 정보 입력 -->
     <div class="card">
+      <!-- <h2 class="text-2xl font-bold">자재 입고 등록</h2> -->
       <div class="flex justify-between items-center mb-4">
         <h4 class="m-0 flex items-center gap-2">
           <i class="pi pi-pencil"></i>
-          입고 정보 입력
+          자재 입고 정보 입력
         </h4>
         <span class="text-sm text-red-500">* 필수 입력 항목</span>
       </div>
@@ -342,19 +340,19 @@ const submitInbound = async () => {
           <template #body="{ data }">{{ data.matCode }}</template>
         </Column>
 
-        <Column field="matName" header="자재명" sortable style="min-width: 150px">
+        <Column field="matName" header="자재명" style="min-width: 120px">
           <template #body="{ data }">{{ data.matName }}</template>
         </Column>
 
-        <Column header="분류" sortable style="width: 80px">
+        <Column header="분류" style="width: 80px">
           <template #body="{ data }">{{ getMatTypeName(data.matType) }}</template>
         </Column>
 
-        <Column header="단위" sortable style="width: 70px">
+        <Column header="단위" style="width: 70px">
           <template #body="{ data }">{{ getUnitName(data.unit) }}</template>
         </Column>
 
-        <Column field="clientName" header="공급업체" sortable style="width: 120px">
+        <Column field="clientName" header="공급업체" style="width: 120px">
           <template #body="{ data }">{{ data.clientName }}</template>
         </Column>
 

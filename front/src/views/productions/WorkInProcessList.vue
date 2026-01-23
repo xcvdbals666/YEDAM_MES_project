@@ -56,7 +56,7 @@ const onReset = async () => {
 const goDetail = (row) => {
   if (!row?.wko_code) return;
   router.push({
-    name: 'WorkInProcessDetail', //router에추가
+    name: 'WorkInProcessBulletin', //router에추가
     params: { wko_code: row.wko_code }
   });
 };

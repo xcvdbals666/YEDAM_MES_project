@@ -197,10 +197,10 @@ const saveMpo = async () => {
       <div class="flex justify-between items-center mb-4">
         <div class="font-semibold text-xl">발주 기본정보</div>
         <div class="flex gap-2">
-          <Button label="삭제" severity="danger" size="small" @click="deleteMpo" />
-          <Button label="초기화" severity="contrast" size="small" @click="resetForm" />
-          <Button label="저장" severity="info" size="small" @click="saveMpo" />
-          <Button label="발주정보 불러오기" severity="success" size="small" @click="showMpoModal = true" />
+          <Button label="삭제" severity="danger" size="middle" @click="deleteMpo" />
+          <Button label="초기화" severity="contrast" size="middle" @click="resetForm" />
+          <Button label="저장" severity="info" size="middle" @click="saveMpo" />
+          <Button label="발주정보 불러오기" severity="success" size="middle" @click="showMpoModal = true" />
         </div>
       </div>
 
@@ -244,9 +244,9 @@ const saveMpo = async () => {
       <div class="flex justify-between items-center mb-4">
         <div class="font-semibold text-xl">자재 상세목록</div>
         <div class="flex gap-2">
-          <Button label="자재추가" severity="info" size="small" @click="openAddModal" />
-          <Button label="자재삭제" severity="danger" size="small" @click="deleteMaterials" />
-          <Button label="자재구매요청서 불러오기" severity="success" size="small" @click="showMrpModal = true" />
+          <Button label="자재추가" severity="info" size="middle" @click="openAddModal" />
+          <Button label="자재삭제" severity="danger" size="middle" @click="deleteMaterials" />
+          <Button label="자재구매요청서 불러오기" severity="success" size="middle" @click="showMrpModal = true" />
         </div>
       </div>
 

@@ -11,7 +11,7 @@ const selectMaxMprDCode = `SELECT IFNULL(MAX(mpr_d_code), 'MPR-D-000') AS last_c
 const selectAllMrpCodeMrpTbl = `SELECT mrp_code, plan_date FROM mrp_tbl order by plan_date desc`;
 
 // 자재 선택 - 자재 정보 조회
-const selectByMatCodeMatTbl = `SELECT m.mat_code, m.mat_name, m.unit, c2.note as unit_label,
+const selectByMatCodeMatTbl = `SELECT m.mat_code, m.mat_name, m.unit, c2.note AS unit_label,
 	                                    IFNULL(s.current_qty, 0) AS current_qty,
                                       CASE
                                         WHEN IFNULL(d.req_qtt, 0) - (IFNULL(s.current_qty, 0) 
@@ -37,10 +37,10 @@ const selectByMatCodeMatTbl = `SELECT m.mat_code, m.mat_name, m.unit, c2.note as
                                            GROUP BY mat_code) d ON d.mat_code = m.mat_code
                                 LEFT JOIN (SELECT d.mat_code, SUM(d.req_qtt) AS plan_in_qty
                                            FROM mpo_d_tbl d
-                                           JOIN mpo_tbl h ON d.purchase_code = h.purchase_code
+                                           JOIN mpo_tbl h ON d.purchASe_code = h.purchASe_code
                                            WHERE h.stat = 'c1' AND d.deadline = CURDATE()
                                            GROUP BY d.mat_code) p ON p.mat_code = m.mat_code
-                                WHERE m.is_used = 'f2' and m.mat_name like ?
+                                WHERE m.is_used = 'f2' AND m.mat_name like ?
                                 ORDER BY m.mat_code`;
 
 // 자재구매요청 저장
@@ -48,7 +48,7 @@ const insertMprTbl = `INSERT INTO mpr_tbl (mpr_code, reqdate, deadline, mrp_code
                                   VALUES (?, ?, ?, ?, ?)`;
 
 // 자재구매요청 상세정보 저장
-const insertMprDTbl = `INSERT INTO mpr_d_tbl (mpr_d_code, req_qtt, unit, note, mpr_code, mat_sup, mat_code) 
+const insertMprDTbl = `INSERT INTO mpr_d_tbl (mpr_d_code, req_qtt, unit, note, mpr_code, mat_sup, mat_code, source_type) 
                                    VALUES (?, ?, ?, ?, ?, ?, ?)`;
 
 // 자재구매요청서 전체 목록 조회
@@ -69,8 +69,8 @@ const selectByMprCodeMprTbl = `SELECT m.mpr_code, m.reqdate, e.emp_name, d.dept_
                                WHERE m.mpr_code = ?`;
 
 // 자재구매요청 상세 정보 조회 - 요청자재상세
-const selectByMprCodeMprDTbl = `SELECT d.mpr_d_code, mt.mat_name, d.mat_code, d.req_qtt, d.unit, d.note,
-                                       c.client_name, c.client_code, cc.note AS unit_label,
+const selectByMprCodeMprDTbl = `SELECT d.mpr_d_code, d.source_type, mt.mat_name, d.mat_code, d.req_qtt, d.unit, 
+                                       d.note, c.client_name, c.client_code, cc.note AS unit_label,
                                        IFNULL(s.current_qty, 0) AS current_qty,
                                        CASE WHEN d.req_qtt - IFNULL(s.current_qty, 0) > 0
                                             THEN d.req_qtt - IFNULL(s.current_qty, 0)
@@ -158,11 +158,59 @@ const selectByMprCodeIsMrpCode = `SELECT mpr_code, mrp_code
                                   FROM mpr_tbl
                                   WHERE mpr_code = ?`;
 
+//// MRP 선택해서 들어온 자재인지 구분
+const selectByMprDCodeSourceType = `select source_type FROM mpr_d_tbl where mpr_d_code = ?`;
+
 // 구매요청 삭제
 const deleteMpr = `DELETE FROM mpr_tbl WHERE mpr_code = ?`;
 
 // 구매요청 삭제 전 상세 삭제
 const deleteDetailMpr = `DELETE FROM mpr_d_tbl WHERE mpr_code = ?`;
+
+// 입출고내역조회
+const selectMaterialInOutList = `SELECT *
+                                 FROM (SELECT 'IN' AS io_type, mi.minbnd_code AS io_code,
+                                               mi.inbnd_date AS process_date, mi.mat_code,
+                                               m.mat_name, m.spec, 
+                                               COALESCE(md.req_qtt, mi.inbnd_qtt) AS req_qtt,
+                                               mi.inbnd_qtt AS proc_qtt, m.unit, c2.note as unit_label,
+                                               CASE 
+                                                    WHEN md.req_qtt IS NULL THEN 'c2'
+                                                    WHEN md.req_qtt = mi.inbnd_qtt OR md.req_qtt < mi.inbnd_qtt THEN 'c2'
+                                                    WHEN md.req_qtt > mi.inbnd_qtt THEN 'c3'
+                                               END AS status_code, cc.note AS status_name,
+                                               mi.mcode AS emp_code, e.emp_name
+                                       FROM minbnd_tbl mi
+                                       LEFT JOIN qio_tbl q ON q.qio_code = mi.qio_code 
+                                       LEFT JOIN mpo_d_tbl md ON md.mpo_d_code = q.mpo_d_code     
+                                            JOIN mat_tbl m ON m.mat_code = mi.mat_code
+                                            JOIN emp_tbl e ON e.emp_code = mi.mcode
+                                            JOIN common_code c2 ON c2.com_value = m.unit
+                                       LEFT JOIN common_code cc ON cc.group_value = '0C'
+                                                                   and cc.com_value = CASE
+                                                                                          WHEN md.req_qtt is null THEN 'c2'
+                                                                                          WHEN md.req_qtt <= mi.inbnd_qtt THEN 'c2'
+                                                                                          ELSE 'c3'
+                                                                                      END
+                                                                  
+
+                                 UNION ALL
+                                 SELECT 'OUT' AS io_type, mo.moutbnd_code AS io_code,
+                                         mo.moutbnd_date AS process_date, mo.mat_code,
+                                         m.mat_name, m.spec, mo.outbnd_qtt AS req_qtt,
+                                         mo.outbnd_qtt AS proc_qtt, m.unit, NULL as unit_label,
+                                         'c2' AS status_code, cc.note AS status_name, mo.emp_code AS emp_code, e.emp_name
+                                 FROM moutbnd_tbl mo
+                                 JOIN mat_tbl m ON m.mat_code = mo.mat_code
+                                 LEFT JOIN emp_tbl e ON e.emp_code = mo.emp_code
+                                 LEFT JOIN common_code cc ON cc.group_value = '0C' AND cc.com_value = 'c2') t
+                                 WHERE 1 = 1 AND (? = 'ALL' OR t.io_type = ?)
+                                             AND (? IS NULL OR t.process_date >= ?)
+                                             AND (? IS NULL OR t.process_date <= ?)
+                                             AND (? = '' OR t.mat_code LIKE CONCAT('%', ?, '%')
+                                                         OR t.mat_name LIKE CONCAT('%', ?, '%'))
+                                             AND (? = 'ALL' OR t.status_code = ?)
+                                 ORDER BY t.io_type, t.process_date DESC `;
 
 module.exports = {
   selectByMatCodeMatTbl,
@@ -185,4 +233,6 @@ module.exports = {
   selectByMprCodeIsMrpCode,
   deleteMpr,
   deleteDetailMpr,
+  selectByMprDCodeSourceType,
+  selectMaterialInOutList,
 };

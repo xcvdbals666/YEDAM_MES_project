@@ -30,11 +30,12 @@ const mrpInfo = reactive({
 onMounted(async () => {
   if (!store.mrpCode) return;
   const { info, matList } = await store.fetchMRPDetail();
+  console.log(info);
   mrpInfo.mrpCode = info[0].mrp_code;
   mrpInfo.prdpCode = info[0].prdp_code;
   mrpInfo.planDate = new Date(info[0].plan_date);
   mrpInfo.startDate = new Date(info[0].start_date);
-  mrpInfo.reg = info[0].reg;
+  mrpInfo.reg = info[0].emp_code;
   mrpInfo.empName = info[0].emp_name;
   mrpInfo.note = info[0].mrp_note;
 
@@ -44,7 +45,7 @@ onMounted(async () => {
       mat_code: data.mat_code,
       mat_name: data.mat_name,
       req_qtt: data.req_qtt,
-      save_inven: data.save_inven,
+      inven: data.inven,
       unit: data.unit,
       unit_note: data.unit_note,
       is_delete: false
@@ -150,20 +151,20 @@ const deleteList = () => {
 };
 
 // 필요수량 체크
-watch(
-  () => mrpMaterialList.value,
-  (newList) => {
-    for (const row of newList) {
-      if (row.req_qtt > row.save_inven) {
-        row.req_qtt = row.save_inven;
+// watch(
+//   () => mrpMaterialList.value,
+//   (newList) => {
+//     for (const row of newList) {
+//       if (row.req_qtt > row.inven) {
+//         row.req_qtt = row.inven;
 
-        alert('필요수량은 재고보다 많게 설정할 수 없습니다!');
-        break; // 한 번만 띄우기
-      }
-    }
-  },
-  { deep: true }
-);
+//         alert('필요수량은 재고보다 많게 설정할 수 없습니다!');
+//         break; // 한 번만 띄우기
+//       }
+//     }
+//   },
+//   { deep: true }
+// );
 
 // 자재 검색 모달 열기
 const openMaterialModal = () => {
@@ -188,7 +189,7 @@ const selectMaterial = () => {
       mat_code: data.mat_code,
       mat_name: data.mat_name,
       req_qtt: 0,
-      save_inven: data.save_inven,
+      inven: data.inven,
       unit: data.unit,
       unit_note: data.unit_note,
       is_delete: false
@@ -225,8 +226,9 @@ const importBOM = async () => {
       mat_code: data.mat_code,
       mat_name: data.mat_name,
       req_qtt: data.req_qtt,
-      save_inven: data.save_inven,
+      inven: data.inven,
       unit: data.unit,
+      unit_note: data.unit_note,
       is_delete: false
     };
     rownum += 1;
@@ -344,7 +346,7 @@ const importBOM = async () => {
             <InputNumber v-model="data.req_qtt" showButtons mode="decimal" inputClass="w-40" :min="0"></InputNumber>
           </template>
         </Column>
-        <Column field="save_inven" header="현재재고" headerClass="table-header" bodyClass="table-body" style="width: 120px"> </Column>
+        <Column field="inven" header="현재재고" headerClass="table-header" bodyClass="table-body" style="width: 120px"> </Column>
         <Column field="unit_note" header="단위" headerClass="table-header" bodyClass="table-body" style="width: 120px"> </Column>
       </DataTable>
 
@@ -364,7 +366,7 @@ const importBOM = async () => {
           <Column field="mat_code" header="자재코드" headerClass="table-header" bodyClass="table-body" style="width: 120px" />
           <Column field="mat_name" header="자재명" headerClass="table-header" bodyClass="table-body" style="width: 140px" />
           <Column field="mat_type" header="자재유형" headerClass="table-header" bodyClass="table-body" style="width: 60px" />
-          <Column field="unit" header="단위" headerClass="table-header" bodyClass="table-body" style="width: 60px" />
+          <Column field="unit_note" header="단위" headerClass="table-header" bodyClass="table-body" style="width: 60px" />
           <Column field="note" header="비고" headerClass="table-header" bodyClass="table-body" style="width: 140px" />
         </DataTable>
         <template #footer>

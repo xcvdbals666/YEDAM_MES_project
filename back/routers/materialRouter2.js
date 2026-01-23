@@ -137,4 +137,11 @@ router.get("/mpr-request/:mprCode/editable", async (req, res) => {
   res.send({ isEditable });
 });
 
+// 입출고내역조회
+router.get("/mat-inout", async (req, res) => {
+  const params = req.query;
+  const list = await materialService2.findMaterialInOutList(params);
+  res.send(list);
+});
+
 module.exports = router;
