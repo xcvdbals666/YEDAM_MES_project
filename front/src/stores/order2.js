@@ -117,6 +117,8 @@ export const useOrderStore2 = defineStore('order2', {
         this.orderDetail = response.data.orderInfo;
         this.products = response.data.products;
         this.outReqCode = response.data.out_req_code;
+        console.log(this.orderDetail);
+        console.log(this.products);
 
         return response.data;
       } catch (error) {

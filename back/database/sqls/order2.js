@@ -71,6 +71,7 @@ SELECT
   o.ord_code, 
   o.ord_date, 
   c.client_name, 
+  c.client_code,
   o.note
 FROM ord_tbl o
 JOIN client_tbl c ON c.client_code = o.client_code
@@ -81,13 +82,17 @@ WHERE o.ord_code = ?
 const selectProdList = `
 SELECT 
   p.prod_name,
+  p.com_value AS prod_type_code,
 
   c_type.note AS prod_type,
   c_spec.note AS spec, 
   c_unit.note AS unit,
 
+  od.prod_code, 
   od.ord_amount,
   od.delivery_date,
+  od.spec AS spec_code,
+  od.unit AS unit_code,   
 
   (COALESCE(stock_in.total_in, 0)
   - COALESCE(out_req.total_req, 0)) AS current_stock

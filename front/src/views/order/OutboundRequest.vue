@@ -14,7 +14,8 @@ const getInitialOutInfo = () => ({
   ord_code: '',
   ord_date: '',
   client_name: '',
-  emp_name: ''
+  emp_name: '',
+  note: ''
 });
 
 // 출고 요청 정보
@@ -119,15 +120,15 @@ const formatDate = (v) => {
           <th>출고코드</th>
           <td><InputText class="w-full" v-model="outInfo.out_code" disabled /></td>
 
-          <th>출고요청일</th>
-          <td><InputText class="w-full" v-model="outInfo.out_req_date" disabled /></td>
+          <th>주문일자</th>
+          <td><InputText class="w-full" disabled v-model="outInfo.ord_date" /></td>
         </tr>
         <tr>
           <th>주문코드</th>
           <td><InputText class="w-full" disabled v-model="outInfo.ord_code" /></td>
 
-          <th>주문일자</th>
-          <td><InputText class="w-full" disabled v-model="outInfo.ord_date" /></td>
+          <th>출고요청일</th>
+          <td><InputText class="w-full" v-model="outInfo.out_req_date" disabled /></td>
         </tr>
         <tr>
           <th>거래처</th>
@@ -135,6 +136,12 @@ const formatDate = (v) => {
 
           <th>출고 요청 담당자</th>
           <td><InputText class="w-full" disabled v-model="outInfo.emp_name" /></td>
+        </tr>
+        <tr>
+          <th>비고</th>
+          <td colspan="3">
+            <Textarea class="w-full" v-model="outInfo.note" rows="3" />
+          </td>
         </tr>
       </tbody>
     </table>
