@@ -123,6 +123,25 @@ const findQirList = async (id) => {
   return list;
 };
 
+// 검사 결과서 합격 불합격 수정
+const modifyQirList = async (data) => {
+  const {
+    result,
+    end_date,
+    unpass_qtt,
+    pass_qtt,
+    unpass_rate,
+    qio_code,
+    qcr_code,
+  } = data;
+  let list = await mysql.query(
+    "updateQirList",
+    [result, end_date, unpass_qtt, pass_qtt, unpass_rate, qio_code, qcr_code],
+    "quality1",
+  );
+  return list;
+};
+
 module.exports = {
   findAllQiOrderCheckList,
   findAllQiOrderList,
@@ -135,4 +154,5 @@ module.exports = {
   findAllQirQiOrder,
   findQirProdInfo,
   findQirList,
+  modifyQirList,
 };

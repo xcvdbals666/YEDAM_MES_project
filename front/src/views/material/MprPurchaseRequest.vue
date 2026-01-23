@@ -298,7 +298,7 @@ const doReset = async (askConfirm = true) => {
 // 초기화 버튼
 const reset = () => doReset(true);
 
-// 저장
+// 저장 및 수정
 const isSaved = ref(false);
 const save = async () => {
   if (isSaved.value) return; // 중복 저장 차단
@@ -381,9 +381,25 @@ const save = async () => {
 
 watch(isEditable, (val) => {
   if (!val) {
-    alert('발주가 진행된 구매요청은 수정할 수 없습니다.');
+    alert('발주가 진행된 구매요청은 수정 및 삭제할 수 없습니다.');
   }
 });
+
+const deleteMpr = async () => {
+  if (!requestInfo.value.mprCode) return;
+  if (!confirm('정말 삭제하시겠습니까?')) return;
+
+  try {
+    await store.deleteMpr(requestInfo.value.mprCode);
+
+    alert('삭제되었습니다.');
+
+    // 화면 초기화 (신규 상태로)
+    await doReset(false);
+  } catch (err) {
+    alert(err.response?.data?.message || '삭제 중 오류 발생');
+  }
+};
 </script>
 
 <template>
@@ -400,6 +416,7 @@ watch(isEditable, (val) => {
       :isSaved="isSaved"
       :isEditable="isEditable"
       @save="save"
+      @delete="deleteMpr"
       @reset="reset"
     />
     <MprRequestItem v-model="requestDetailInfo" :isEditable="isEditable" :isEditMode="isEditMode" @selecte-material="(row) => openMaterialModal(row)" />

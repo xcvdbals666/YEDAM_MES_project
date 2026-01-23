@@ -179,6 +179,21 @@ const modifyMprTbl = async ({ request, requestDetail }) => {
   return { mprCode };
 };
 
+// 자재구매요청 삭제
+const removeMpr = async (mprCode) => {
+  // 발주 매핑 여부 체크
+  const map = await mysql.query("selectIsEditable", [mprCode], "material2");
+  if (map.length > 0) {
+    throw new Error("발주가 진행된 구매요청은 삭제할 수 없습니다.");
+  }
+  // 상세 삭제
+  await mysql.query("deleteDetailMpr", [mprCode], "material2");
+  // 헤더 삭제
+  await mysql.query("deleteMpr", [mprCode], "material2");
+
+  return { status: "success" };
+};
+
 // 자재구매요청 조회
 const findByMprCodeMprTbl = async (keyword) => {
   let sql = `SELECT m.mpr_code, m.reqdate, m.deadline, m.mrp_code, m.mcode,
@@ -330,4 +345,5 @@ module.exports = {
   findMprHeaderModal,
   findByMrpCodeMrpDTbl,
   findIsEditable,
+  removeMpr,
 };

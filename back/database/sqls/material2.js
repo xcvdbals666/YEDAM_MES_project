@@ -158,6 +158,12 @@ const selectByMprCodeIsMrpCode = `SELECT mpr_code, mrp_code
                                   FROM mpr_tbl
                                   WHERE mpr_code = ?`;
 
+// 구매요청 삭제
+const deleteMpr = `DELETE FROM mpr_tbl WHERE mpr_code = ?`;
+
+// 구매요청 삭제 전 상세 삭제
+const deleteDetailMpr = `DELETE FROM mpr_d_tbl WHERE mpr_code = ?`;
+
 module.exports = {
   selectByMatCodeMatTbl,
   selectByMprCodeMprTbl,
@@ -177,4 +183,6 @@ module.exports = {
   deleteMprDTbl,
   updateMprDTbl,
   selectByMprCodeIsMrpCode,
+  deleteMpr,
+  deleteDetailMpr,
 };

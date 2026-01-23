@@ -4,8 +4,7 @@ import { useOrderStore } from '@/stores/order1';
 import BaseDialog from '@/components/order/BaseDialog.vue';
 import { FilterMatchMode, FilterService } from '@primevue/core/api';
 const order = useOrderStore();
-//제품배열
-const details = ref([]);
+
 //주문정보
 const orderInfo = ref({
   ord_code: '',
@@ -39,6 +38,7 @@ const filters = ref({
   ord_name: { value: null, matchMode: FilterMatchMode.CONTAINS },
   client_name: { value: null, matchMode: FilterMatchMode.CONTAINS },
   ord_code: { value: null, matchMode: FilterMatchMode.CONTAINS },
+  ord_stat: { value: null, matchMode: FilterMatchMode.CONTAINS },
   ord_date: { value: [null, null], matchMode: 'dateRange' }
 });
 // 검색조건의 시작일 종료일 변수
@@ -59,9 +59,11 @@ const rowClass = (data) => {
 const ordVisible = ref(false);
 // 선택된 주문을 담을 변수
 const selectedOrder = ref(null);
-
+const statOptions = ref([]);
 onBeforeMount(async () => {
   await order.getOrderList();
+  await order.getStatOptions();
+  statOptions.value = order.stats;
 });
 const orderDetail = ref([]);
 // 기존 getOrderDetails 함수를 이걸로 교체하세요.
@@ -73,7 +75,9 @@ const getOrderDetails = async (event) => {
   // 2. API 호출
   await order.getOrderDetail(orderInfo.value.ord_code);
   orderDetail.value = order.details;
-
+  for (let val of orderDetail.value) {
+    totalPrice.value = totalPrice.value + val.total_price;
+  }
   // 3. 데이터 준비 끝난 후 모달 열기
   ordVisible.value = true;
 };
@@ -82,6 +86,7 @@ const resetBtn = () => {
   filters.value.ord_name.value = null;
   filters.value.client_name.value = null;
   filters.value.ord_code.value = null;
+  filters.value.ord_stat.value = null;
   filters.value.ord_date.value = [null, null];
   startDate.value = null;
   endDate.value = null;
@@ -105,6 +110,11 @@ const getPrioritySeverity = (priority) => {
 };
 const isRowSelectable = (data) => {
   return true; // 모든 행 선택 가능
+};
+const totalPrice = ref(0);
+const closeModal = () => {
+  totalPrice.value = 0;
+  ordVisible.value = false;
 };
 </script>
 
@@ -147,7 +157,7 @@ const isRowSelectable = (data) => {
         <div class="flex justify-between items-end mb-3">
           <h3 class="text-lg font-bold text-gray-700">📦 주문 품목</h3>
           <span class="text-sm text-gray-500">
-            총 합계: <span class="text-xl font-bold text-blue-600">{{}}</span>
+            총 합계: <span class="text-xl font-bold text-blue-600">{{ totalPrice.toLocaleString() }} </span>원
           </span>
         </div>
 
@@ -197,7 +207,7 @@ const isRowSelectable = (data) => {
       </div>
     </div>
     <template #footer>
-      <Button label="확인" severity="info" variant="outlined" class="min-w-[65px]" @click="ordVisible = false" />
+      <Button label="확인" severity="info" variant="outlined" class="min-w-[65px]" @click="closeModal" />
     </template>
   </Dialog>
   <Fluid>
@@ -234,6 +244,13 @@ const isRowSelectable = (data) => {
             <DatePicker v-model="endDate" showIcon dateFormat="yy-mm-dd" placeholder="종료일" class="w-[140px]" />
           </div>
         </div>
+        <div class="flex flex-col gap-2">
+          <label for="search" class="font-bold">주문상태</label>
+          <IconField>
+            <InputIcon class="pi pi-search" />
+            <Select id="search" v-model="filters['ord_code'].value" placeholder="거래처" class="w-[300px]" :options="statOptions" option-label="stat_note" option-value="ord_stat" />
+          </IconField>
+        </div>
         <div class="ml-auto flex gap-2">
           <Button label="초기화" severity="contrast" variant="outlined" @click="resetBtn" />
         </div>
@@ -261,12 +278,13 @@ const isRowSelectable = (data) => {
             <Column field="ord_code" header="주문코드"></Column>
             <Column field="ord_name" header="주문명"></Column>
             <Column field="client_name" header="거래처명"></Column>
+            <Column field="stat_note" header="상태" />
+            <Column field="ord_date" header="주문일자" />
             <Column field="mcode" header="작성자">
               <template #body="slotProps">
                 {{ `${slotProps.data.mname} (${slotProps.data.mcode})` }}
               </template>
             </Column>
-            <Column field="ord_date" header="주문일자" />
           </DataTable>
           <div class="flex justify-end mt-4">
             <h5>
