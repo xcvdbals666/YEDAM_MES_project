@@ -22,7 +22,7 @@ const ProductionRoutes1 = [
     component: WorkInProcessList
   },
   {
-    path: '/workInProcessList/:wko_code',
+    path: '/workInProcessDetail/:wko_code',
     name: 'WorkInProcessDetail',
     component: WorkInProcessDetail,
     props: true //params를 props로 받게

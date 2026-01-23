@@ -254,6 +254,19 @@ export const useProductionsStore = defineStore('productions', () => {
     prdrDDetail.value = res.data;
   };
 
+
+  const wipBulletin = ref([]);
+
+  const fetchWipBulletin = async (wkoCode) => {
+    if (!wkoCode) return;
+
+    const res = await axios.get(`/api/produce/wipBulletin/${wkoCode}`);
+    wipBulletin.value = Array.isArray(res.data) ? res.data : [];
+    return wipBulletin.value;
+
+  };
+
+
   return {
     wkoList,
     loading,
@@ -301,6 +314,7 @@ export const useProductionsStore = defineStore('productions', () => {
     prdrStatusList,
     fetchPrdrStatusByWko,
     prdrDDetail,
-    fetchPrdrDDetail
+    fetchPrdrDDetail,
+    fetchWipBulletin
   };
 });

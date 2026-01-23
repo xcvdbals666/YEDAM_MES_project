@@ -161,7 +161,7 @@ const onEqClick = async (eq) => {
             type="number"
             class="w-full p-inputtext"
             :value="prdrDDetail?.input_qtt ?? ''"
-
+            readonly
           />
         <!-- <input type="number" class="w-full p-inputtext" min="0" v-model.number="inputQtt" placeholder="숫자입력" /> -->
       </div>
