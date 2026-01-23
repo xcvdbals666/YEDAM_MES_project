@@ -7,6 +7,7 @@ const props = defineProps({
   mrpFilteredValue: Array,
   isSaved: Boolean,
   isEditable: Boolean,
+  isEditMode: Boolean,
   canSelectMrp: Boolean
 });
 const emit = defineEmits(['update:modelValue', 'update:selectedMrpValue', 'selectEmployee', 'save', 'reset', 'delete', 'open-mpr', 'search-mrp']);
@@ -24,7 +25,7 @@ const data = computed({
       <h4 class="m-0 font-semibold">자재 구매 요청</h4>
 
       <div class="flex items-center gap-2 whitespace-nowrap">
-        <Button label="삭제" severity="danger" @click="emit('delete')" :disabled="!isEditMode || !isEditable" />
+        <Button label="삭제" severity="danger" @click="emit('delete')" :disabled="!isEditable || !isEditMode" />
         <Button label="초기화" severity="contrast" @click="emit('reset')" />
         <Button label="저장" severity="info" @click="emit('save')" :disabled="isSaved || !isEditable" />
         <Button label="MPR 불러오기" @click="emit('open-mpr')" />
