@@ -119,7 +119,7 @@ WHERE ld.line_code = ?
 ORDER BY ld.eq_code
 `;
 
-//선택한 wko_tbl의 prod_code로 타고가서 po_tbl에서 공정명 드롭다운 뽑기
+//선택한 wko_tbl의 prod_code로 타고가서 po_tbl에서 공정명 뽑기
 const selectProcessDropdownByWko = `
     SELECT DISTINCT
       d.po_code,
@@ -137,7 +137,7 @@ const selectProcessDropdownByWko = `
     ORDER BY d.no
   `;
 
-//작업시작 버튼 누르면 필요한 쿼리
+//###############작업시작 버튼 누르면 필요한 쿼리#########################
 //prdr 테이블 번호생성
 const selectNextPrdrSeq = `
 SELECT IFNULL(
@@ -169,7 +169,16 @@ INSERT INTO prdr_d_tbl
 VALUES
   (?, ?, ?, NOW(), ?)
 `;
-//작업시작버튼 끝
+
+//bom_save 테이블 삽입 
+const insertBomSave = `
+INSERT INTO bom_save
+  (bom_save_code, mat_type, req_qtt, unit, spec, loss_rate, copy_date, wko_code, mat_code)
+VALUES
+  (?, ?, ?, ?, NULL, NULL, ?, ?, ?)
+`
+
+//###############작업시작버튼 끝########################################
 
 //#####제정신아님. . .
 // 특정 작업지시서의 설비별 생산실적 조회 (wko_tbl의 code기준으로)
@@ -272,6 +281,7 @@ module.exports = {
   selectNextPrdrDSeq,
   insertPrdrStart,
   insertPrdrDStart,
+  insertBomSave,
   selectPrdrStatusByWko,
   selectPrdrDDetail,
   selectWipBulletinByWko
