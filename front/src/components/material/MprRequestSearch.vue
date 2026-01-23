@@ -17,9 +17,9 @@ const data = computed({
   <Fluid class="card">
     <div class="flex justify-between items-center pb-4">
       <h4 class="m-0">요청 검색</h4>
-      <div class="flex items-center gap-2">
-        <Button label="초기화" severity="contrast" class="whitespace-nowrap px-3 py-1 h-[35px] text-sm" @click="emit('reset')" />
-        <Button label="조회" class="px-3 py-1 h-[35px] text-sm" @click="emit('search')" />
+      <div class="flex items-center gap-3">
+        <Button label="초기화" severity="contrast" class="whitespace-nowrap" @click="emit('reset')" />
+        <Button label="조회" @click="emit('search')" />
       </div>
     </div>
 
@@ -48,16 +48,16 @@ const data = computed({
           <th>요청일자</th>
           <td>
             <div class="flex gap-2">
-              <DatePicker v-model="data.reqDateFrom" dateFormat="yy-mm-dd" placeholder="시작일 선택" class="w-full" />
-              <DatePicker v-model="data.reqDateTo" dateFormat="yy-mm-dd" placeholder="종료일 선택" class="w-full" />
+              <DatePicker v-model="data.reqDateFrom" dateFormat="yy-mm-dd" :showIcon="true" :showButtonBar="true" placeholder="시작일 선택" class="w-full" />
+              <DatePicker v-model="data.reqDateTo" dateFormat="yy-mm-dd" :showIcon="true" :showButtonBar="true" placeholder="종료일 선택" class="w-full" />
             </div>
           </td>
 
           <th>납기일자</th>
           <td>
             <div class="flex gap-2">
-              <DatePicker v-model="data.deadlineFrom" dateFormat="yy-mm-dd" placeholder="시작일 선택" class="w-full" />
-              <DatePicker v-model="data.deadlineTo" dateFormat="yy-mm-dd" placeholder="종료일 선택" class="w-full" />
+              <DatePicker v-model="data.deadlineFrom" dateFormat="yy-mm-dd" :showIcon="true" :showButtonBar="true" placeholder="시작일 선택" class="w-full" />
+              <DatePicker v-model="data.deadlineTo" dateFormat="yy-mm-dd" :showIcon="true" :showButtonBar="true" placeholder="종료일 선택" class="w-full" />
             </div>
           </td>
         </tr>

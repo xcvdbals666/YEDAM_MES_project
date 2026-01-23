@@ -150,6 +150,11 @@ const model = ref([
             label: '입고등록',
             icon: 'pi pi-fw pi-sign-in',
             to: '/inboundregister'
+          },
+          {
+            label: '입출고내역',
+            icon: 'pi pi-fw pi-sign-in',
+            to: '/matInout'
           }
         ]
       },

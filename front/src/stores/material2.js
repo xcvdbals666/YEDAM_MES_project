@@ -14,7 +14,8 @@ export const useMaterialStore = defineStore('material2', {
     mprItems: [], // 자재구매요청 상세 조회 - 요청 자재 상세 정보
     headerModals: [], // MPR 불러오기용 모달 + 검색
     requestHeader: null, // MPR 불러오기용 조회 - 헤더 정보
-    mrpList: [] //MRP 기준 정보 불러오기
+    mrpList: [], //MRP 기준 정보 불러오기
+    matInOutList: [] // 자재 입출고 내역 정보
   }),
   // getters
   // actions
@@ -104,8 +105,14 @@ export const useMaterialStore = defineStore('material2', {
     },
     // 구매요청 수정/삭제 여부 확인
     async checkEditable(mprCode) {
-      const res = await axios.get(`/api/material/mpr-request/${mprCode}/editable`);
-      return res.data.isEditable; // true면 수정 가능
+      const response = await axios.get(`/api/material/mpr-request/${mprCode}/editable`);
+      return response.data.isEditable; // true면 수정 가능
+    },
+
+    // 입출고내역조회
+    async fetchInOutList(params) {
+      const response = await axios.get(`/api/material/mat-inout`, { params });
+      this.matInOutList = response.data;
     }
   },
   persist: true

@@ -16,6 +16,11 @@ const materialRoutes2 = [
     name: 'mprRequestDetail',
     component: () => import('@/views/material/MprRequestDetail.vue'),
     props: true
+  },
+  {
+    path: '/matInout',
+    name: 'MaterialInOut',
+    component: () => import('@/views/material/MaterialInOut.vue')
   }
 ];
 
