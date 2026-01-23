@@ -94,4 +94,11 @@ router.put(`/mrp`, async (req, res) => {
   res.send(result);
 });
 
+// 생산실적 조회
+router.get(`/prdp`, async (req, res) => {
+  const data = req.query;
+  let list = await produceService.findAllPrdr(data);
+  res.send(list);
+});
+
 module.exports = router;

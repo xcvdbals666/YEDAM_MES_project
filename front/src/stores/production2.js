@@ -13,7 +13,8 @@ export const useProductionStore = defineStore('production', {
     prodList: [],
     lineList: [],
     planProdList: [],
-    materialList: []
+    materialList: [],
+    prdrList: []
   }),
   // getters
 
@@ -166,6 +167,19 @@ export const useProductionStore = defineStore('production', {
       try {
         const response = await axios.put(`/api/produce/mrp`, { mat: matList, info: mrpInfo });
         return response.data;
+      } catch (err) {
+        console.log(err);
+      }
+    },
+
+    // 생산실적 조회
+    async fetchPrdrs(data) {
+      try {
+        const response = await axios.get(`/api/produce/prdp`, {
+          params: data
+        });
+        this.prdrList = response.data;
+        return this.prdrList;
       } catch (err) {
         console.log(err);
       }

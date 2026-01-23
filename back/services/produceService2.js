@@ -334,6 +334,34 @@ const modifyMrp = async (data) => {
   return resObj;
 };
 
+// 생산실적 조회
+const findAllPrdr = async (data) => {
+  const { prdrCode, prodName, startDate, endDate, workOrderCode } = data;
+  let sql = `
+  SELECT pr.*, pd.prod_name
+  FROM prdr_tbl pr
+  JOIN prod_tbl pd ON pr.prod_code = pd.prod_code
+  WHERE 1=1`;
+  const params = [];
+  if (prdrCode) {
+    sql += ` AND pr.prdr_code LIKE ?`;
+    params.push(`%${prdrCode}%`);
+  }
+  if (prodName) {
+    sql += ` AND pd.prod_name LIKE ?`;
+    params.push(`%${prodName}%`);
+  }
+  if (workOrderCode) {
+    sql += ` AND pr.work_order_code LIKE ?`;
+    params.push(`%${workOrderCode}%`);
+  }
+  sql += ` AND pr.start_date >= ? AND pr.end_date <= ?`;
+  params.push(startDate, `${endDate} 23:59:59`);
+
+  let list = await mysql.rquery(sql, params);
+  return list;
+};
+
 module.exports = {
   findAllPrdp,
   findByCodeOrNamePrdp,
@@ -348,4 +376,5 @@ module.exports = {
   findAllMrp,
   findByCodeMrpDetail,
   modifyMrp,
+  findAllPrdr,
 };
