@@ -8,7 +8,7 @@ const selectMaxMprCode = `SELECT IFNULL(MAX(mpr_code), 'MPR-000') AS last_code F
 const selectMaxMprDCode = `SELECT IFNULL(MAX(mpr_d_code), 'MPR-D-000') AS last_code FROM mpr_d_tbl`;
 
 // mrp code 조회
-const selectAllMrpCodeMrpTbl = `SELECT mrp_code, plan_date FROM mrp_tbl order by plan_date desc`;
+const selectAllMrpCodeMrpTbl = `SELECT mrp_code, plan_date FROM mrp_tbl order by mrp_code desc`;
 
 // 자재 선택 - 자재 정보 조회
 const selectByMatCodeMatTbl = `SELECT m.mat_code, m.mat_name, m.unit, c2.note AS unit_label,
@@ -212,6 +212,12 @@ const selectMaterialInOutList = `SELECT *
                                              AND (? = 'ALL' OR t.status_code = ?)
                                  ORDER BY t.io_type, t.process_date DESC `;
 
+// insert, update 중복 체크 용
+const selectMprDExists = `SELECT 1
+                          FROM mpr_d_tbl
+                          WHERE mpr_code = ? AND mat_code = ? AND source_type = ?
+                          LIMIT 1`;
+
 module.exports = {
   selectByMatCodeMatTbl,
   selectByMprCodeMprTbl,
@@ -235,4 +241,5 @@ module.exports = {
   deleteDetailMpr,
   selectByMprDCodeSourceType,
   selectMaterialInOutList,
+  selectMprDExists,
 };
