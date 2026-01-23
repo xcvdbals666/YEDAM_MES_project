@@ -115,7 +115,9 @@ let qirBasicInfo = ref({ qio_code: '', qio_date: '', emp_name: '' }); // 검사 
 const selectQirList = (data) => {
   qirDisplay.value = false;
   console.log('검사결과서 선택값: ', data);
+
   qirBasicInfo.value = data;
+
   selectedOrder(data);
   checkCallQir.value = false;
 };

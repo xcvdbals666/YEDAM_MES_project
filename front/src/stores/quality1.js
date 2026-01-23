@@ -12,6 +12,7 @@ export const useQuality1Store = defineStore('quality', {
     // 결과서 관리
     qirProdInfo: [], // 검사지시서 불러오기(생산일경우)
     qirList: [], // 검사결과서서 불러오기
+    realQirList: [], // 검사결과서 원본 목록
     state: 0 // 상태 판별
   }),
   actions: {
@@ -115,7 +116,17 @@ export const useQuality1Store = defineStore('quality', {
         let date = new Date(data.start_date);
         data.start_date = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
       });
+      this.realQirList = response.data;
       this.qirList = response.data;
+      for (let i = 0; i < this.qirList.length; i++) {
+        console.log(this.qirList[i].qio_code);
+        if (i > 0) {
+          if (this.qirList[i].qio_code == this.qirList[i - 1].qio_code) {
+            response.data.splice(i, 1);
+            i--;
+          }
+        }
+      }
       console.log('결과서 목록: ', this.qirList);
 
       return this.qirList;

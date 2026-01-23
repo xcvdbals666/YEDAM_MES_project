@@ -128,12 +128,12 @@ const selectQirProdInfo = `SELECT w.prdp_code,q.qio_code, p.end_date, p.producti
                              GROUP BY p.prdr_code`;
 
 // 검사결과서 정보 불러오기
-const selectQirList = `SELECT  , IFNULL((q2.insp_vol- IFNULL(q.pass_qtt, 0) - IFNULL(unpass_qtt,0)),0 ) AS 'remaining'
+const selectQirList = `SELECT  *, IFNULL((q2.insp_vol- IFNULL(q.pass_qtt, 0) - IFNULL(unpass_qtt,0)),0 ) AS 'remaining'
                        FROM qir_tbl q
                        LEFT JOIN emp_tbl e ON q.qir_emp_code = e.emp_code
                        LEFT JOIN qio_tbl q2 ON q.qio_code = q2.qio_code
                        WHERE q.result IS NULL
-                       GROUP BY q.qio_code`;
+                       `;
 
 // 검사 결과서 합격 불합격 수정
 const updateQirList = `UPDATE qir_tbl 
