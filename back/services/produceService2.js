@@ -345,4 +345,5 @@ module.exports = {
   findBomMat,
   findAllMrp,
   findByCodeMrpDetail,
+  modifyMrp,
 };
