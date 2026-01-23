@@ -3,7 +3,6 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useQualityStore2 } from '@/stores/quality2.js';
-import axios from 'axios';
 
 import SelectQiOrderModal2 from '@/components/quality/modal/SelectQiOrderModal2.vue';
 const qualityStore = useQualityStore2();
@@ -22,7 +21,7 @@ const orderDisplay = ref(false);
 
 // 모달 열기
 const openModal = async () => {
-  await qualityStore.fetchOrderList();
+  await qualityStore.fetchQiOrderList();
   orderDisplay.value = true;
 };
 
@@ -85,6 +84,25 @@ const filteredOrders = computed(() => {
     return isCodeMatch && isTypeMatch && isStartDateMatch && isEndDateMatch;
   });
 });
+
+//전체조회 버튼 기능추가
+const resetFilters = () => {
+  qio_code.value = '';
+  qio_date.value = '';
+  insp_date.value = '';
+  inspect_type.value = '';
+  mat_name.value = '';
+  qio_status.value = '';
+};
+
+const modalKey = ref(0);
+
+const fetchAll = async () => {
+  resetFilters();
+  selectedOrders.value = [];
+  modalKey.value++; // 모달 강제 리셋
+  await qualityStore.fetchQiOrderList();
+};
 </script>
 
 <!---->
@@ -92,7 +110,7 @@ const filteredOrders = computed(() => {
 <template>
   <div class="card border border-gray-200 flex flex-col gap-6 p-fluid">
     <!--모달창-->
-    <SelectQiOrderModal2 :display="orderDisplay" :qi-order-list="qualityStore.qiOrderList" @close="closeModal" @selected-order="selectedOrder" />
+    <SelectQiOrderModal2 :key="modalKey" :display="orderDisplay" :qi-order-list="qualityStore.qiOrderList" @close="closeModal" @selected-order="selectedOrder" />
     <!------------------------------------------------------------------------------------------------->
     <!-- 검색이 되어야 하는 창-->
     <div class="text-2xl font-bold text-center">품질 검사 목록 조회</div>
@@ -127,7 +145,7 @@ const filteredOrders = computed(() => {
     <div class="flex items-center justify-between mt-2">
       <!-- 왼쪽 영역 -->
       <div class="flex gap-4">
-        <Button label="전체조회" severity="contrast" @click="search" />
+        <Button label="전체조회" severity="contrast" @click="fetchAll" />
         <!--전체를 누르면 전체의 지시코드가 생김-->
         <Button label="검색조회" severity="warn" @click="search" />
       </div>
