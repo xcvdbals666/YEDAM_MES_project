@@ -183,6 +183,18 @@ const insertMrpDetail = `
 INSERT INTO mrp_d_tbl(mrp_d_code, unit, req_qtt, mrp_code, mat_code)
 VALUES(?, ?, ?, ?, ?)`;
 
+// 작업진행 조회
+const selectByCodePrdrDetail = `
+SELECT prd.*, pr.work_order_code, le.*
+FROM prdr_d_tbl prd
+JOIN prdr_tbl pr ON pr.prdr_code = prd.prdr_code
+JOIN (SELECT ppd.no, ld.*, po.po_name, po.po_code, CONCAT(eq.eq_code, ' ', eq.eq_name) AS eq_name
+FROM line_d_tbl ld
+JOIN prod_proc_d_tbl ppd ON ld.pp_code = ppd.pp_code
+JOIN po_tbl po ON ppd.po_code = po.po_code
+JOIN eq_tbl eq ON ld.eq_code = eq.eq_code) le ON le.line_eq_code = prd.line_eq_code
+WHERE pr.work_order_code = ?`;
+
 module.exports = {
   selectAllPrdp,
   selectByCodeOrNamePrdp,
@@ -210,4 +222,5 @@ module.exports = {
   deleteMrpDetail,
   updateMrpDetail,
   insertMrpDetail,
+  selectByCodePrdrDetail,
 };

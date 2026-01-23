@@ -362,6 +362,13 @@ const findAllPrdr = async (data) => {
   return list;
 };
 
+// 작업 진행 조회
+const findByCodePrdrDetail = async (data) => {
+  const { wkoCode } = data;
+  let list = await mysql.query("selectByCodePrdrDetail", [wkoCode], "produce2");
+  return list;
+};
+
 module.exports = {
   findAllPrdp,
   findByCodeOrNamePrdp,
@@ -377,4 +384,5 @@ module.exports = {
   findByCodeMrpDetail,
   modifyMrp,
   findAllPrdr,
+  findByCodePrdrDetail,
 };
