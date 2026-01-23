@@ -8,6 +8,11 @@ const qualityRouter2 = [
     path: '/qioresultlist',
     name: 'QiResultList',
     component: () => import('../views/quality/QiResultList.vue')
+  },
+  {
+    path: '/qiresultdetail',
+    name: 'QiResultDetail',
+    component: () => import('../views/quality/QiResultDetail.vue')
   }
 ];
 
