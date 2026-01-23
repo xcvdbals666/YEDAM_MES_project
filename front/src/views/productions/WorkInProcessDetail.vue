@@ -1,4 +1,4 @@
-<!-- 작업 진행 상세 페이지-->
+<!-- 후행페이지: 작업 진행 상세 페이지-->
 <!-- productions / WorkInProcessDetail.vue -->
 <script setup>
 import { ref, watch, onMounted, computed } from 'vue';
@@ -10,7 +10,7 @@ const route = useRoute();
 const router = useRouter();
 const store = useProductionsStore();
 
-const { wipDetail, wipDetailLoading, lineEquipments, processOptions, prdrStatusList } = storeToRefs(store);
+const { wipDetail, wipDetailLoading, lineEquipments, processOptions, prdrStatusList, prdrDDetail } = storeToRefs(store);
 
 const wkoCode = computed(() => route.params.wko_code);
 const goBack = () => router.back();
@@ -21,6 +21,7 @@ const equipmentNameText = ref(''); //설비명 표시용
 
 const inputQtt = ref(0); //투입량
 const selectedLineEqCode = ref(null);
+const selectedEq = ref(null);
 
 onMounted(async () => {
   await store.fetchWorkInProcessDetail(wkoCode.value);
@@ -80,6 +81,8 @@ const getEqStatus = (lineEqCode) => {
 const onEqClick = async (eq) => {
   const row = prdrStatusList.value.find((r) => r.line_eq_code === eq.line_eq_code);
   if (!row?.prdr_d_code) return;
+
+  selectedEq.value = eq;
   await store.fetchPrdrDDetail(row.prdr_d_code);
 };
 </script>
@@ -98,7 +101,12 @@ const onEqClick = async (eq) => {
 
       <div class="col-span-12 lg:col-span-6 flex items-center gap-3">
         <label class="w-28 shrink-0 text-lg font-semibold">설비명</label>
-        <InputText :modelValue="equipmentNameText" class="w-full" readonly />
+        <InputText 
+          :modelValue="selectedEq?.eq_name ?? equipmentNameText"
+          class="w-full"
+          readonly 
+        />
+        <!-- <InputText :modelValue="equipmentNameText" class="w-full" readonly /> -->
       </div>
 
       <div class="col-span-12 lg:col-span-6 flex items-center gap-3">
@@ -123,17 +131,39 @@ const onEqClick = async (eq) => {
 
       <div class="col-span-12 lg:col-span-6 flex items-center gap-3">
         <label class="w-28 shrink-0 text-lg font-semibold">시작시간</label>
-        <input type="text" class="w-full p-inputtext" placeholder="작업시작 클릭 시 자동으로 입력됩니다." readonly />
+        <input 
+          type="text"
+          class="w-full p-inputtext"
+          :value="prdrDDetail?.start_date 
+                  ? prdrDDetail.start_date.replace('T',' ').slice(0,19) 
+                  : ''"
+          readonly
+        />
+        <!-- <input type="text" class="w-full p-inputtext" placeholder="작업시작 클릭 시 자동으로 입력됩니다." readonly /> -->
       </div>
 
       <div class="col-span-12 lg:col-span-6 flex items-center gap-3">
         <label class="w-28 shrink-0 text-lg font-semibold">종료시간</label>
-        <input type="text" class="w-full p-inputtext" placeholder="작업완료 클릭 시 자동으로 입력됩니다." readonly />
+        <input 
+          type="text"
+          class="w-full p-inputtext"
+          :value="prdrDDetail?.end_date 
+                  ? prdrDDetail.end_date.replace('T',' ').slice(0,19) 
+                  : ''"
+          readonly
+        />  
+        <!-- <input type="text" class="w-full p-inputtext" placeholder="작업완료 클릭 시 자동으로 입력됩니다." readonly /> -->
       </div>
 
       <div class="col-span-12 lg:col-span-6 flex items-center gap-3">
         <label class="w-28 shrink-0 text-lg font-semibold">투입량</label>
-        <input type="number" class="w-full p-inputtext" min="0" v-model.number="inputQtt" placeholder="숫자입력" />
+          <input
+            type="number"
+            class="w-full p-inputtext"
+            :value="prdrDDetail?.input_qtt ?? ''"
+
+          />
+        <!-- <input type="number" class="w-full p-inputtext" min="0" v-model.number="inputQtt" placeholder="숫자입력" /> -->
       </div>
 
       <div class="col-span-12 lg:col-span-6 flex items-center gap-3">
@@ -185,7 +215,6 @@ const onEqClick = async (eq) => {
           <div class="font-semibold">{{ eq.eq_code }}</div>
           <div class="text-sm">{{ eq.eq_name }}</div>
 
-          <!-- 상태 뱃지 -->
           <div class="mt-2 text-xs font-semibold">
             <span v-if="getEqStatus(eq.line_eq_code) === 'running'">진행중</span>
             <span v-else-if="getEqStatus(eq.line_eq_code) === 'done'">작업완료</span>

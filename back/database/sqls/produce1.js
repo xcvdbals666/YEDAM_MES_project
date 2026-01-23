@@ -198,13 +198,63 @@ const selectPrdrDDetail = `
 SELECT
   pd.prdr_d_code,
   pd.prdr_code,
-  pd.input_qtt,
+  pd.input_qtt      AS input_qtt,
   pd.start_date,
   pd.end_date,
   pd.line_eq_code
 FROM prdr_d_tbl pd
 WHERE pd.prdr_d_code = ?
 `;
+
+// 공정 전체 bulletin (wko_code 기준)
+const selectWipBulletinByWko = `
+SELECT
+  d.po_code,
+  po.po_name,
+  d.no,
+
+  ld.line_eq_code,
+  ld.eq_code,
+  e.eq_name,
+  e.eq_type,
+
+  pd.prdr_d_code,
+  pd.start_date,
+  pd.end_date,
+  pd.input_qtt
+
+FROM wko_tbl w
+JOIN prod_proc_tbl pp
+  ON pp.prod_code = w.prod_code
+JOIN prod_proc_d_tbl d
+  ON d.prod_proc_code = pp.prod_proc_code
+JOIN po_tbl po
+  ON po.po_code = d.po_code
+
+LEFT JOIN line_d_tbl ld
+  ON ld.line_code = w.line_code
+LEFT JOIN eq_tbl e
+  ON e.eq_code = ld.eq_code
+  AND e.eq_type = d.eq_type
+
+LEFT JOIN (
+  SELECT x.*
+  FROM prdr_d_tbl x
+  JOIN (
+    SELECT line_eq_code, MAX(start_date) AS max_start
+    FROM prdr_d_tbl
+    GROUP BY line_eq_code
+  ) y
+    ON y.line_eq_code = x.line_eq_code
+   AND y.max_start = x.start_date
+) pd
+  ON pd.line_eq_code = ld.line_eq_code
+
+WHERE w.wko_code = ?
+ORDER BY d.no, ld.eq_code
+`;
+
+
 
 module.exports = {
   selectAllLinesDJ,
@@ -224,4 +274,5 @@ module.exports = {
   insertPrdrDStart,
   selectPrdrStatusByWko,
   selectPrdrDDetail,
+  selectWipBulletinByWko
 };
