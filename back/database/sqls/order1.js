@@ -14,7 +14,8 @@ const selectAllOrder = `SELECT ord_code,
         WHERE d.ord_code=o.ord_code) AS ord_priority,
         ord_stat,
         com_note(ord_stat) as stat_note,
-        (SELECT emp_name FROM emp_tbl e WHERE e.emp_code=o.mcode)AS mname
+        (SELECT emp_name FROM emp_tbl e WHERE e.emp_code=o.mcode)AS mname,
+        (SELECT count(*) FROM ord_d_tbl d WHERE d.ord_code=o.ord_code) AS count
 FROM ord_tbl o
 order by 1 desc`;
 
@@ -129,13 +130,34 @@ WHERE ord_code = ?`;
 // 주문 상세 삭제(주문 코드 기반)
 const deleteDetail = `DELETE FROM ord_d_tbl
 WHERE ord_code = ?`;
+// 주문 상태 코드 및 노트 가져오기
+const selectOrderStats = `SELECT com_value, 
+		note 
+FROM common_code 
+WHERE group_value IN ('0A','0Q')`;
 
+// 완제품 재고 체크
+const selectProductQty = `SELECT current_qty, prod_name FROM view_prod_stock WHERE prod_code = ?`;
+// 자재 재고 체크
+const selectMatStock = `SELECT 
+             bm.mat_code,
+             bm.mat_name,
+             (bm.req_qtt * ?) as need_qty,      -- 필요량 = (개당 소요량 * 생산수량)
+             IFNULL(v.current_qty, 0) as stock_qty -- 현재고 (만들어둔 뷰 활용)
+           FROM bom_tbl b
+           JOIN bom_mat bm ON b.bom_code = bm.bom_code  -- [핵심] 헤더와 상세를 코드로 연결
+           LEFT JOIN view_mat_stock v ON bm.mat_code = v.mat_code
+           WHERE b.prod_code = ? 
+             AND b.is_used = 'f2'`;
+// 공장 혼잡도 체크
+const selectwkoByStat = `SELECT COUNT(*) as cnt FROM wko_tbl WHERE stat != 'v2'`;
 module.exports = {
   selectAllOrder,
   selectAllClient,
   selectAllEmployees,
   selectAllProducts,
   selectOrderDetailByCode,
+  selectOrderStats,
   insertOrder,
   insertOrderDetail,
   selectOrderCode,
@@ -143,4 +165,7 @@ module.exports = {
   updateDetail,
   deleteOrder,
   deleteDetail,
+  selectProductQty,
+  selectMatStock,
+  selectwkoByStat,
 };

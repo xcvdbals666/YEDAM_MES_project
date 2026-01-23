@@ -1,7 +1,6 @@
 <script setup>
-import { ref, watch, onBeforeMount, computed } from 'vue';
+import { ref, watch, onBeforeMount } from 'vue';
 import { useOrderStore } from '@/stores/order1';
-import BaseDialog from '@/components/order/BaseDialog.vue';
 import { FilterMatchMode, FilterService } from '@primevue/core/api';
 const order = useOrderStore();
 
@@ -11,6 +10,7 @@ const orderInfo = ref({
   ord_name: '',
   ord_date: new Date().toISOString().split('T')[0],
   ord_stat: null,
+  stat_note: null,
   client_code: null,
   mcode: '',
   note: ''
@@ -38,7 +38,7 @@ const filters = ref({
   ord_name: { value: null, matchMode: FilterMatchMode.CONTAINS },
   client_name: { value: null, matchMode: FilterMatchMode.CONTAINS },
   ord_code: { value: null, matchMode: FilterMatchMode.CONTAINS },
-  ord_stat: { value: null, matchMode: FilterMatchMode.CONTAINS },
+  ord_stat: { value: null, matchMode: FilterMatchMode.EQUALS },
   ord_date: { value: [null, null], matchMode: 'dateRange' }
 });
 // 검색조건의 시작일 종료일 변수
@@ -64,6 +64,7 @@ onBeforeMount(async () => {
   await order.getOrderList();
   await order.getStatOptions();
   statOptions.value = order.stats;
+  statOptions.value.unshift({ com_value: null, note: '전체' });
 });
 const orderDetail = ref([]);
 // 기존 getOrderDetails 함수를 이걸로 교체하세요.
@@ -116,13 +117,25 @@ const closeModal = () => {
   totalPrice.value = 0;
   ordVisible.value = false;
 };
+const totalCount = ref(0);
+const onFilter = (event) => {
+  totalCount.value = event.filteredValue.length;
+};
+watch(
+  () => order.orders,
+  (newVal) => {
+    if (newVal) {
+      totalCount.value = newVal.length;
+    }
+  }
+);
 </script>
 
 <template>
-  <Dialog v-model:visible="ordVisible" header="주문 상세 정보" :style="{ width: '70vw', maxWidth: '1000px' }" modal :draggable="false">
+  <Dialog v-model:visible="ordVisible" header="주문 상세 정보" :style="{ width: '60vw', maxWidth: '1000px' }" modal :draggable="false">
     <div class="flex flex-col gap-6">
       <div>
-        <h3 class="text-lg font-bold mb-3 text-gray-700">📋 기본 정보</h3>
+        <h3 class="text-lg font-bold mb-3 text-gray-700">주문 정보</h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div class="flex flex-col gap-1">
             <label class="text-sm font-bold text-gray-500">주문코드</label>
@@ -136,14 +149,21 @@ const closeModal = () => {
 
           <div class="flex flex-col gap-1">
             <label class="text-sm font-bold text-gray-500">거래처</label>
-            <InputText v-model="orderInfo.client_name" readonly="true" />
+            <InputText :value="`${orderInfo.client_name} (${orderInfo.client_code})`" readonly="true" />
           </div>
 
           <div class="flex flex-col gap-1">
             <label class="text-sm font-bold text-gray-500">주문일자</label>
             <InputText v-model="orderInfo.ord_date" type="date" readonly="true" />
           </div>
-
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-bold text-gray-500">작성자</label>
+            <InputText readonly="true" :value="`${orderInfo.mname} (${orderInfo.mcode})`" />
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-bold text-gray-500">주문상태</label>
+            <InputText v-model="orderInfo.stat_note" readonly="true" />
+          </div>
           <div class="flex flex-col gap-1 md:col-span-2">
             <label class="text-sm font-bold text-gray-500">비고</label>
             <Textarea v-model="orderInfo.note" rows="2" autoResize readonly="true" />
@@ -155,7 +175,7 @@ const closeModal = () => {
 
       <div>
         <div class="flex justify-between items-end mb-3">
-          <h3 class="text-lg font-bold text-gray-700">📦 주문 품목</h3>
+          <h3 class="text-lg font-bold text-gray-700">주문 상세</h3>
           <span class="text-sm text-gray-500">
             총 합계: <span class="text-xl font-bold text-blue-600">{{ totalPrice.toLocaleString() }} </span>원
           </span>
@@ -166,30 +186,29 @@ const closeModal = () => {
             <template #body="slotProps">
               <div class="flex flex-col">
                 <span class="font-bold">{{ slotProps.data.prod_name }}</span>
-                <span class="text-xs text-gray-500"> {{ slotProps.data.com_note }} | {{ slotProps.data.prod_code }} </span>
+                <span class="text-xs text-gray-500"> 제품 유형 : {{ slotProps.data.com_note }} / 제품 코드: {{ slotProps.data.prod_code }} </span>
               </div>
             </template>
           </Column>
 
-          <Column header="규격/단위" style="width: 120px">
+          <Column header="규격" style="width: 60px">
             <template #body="slotProps">
-              <div>{{ slotProps.data.spec_note }}</div>
-              <div class="text-xs text-gray-400">({{ slotProps.data.unit_note }})</div>
+              <div class="text-center">{{ slotProps.data.spec_note }} ea</div>
             </template>
           </Column>
 
           <Column field="delivery_date" header="납기예정일" style="width: 100px" class="text-center"></Column>
 
-          <Column field="ord_priority" header="우선순위" style="width: 80px" class="text-center">
+          <Column field="ord_priority" header="우선순위" style="width: 60px" class="text-center">
             <template #body="slotProps">
-              <Tag :value="slotProps.data.ord_priority" :severity="getPrioritySeverity(slotProps.data.ord_priority)" />
+              <div class="text-center">
+                <Tag :value="slotProps.data.ord_priority" :severity="getPrioritySeverity(slotProps.data.ord_priority)" />
+              </div>
             </template>
           </Column>
 
           <Column field="ord_amount" header="수량" style="width: 80px" class="text-right">
-            <template #body="slotProps">
-              {{ slotProps.data.ord_amount.toLocaleString() }}
-            </template>
+            <template #body="slotProps"> {{ slotProps.data.ord_amount.toLocaleString() }} ({{ slotProps.data.unit_note }}) </template>
           </Column>
 
           <Column field="prod_price" header="단가" style="width: 100px" class="text-right">
@@ -207,53 +226,52 @@ const closeModal = () => {
       </div>
     </div>
     <template #footer>
-      <Button label="확인" severity="info" variant="outlined" class="min-w-[65px]" @click="closeModal" />
+      <Button label="닫기" severity="secondary" variant="outlined" class="min-w-[65px]" @click="closeModal" />
     </template>
   </Dialog>
   <Fluid>
     <div class="card mb-4">
-      <div class="font-semibold text-xl mb-4">검색 조건</div>
-
+      <div class="font-semibold text-xl flex justify-between items-center">
+        <div>검색 조건</div>
+        <div class="flex items-center gap-2">
+          <Button label="초기화" severity="contrast" variant="outlined" class="min-w-[65px]" @click="resetBtn" />
+        </div>
+      </div>
       <div class="flex flex-wrap gap-4 items-end">
         <div class="flex flex-col gap-2">
           <label for="search" class="font-bold">주문코드</label>
           <IconField>
             <InputIcon class="pi pi-search" />
-            <InputText id="search" v-model="filters['ord_code'].value" placeholder="주문코드" class="w-[300px]" />
+            <InputText id="search" v-model="filters['ord_code'].value" placeholder="주문코드" class="!w-[500px]" />
           </IconField>
         </div>
         <div class="flex flex-col gap-2">
           <label for="search" class="font-bold">주문명</label>
           <IconField>
             <InputIcon class="pi pi-search" />
-            <InputText id="search" v-model="filters['ord_name'].value" placeholder="주문명" class="w-[300px]" />
+            <InputText id="search" v-model="filters['ord_name'].value" placeholder="주문명" class="!w-[500px]" />
           </IconField>
         </div>
         <div class="flex flex-col gap-2">
           <label for="search" class="font-bold">거래처</label>
           <IconField>
             <InputIcon class="pi pi-search" />
-            <InputText id="search" v-model="filters['client_name'].value" placeholder="거래처" class="w-[300px]" />
+            <InputText id="search" v-model="filters['client_name'].value" placeholder="거래처" class="!w-[500px]" />
           </IconField>
         </div>
         <div class="flex flex-col gap-2">
           <label class="font-bold text-sm">주문일자 (기간)</label>
           <div class="flex items-center gap-2">
-            <DatePicker v-model="startDate" showIcon dateFormat="yy-mm-dd" placeholder="시작일" class="w-[140px]" />
+            <DatePicker v-model="startDate" showIcon dateFormat="yy-mm-dd" placeholder="시작일" class="!w-[240px]" />
             <span>~</span>
-            <DatePicker v-model="endDate" showIcon dateFormat="yy-mm-dd" placeholder="종료일" class="w-[140px]" />
+            <DatePicker v-model="endDate" showIcon dateFormat="yy-mm-dd" placeholder="종료일" class="!w-[240px]" />
           </div>
         </div>
         <div class="flex flex-col gap-2">
           <label for="search" class="font-bold">주문상태</label>
-          <IconField>
-            <InputIcon class="pi pi-search" />
-            <Select id="search" v-model="filters['ord_code'].value" placeholder="거래처" class="w-[300px]" :options="statOptions" option-label="stat_note" option-value="ord_stat" />
-          </IconField>
+          <Select id="search" v-model="filters['ord_stat'].value" placeholder="주문상태" class="!w-[500px]" :options="statOptions" option-label="note" option-value="com_value" />
         </div>
-        <div class="ml-auto flex gap-2">
-          <Button label="초기화" severity="contrast" variant="outlined" @click="resetBtn" />
-        </div>
+        <div class="ml-auto flex gap-2"></div>
       </div>
     </div>
 
@@ -273,22 +291,59 @@ const closeModal = () => {
             selection-mode="single"
             :rowClass="rowClass"
             :metaKeySelection="false"
+            showGridlines
             @row-dblclick="getOrderDetails"
+            @filter="onFilter"
           >
-            <Column field="ord_code" header="주문코드"></Column>
-            <Column field="ord_name" header="주문명"></Column>
-            <Column field="client_name" header="거래처명"></Column>
-            <Column field="stat_note" header="상태" />
-            <Column field="ord_date" header="주문일자" />
-            <Column field="mcode" header="작성자">
+            <Column field="ord_code" sortable>
+              <template #header>
+                <div class="w-full text-center font-bold">주문코드</div>
+              </template>
+            </Column>
+            <Column field="ord_name" sortable>
+              <template #header>
+                <div class="w-full text-center font-bold">주문명</div>
+              </template>
+            </Column>
+            <Column field="client_name" sortable>
+              <template #header>
+                <div class="w-full text-center font-bold">거래처명</div>
+              </template>
+            </Column>
+            <Column field="stat_note" sortable>
+              <template #header>
+                <div class="w-full text-center font-bold">상태</div>
+              </template>
+            </Column>
+            <Column field="ord_date" sortable>
+              <template #header>
+                <div class="w-full text-center font-bold">주문일자</div>
+              </template>
+            </Column>
+            <Column field="mcode" sortable>
+              <template #header>
+                <div class="w-full text-center font-bold">작성자</div>
+              </template>
               <template #body="slotProps">
                 {{ `${slotProps.data.mname} (${slotProps.data.mcode})` }}
               </template>
             </Column>
+            <Column field="count">
+              <template #header>
+                <div class="w-full text-center font-bold">상세건수</div>
+              </template>
+              <template #body="slotProps">
+                <div class="w-full text-center">
+                  {{ `${slotProps.data.count} 건` }}
+                </div>
+              </template>
+            </Column>
+
+            <Column field="ord_stat" hidden></Column>
           </DataTable>
           <div class="flex justify-end mt-4">
             <h5>
-              총 <span class="text-orange-700 font-bold text-4xl">{{ order.orders.length }}</span
+              총 <span class="text-orange-700 font-bold text-4xl">{{ totalCount }}</span
               >건
             </h5>
           </div>
