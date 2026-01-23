@@ -53,6 +53,7 @@ export const useOrderStore = defineStore('order', {
     // 주문 목록 불러오기(주문목록페이지용)
     async getOrderList() {
       let list = await axios.get(`${url}/orders`);
+      console.log(list);
       this.orders = list.data;
     },
     // 주문 상세 불러오기
@@ -83,6 +84,12 @@ export const useOrderStore = defineStore('order', {
       let result = await axios.get(`${url}/orderStats`);
       console.log(result.data);
       this.stats = result.data;
+    },
+    // AI 납기일 분석
+    async expectDateByAI(prodCode, Qty) {
+      let result = await axios.get(`${url}/ai/${prodCode}/${Qty}`);
+      console.log(result.data);
+      return result.data;
     }
   },
   persist: true
