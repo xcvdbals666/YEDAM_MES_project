@@ -1,7 +1,5 @@
 <!-- 후행페이지: 작업 진행 상세 페이지-->
 <!-- productions / WorkInProcessDetail.vue -->
-<!-- productions / WorkInProcessDetail.vue -->
-<!-- productions / WorkInProcessDetail.vue -->
 <script setup>
 import { ref, watch, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -12,17 +10,11 @@ const route = useRoute();
 const router = useRouter();
 const store = useProductionsStore();
 
-const {
-  wipDetail,
-  wipDetailLoading,
-  lineEquipments,
-  processOptions,
-  prdrStatusList,
-  prdrDDetail
-} = storeToRefs(store);
+const { wipDetail, wipDetailLoading, lineEquipments, processOptions, prdrStatusList, prdrDDetail } = storeToRefs(store);
 
 const wkoCode = computed(() => route.params.wko_code);
-const selectedPoCode = computed(() => route.query.po_code); // Bulletin에서 넘어온 공정코드
+//const selectedPoCode = computed(() => route.query.po_code); // Bulletin에서 넘어온 공정코드
+const selectedPoCode = computed(() => 'PO-005');
 
 const goBack = () => router.back();
 
@@ -226,36 +218,26 @@ watch(prdrStatusList, async () => {
 
     <div class="flex gap-2 mt-4">
       <Button label="목록" severity="secondary" @click="goBack" />
-      <Button label="작업시작" severity="success" @click="onStart" :disabled="isStarted" />
       <!-- 작업시작 되면 버튼 못누름 -->
-      <Button label="작업종료" severity="info" disabled />
+      <Button label="작업시작" severity="success" @click="onStart" :disabled="isStarted" />
+
+      <Button label="작업종료" severity="info" />
     </div>
   </div>
 
   <!-- 설비 카드 -->
   <div class="card mt-4">
     <div class="font-semibold text-xl mb-3">라인 설비 목록</div>
-    <div class="text-sm text-gray-500 mb-3">
-      라인: {{ wipDetail?.line_code || '-' }} / 선택 공정: {{ selectedPoName || '-' }}
-    </div>
+    <div class="text-sm text-gray-500 mb-3">라인: {{ wipDetail?.line_code || '-' }} / 선택 공정: {{ selectedPoName || '-' }}</div>
 
     <div class="grid grid-cols-12 gap-3">
-      <div
-        v-for="eq in allEquipments"
-        :key="eq.line_eq_code"
-        :class="[
-          'col-span-12 md:col-span-4 lg:col-span-3 border rounded-lg p-3 text-center',
-          eq.eq_type === selectedEqType && 'bg-yellow-200 border-yellow-400'
-        ]"
-      >
+      <div v-for="eq in allEquipments" :key="eq.line_eq_code" :class="['col-span-12 md:col-span-4 lg:col-span-3 border rounded-lg p-3 text-center', eq.eq_type === selectedEqType && 'bg-yellow-200 border-yellow-400']">
         <div class="font-semibold">{{ eq.eq_code }}</div>
         <div class="text-sm">{{ eq.eq_name }}</div>
         <div class="mt-2 text-xs text-gray-500">유형: {{ eq.eq_type }}</div>
       </div>
 
-      <div v-if="!allEquipments.length" class="col-span-12 text-gray-500 p-3">
-        해당 라인에 등록된 설비가 없습니다.
-      </div>
+      <div v-if="!allEquipments.length" class="col-span-12 text-gray-500 p-3">해당 라인에 등록된 설비가 없습니다.</div>
     </div>
   </div>
 </template>
@@ -268,4 +250,3 @@ watch(prdrStatusList, async () => {
   cursor: not-allowed;
 }
 </style>
-
