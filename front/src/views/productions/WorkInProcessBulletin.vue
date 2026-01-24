@@ -12,10 +12,11 @@ const router = useRouter();
 const store = useProductionStore();
 
 const wkoCode = computed(() => route.params.wko_code); // 작업지시 번호
+const lineCode = computed(() => route.query.line_code);
 const bulletinRows = ref([]);
 
 onMounted(async () => {
-  bulletinRows.value = await store.fetchPrdrDetail(wkoCode.value);
+  bulletinRows.value = await store.fetchPrdrDetail(wkoCode.value, lineCode.value);
 });
 
 const fmt = (v) => {

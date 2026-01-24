@@ -102,7 +102,7 @@ router.get(`/prdr`, async (req, res) => {
 });
 
 // 작업진행 조회
-router.get(`/prdr/:wkoCode`, async (req, res) => {
+router.get(`/prdr/:wkoCode/:lineCode`, async (req, res) => {
   const data = req.params;
   let list = await produceService.findByCodePrdrDetail(data);
   res.send(list);
