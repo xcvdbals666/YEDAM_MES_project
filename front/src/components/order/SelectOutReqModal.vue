@@ -91,7 +91,7 @@ const formatDate = (v) => {
       <InputText v-model="keyword" placeholder="출고요청코드 또는 주문명을 입력해주세요" class="w-full" />
     </div>
 
-    <DataTable :value="groupedOutReq" v-model:selection="selectedOutReq" selectionMode="single" dataKey="ord_code" scrollable scrollHeight="400px">
+    <DataTable :value="groupedOutReq" v-model:selection="selectedOutReq" selectionMode="single" dataKey="out_req_code" scrollable scrollHeight="400px">
       <Column selectionMode="single" style="width: 3rem" />
       <Column field="out_req_code" header="출고요청코드" />
       <Column field="prod_display" header="제품명" />
@@ -103,7 +103,7 @@ const formatDate = (v) => {
       </Column>
       <Column header="상태">
         <template #body="{ data }">
-          <Tag :value="statusMap[data.ord_stat]?.label || '알수없음'" :severity="statusMap[data.stat]?.severity || 'info'" rounded />
+          <Tag :value="statusMap[data.ord_stat]?.label || '알수없음'" :severity="statusMap[data.ord_stat]?.severity || 'info'" rounded />
         </template>
       </Column>
     </DataTable>

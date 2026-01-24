@@ -150,7 +150,7 @@ const findByOrderOrdTbl = async (keyword) => {
     const like = `%${keyword}%`;
     params.push(like, like);
   }
-  sql += ` ORDER BY o.ord_code `;
+  sql += ` ORDER BY o.ord_code DESC `;
   return mysql.rquery(sql, params);
 };
 
@@ -211,7 +211,7 @@ const createOutboundRequest = async (requestData) => {
       "order2",
     );
 
-    // 2. 출고요청 상세 INSERT (제품별 반복)
+    // 2. 출고요청 상세코드 INSERT (제품별 반복)
     for (let i = 0; i < products.length; i++) {
       const detailCode = `${outReqInfo.out_req_code}-D${String(i + 1).padStart(4, "0")}`;
 
@@ -265,8 +265,31 @@ const findAllOutReq = async (keyword) => {
     const like = `%${keyword}%`;
     params.push(like, like);
   }
-  sql += ` ORDER BY o.out_req_code `;
+  sql += ` ORDER BY o.out_req_code DESC `;
   return mysql.rquery(sql, params);
+};
+
+// 출고 요청 정보 + 제품 목록 조회
+const findOutReqDetailForOutbound = async (out_req_code) => {
+  // Promise.all(): 여러 개의 비동기 작업을 동시에 실행하고 모두 끝날 때까지 기다림
+  const [outReqInfo, products] = await Promise.all([
+    mysql.query("selectByOutReqCode", [out_req_code], "order2"),
+    mysql.query("selectProdListByOutreq", [out_req_code, out_req_code], "order2")
+  ]);
+
+    // 제품 목록의 숫자 필드들을 Number로 변환
+  const processedProducts = products.map((product) => ({
+    ...product,
+    out_req_amount: Number(product.out_req_amount),
+    already_outbnd_qtt: Number(product.already_outbnd_qtt) || 0,
+    not_outbnd_qtt: Number(product.not_outbnd_qtt) || 0,
+    current_stock: Number(product.current_stock) || 0,
+  }));
+
+  return {
+    outReqInfo: outReqInfo[0] || null,
+    products: processedProducts,
+  };
 };
 
 module.exports = {
@@ -282,4 +305,5 @@ module.exports = {
   findOrderDetailForOutbound,
   createOutboundRequest,
   findAllOutReq,
+  findOutReqDetailForOutbound
 };
