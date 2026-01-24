@@ -43,9 +43,13 @@ const findAllMrpCodeMrpTbl = async () => {
 };
 
 // 자재 선택 - 자재 정보 조회
-const findByMatCodeMatTbl = async (keyword) => {
+const findByMatCodeMatTbl = async ({ keyword, mrpCode }) => {
   const like = `%${keyword || ""}%`;
-  const list = await mysql.query("selectByMatCodeMatTbl", like, "material2");
+  const list = await mysql.query(
+    "selectByMatCodeMatTbl",
+    [mrpCode || null, mrpCode || null, like],
+    "material2",
+  );
   return list;
 };
 
@@ -342,18 +346,49 @@ const findIsEditable = async (mprCode) => {
   return list.length === 0;
 };
 
-// 입출고내역조회
+// 자재 입출고내역조회
 const findMaterialInOutList = async (params) => {
   const {
     ioType = "ALL",
     dateFrom = null,
     dateTo = null,
-    keyword = null,
+    keyword = "",
     status = "ALL",
   } = params;
 
   const list = await mysql.query(
     "selectMaterialInOutList",
+    [
+      ioType, // 입출고 타입
+      ioType,
+      dateFrom, // 시작일
+      dateFrom,
+      dateTo, // 종료일
+      dateTo,
+      keyword, // 검색어 없음
+      keyword, // 자재명
+      keyword,
+      status, // 처리 상태
+      status,
+    ],
+    "material2",
+  );
+
+  return list;
+};
+
+// 완제품 입출고내역조회
+const findProductInOutList = async (params) => {
+  const {
+    ioType = "ALL",
+    dateFrom = null,
+    dateTo = null,
+    keyword = "",
+    status = "ALL",
+  } = params;
+
+  const list = await mysql.query(
+    "selectProductInOutList",
     [
       ioType, // 입출고 타입
       ioType,
@@ -390,4 +425,5 @@ module.exports = {
   findIsEditable,
   removeMpr,
   findMaterialInOutList,
+  findProductInOutList,
 };

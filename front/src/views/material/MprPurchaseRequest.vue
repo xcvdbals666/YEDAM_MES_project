@@ -397,9 +397,9 @@ const deleteMpr = async () => {
       @delete="deleteMpr"
       @reset="reset"
     />
-    <MprRequestItem v-model="requestDetailInfo" :isEditable="isEditable" :isEditMode="isEditMode" @selecte-material="(row) => openMaterialModal(row)" />
+    <MprRequestItem v-model="requestDetailInfo" :isEditable="isEditable" :isEditMode="isEditMode" @selecte-material="(row) => openMaterialModal(row)" :mrpCode="requestInfo.mrpCode" />
   </div>
   <SelectModal v-model:visible="showWriterModal" type="employee" @select="selectWriter" />
-  <SelectModal v-model:visible="showMaterialModal" type="material" @select="selectMaterial" />
+  <SelectModal v-model:visible="showMaterialModal" type="material" @select="selectMaterial" :mrpCode="requestInfo.mrpCode" />
   <SelectModal v-model:visible="showMprModal" type="mpr" @select="selectMpr" />
 </template>
