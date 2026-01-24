@@ -186,9 +186,9 @@ export const useProductionStore = defineStore('production', {
       }
     },
 
-    async fetchPrdrDetail(wkoCode) {
+    async fetchPrdrDetail(wkoCode, lineCode) {
       try {
-        const response = await axios.get(`/api/produce/prdr/${wkoCode}`);
+        const response = await axios.get(`/api/produce/prdr/${wkoCode}/${lineCode}`);
         this.prdrDetailList = response.data;
         return this.prdrDetailList;
       } catch (err) {

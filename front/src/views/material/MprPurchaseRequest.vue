@@ -32,6 +32,7 @@ const requestInfo = ref({
 const selectedRow = ref(null);
 const requestDetailInfo = ref([
   {
+    __key: Date.now() + Math.random(),
     mprDCode: '', // 요청상세코드
     materialName: '', // 자재 이름
     curQtt: null, // 현재고
@@ -104,6 +105,7 @@ const selectMaterial = (m) => {
 const selectMpr = async (mprCode) => {
   try {
     console.log('선택한 mprCode:', mprCode);
+    isEditMode.value = true;
 
     /*
       1. MPR 헤더 조회 - 구매요청서 기본 정보 (작성자, 납기일, 참조 MRP 등)
@@ -163,7 +165,6 @@ const selectMpr = async (mprCode) => {
 
     // 수정 모드 진입
     showMprModal.value = false;
-    isEditMode.value = true;
 
     // 발주 진행 여부에 따라 수정 가능 여부 판단
     isEditable.value = await store.checkEditable(mprCode);
@@ -244,10 +245,8 @@ watch(selectedMrpValue, async (val) => {
 });
 
 const canSelectMrp = computed(() => {
-  // 수정 + 이미 MRP 있음 → 선택 불가
-  if (isEditMode.value && requestInfo.value.mrpCode) return false;
-
-  // 나머지는 전부 가능
+  // 수정 모드면 무조건 MRP 선택 불가
+  if (isEditMode.value) return false;
   return true;
 });
 
@@ -311,11 +310,6 @@ const save = async () => {
     }))
   );
 
-  if (aliveItems.length === 0) {
-    alert('자재를 한 개 이상 선택하세요');
-    return;
-  }
-
   for (const mat of validItems) {
     if (!mat.reqQtt || mat.reqQtt <= 0) {
       alert('요청수량을 입력하세요');
@@ -337,7 +331,7 @@ const save = async () => {
     requestDetail: requestDetailInfo.value
       .filter((v) => v.matCode) // 자재 있는 것만
       .map((v) => ({
-        mprDCode: v.mprDCode || null,
+        mprDCode: v.mprDCode,
         is_deleted: v.is_deleted || false,
         sourceType: v.sourceType,
         reqQtt: v.reqQtt,
@@ -403,9 +397,9 @@ const deleteMpr = async () => {
       @delete="deleteMpr"
       @reset="reset"
     />
-    <MprRequestItem v-model="requestDetailInfo" :isEditable="isEditable" :isEditMode="isEditMode" @selecte-material="(row) => openMaterialModal(row)" />
+    <MprRequestItem v-model="requestDetailInfo" :isEditable="isEditable" :isEditMode="isEditMode" @selecte-material="(row) => openMaterialModal(row)" :mrpCode="requestInfo.mrpCode" />
   </div>
   <SelectModal v-model:visible="showWriterModal" type="employee" @select="selectWriter" />
-  <SelectModal v-model:visible="showMaterialModal" type="material" @select="selectMaterial" />
+  <SelectModal v-model:visible="showMaterialModal" type="material" @select="selectMaterial" :mrpCode="requestInfo.mrpCode" />
   <SelectModal v-model:visible="showMprModal" type="mpr" @select="selectMpr" />
 </template>

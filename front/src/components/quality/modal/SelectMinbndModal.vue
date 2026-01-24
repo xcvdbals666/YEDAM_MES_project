@@ -12,7 +12,7 @@ console.log(props.minbnd);
 console.log(selectedProducts.value);
 </script>
 <template>
-  <Dialog v-model:visible="props.display" :breakpoints="{ '960px': '75vw' }" :style="{ width: '50vw' }" :modal="true">
+  <Dialog v-model:visible="props.display" @update:visible="$emit('close')" :breakpoints="{ '960px': '75vw' }" :style="{ width: '50vw' }" :modal="true">
     <DataTable ref="dt" v-model:selection="selectedProducts" :value="props.minbnd" dataKey="mpo_d_code" v-if="props.minbnd.length > 0">
       <template #header>
         <div class="flex flex-wrap gap-2 items-center justify-between">

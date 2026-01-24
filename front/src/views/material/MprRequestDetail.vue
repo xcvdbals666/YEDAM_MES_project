@@ -27,6 +27,14 @@ onMounted(() => {
   store.fetchDetailHeader(props.mprCode);
   store.fetchDetailItem(props.mprCode);
 });
+
+// MRP 자재 행 스타일
+const rowClass = (data) => {
+  if (data.source_type === 'mrp') {
+    return 'row-mrp';
+  }
+  return '';
+};
 </script>
 
 <template>
@@ -68,12 +76,12 @@ onMounted(() => {
   </div>
 
   <!-- 요청 자재 상세 -->
-  <div class="card min-h-[500px]">
+  <div class="card h-[500px] min-h-[500px]">
     <div class="border-b pb-2 mb-4">
       <h4 class="font-semibold">요청 자재 상세</h4>
     </div>
 
-    <DataTable :value="store.mprItems" showGridlines class="p-datatable-sm" tableStyle="table-layout: fixed; width: 100%;" :paginator="true" :rows="10">
+    <DataTable :value="store.mprItems" showGridlines class="p-datatable-sm" :rowClass="rowClass" tableStyle="table-layout: fixed; width: 100%;" :paginator="true" :rows="10">
       <template #empty>
         <div class="text-center py-6 text-gray-400">데이터 없음</div>
       </template>
@@ -114,5 +122,9 @@ td {
 :deep(.p-datatable.p-datatable-gridlines .p-datatable-table th:not(:first-child)),
 :deep(.p-datatable.p-datatable-gridlines .p-datatable-table td:not(:first-child)) {
   border-left: 0 !important;
+}
+
+:deep(.row-mrp) {
+  background-color: #eff6ff;
 }
 </style>

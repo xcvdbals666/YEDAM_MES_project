@@ -4,7 +4,11 @@ import { ref, watch, onMounted, computed } from 'vue';
 const props = defineProps({
   modelValue: Array,
   isEditable: Boolean,
-  isEditMode: Boolean
+  isEditMode: Boolean,
+  mrpCode: {
+    type: String,
+    default: null
+  }
 });
 const emit = defineEmits(['update:modelValue', 'selecteMaterial']);
 
@@ -91,8 +95,13 @@ const rowClass = (data) => {
   return '';
 };
 
-// MRP 자재인지 수동추가 자재인지 구분
-// const isMrpRow = (row) => row.sourceType === 'mrp';
+// 부족수량 tooltip 문구
+const lackQtyTooltip = computed(() => {
+  if (props.mrpCode) {
+    return '선택한 MRP 계획을 기준으로 계산된 부족수량입니다.';
+  }
+  return '전체 생산계획 기준으로 계산된 참고용 부족수량입니다.';
+});
 </script>
 
 <template>
@@ -122,7 +131,7 @@ const rowClass = (data) => {
     >
       <Column selectionMode="multiple" headerStyle="width: 48px; padding: 8px;">
         <template #body="{ data }">
-          <Checkbox v-model="selectedRows" :value="data" :disabled="props.isEditMode && data.sourceType === 'mrp'" />
+          <Checkbox v-model="selectedRows" :value="data" :disabled="(props.isEditMode && data.sourceType === 'mrp') || !props.isEditable" />
         </template>
       </Column>
 
@@ -144,7 +153,13 @@ const rowClass = (data) => {
         </template>
       </Column>
 
-      <Column header="부족수량" headerStyle="width: 110px; padding: 10px;">
+      <Column headerStyle="width: 110px; padding: 10px;">
+        <template #header>
+          <div class="flex items-center gap-1">
+            <span>부족수량</span>
+            <i class="pi pi-info-circle text-gray-400 cursor-pointer" v-tooltip.top="lackQtyTooltip" />
+          </div>
+        </template>
         <template #body="{ data }">
           <InputText v-model="data.lackQtt" class="w-full text-right" disabled />
         </template>

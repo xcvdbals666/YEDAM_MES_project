@@ -27,7 +27,7 @@ const findByCodeOrNamePrdp = async (data) => {
   let list = await mysql.query(
     "selectByCodeOrNamePrdp",
     [query, query],
-    "produce2",
+    "produce2"
   );
   return list;
 };
@@ -45,7 +45,7 @@ const findByCodeOrNameOrd = async (data) => {
   let list = await mysql.query(
     "selectByCodeOrNameOrd",
     [query, query],
-    "produce2",
+    "produce2"
   );
   return list;
 };
@@ -57,7 +57,7 @@ const findByCodeOrNameProd = async (data) => {
   let list = await mysql.query(
     "selectByCodeOrNameProd",
     [query, query, type],
-    "produce2",
+    "produce2"
   );
   return list;
 };
@@ -68,7 +68,7 @@ const findByCodeOrNameLine = async (data) => {
   let list = await mysql.query(
     "selectByCodeOrNameLine",
     [query, query],
-    "produce2",
+    "produce2"
   );
   return list;
 };
@@ -93,14 +93,14 @@ const modifyPrdp = async (data) => {
           info.note,
           info.prdpCode,
         ],
-        "produce2",
+        "produce2"
       );
     } else {
       const month = `${info.prdpDate.slice(0, 4)}${info.prdpDate.slice(5, 7)}`;
       const number =
         Number(
           (await mysql.query("selectMaxCodePrdp", [month], "produce2"))[0]
-            .number,
+            .number
         ) + 1;
       prdpCode = `PRDP-${month}-${String(number).padStart(4, "0")}`;
       prdpResult = await mysql.query(
@@ -116,7 +116,7 @@ const modifyPrdp = async (data) => {
           info.ordCode,
           info.reg,
         ],
-        "produce2",
+        "produce2"
       );
     }
     resObj.prdpCode = prdpCode;
@@ -128,7 +128,7 @@ const modifyPrdp = async (data) => {
         result = await mysql.query(
           "deletePrdpDetail",
           [data.prdp_d_code],
-          "produce2",
+          "produce2"
         );
       } else if (data.prdp_d_code.startsWith("PRDP")) {
         // 행 수정
@@ -141,14 +141,14 @@ const modifyPrdp = async (data) => {
             data.line_code,
             data.prdp_d_code,
           ],
-          "produce2",
+          "produce2"
         );
       } else {
         // 행 추가
         const number =
           Number(
             (await mysql.query("selectMaxCodePrdpDetail", null, "produce2"))[0]
-              .number,
+              .number
           ) + 1;
         const prdp_d_code = `PRDP-D-${String(number).padStart(4, "0")}`;
         result = await mysql.query(
@@ -162,7 +162,7 @@ const modifyPrdp = async (data) => {
             prdpCode,
             data.line_code,
           ],
-          "produce2",
+          "produce2"
         );
       }
     }
@@ -193,7 +193,7 @@ const findByCodeOrNameMat = async (data) => {
   let list = await mysql.query(
     "selectByCodeOrNameMat",
     [query, query],
-    "produce2",
+    "produce2"
   );
   return list;
 };
@@ -249,7 +249,7 @@ const findByCodeMrpDetail = async (data) => {
   resObj.matList = await mysql.query(
     "selectByCodeMrpDetail",
     [mrpCode],
-    "produce2",
+    "produce2"
   );
   return resObj;
 };
@@ -273,13 +273,13 @@ const modifyMrp = async (data) => {
           info.reg,
           info.mrpCode,
         ],
-        "produce2",
+        "produce2"
       );
     } else {
       const day = `${info.planDate.slice(0, 4)}${info.planDate.slice(5, 7)}${info.planDate.slice(8, 10)}`;
       const number =
         Number(
-          (await mysql.query("selectMaxCodeMrp", [day], "produce2"))[0].number,
+          (await mysql.query("selectMaxCodeMrp", [day], "produce2"))[0].number
         ) + 1;
       mrpCode = `MRP-${day}-${String(number).padStart(3, "0")}`;
       mrpResult = await mysql.query(
@@ -292,7 +292,7 @@ const modifyMrp = async (data) => {
           info.prdpCode,
           info.reg,
         ],
-        "produce2",
+        "produce2"
       );
     }
     resObj.mrpCode = mrpCode;
@@ -304,26 +304,26 @@ const modifyMrp = async (data) => {
         result = await mysql.query(
           "deleteMrpDetail",
           [data.mrp_d_code],
-          "produce2",
+          "produce2"
         );
       } else if (data.mrp_d_code.startsWith("MRP")) {
         // 행 수정
         result = await mysql.query(
           "updateMrpDetail",
           [data.req_qtt, data.mrp_d_code],
-          "produce2",
+          "produce2"
         );
       } else {
         const number =
           Number(
             (await mysql.query("selectMaxCodeMrpDetail", null, "produce2"))[0]
-              .number,
+              .number
           ) + 1;
         const mrp_d_code = `MRP-D-${String(number).padStart(4, "0")}`;
         result = await mysql.query(
           "insertMrpDetail",
           [mrp_d_code, data.unit, data.req_qtt, mrpCode, data.mat_code],
-          "produce2",
+          "produce2"
         );
       }
     }
@@ -364,8 +364,12 @@ const findAllPrdr = async (data) => {
 
 // 작업 진행 조회
 const findByCodePrdrDetail = async (data) => {
-  const { wkoCode } = data;
-  let list = await mysql.query("selectByCodePrdrDetail", [wkoCode], "produce2");
+  const { lineCode, wkoCode } = data;
+  let list = await mysql.query(
+    "selectByCodePrdrDetail",
+    [lineCode, wkoCode],
+    "produce2"
+  );
   return list;
 };
 

@@ -120,4 +120,16 @@ router.get("/request-code", async (req, res) => {
   res.send(list);
 });
 
+// 출고요청 정보 + 제품 목록 함께 조회
+router.get("/request-detail/:out_req_code", async (req, res) => {
+  try {
+    const out_req_code = req.params.out_req_code;
+    let result = await orderService.findOutReqDetailForOutbound(out_req_code);
+    res.send(result);
+  } catch (error) {
+    console.error("출고요청 상세 조회 오류:", error);
+    res.status(500).send({ error: "출고요청 정보를 불러오는데 실패했습니다." });
+  }
+});
+
 module.exports = router;

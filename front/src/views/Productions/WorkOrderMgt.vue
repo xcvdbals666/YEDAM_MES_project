@@ -30,7 +30,7 @@ const statusMap = {
 };
 
 //모달에서 생산계획 하나 선택
-const selectedPlan = ref(null); 
+const selectedPlan = ref(null);
 
 //초기 폼 (리셋에 사용)
 const emptyForm = {
@@ -136,42 +136,41 @@ onMounted(() => {
 //wko_code 번호만들기
 //저장버튼 누르는 순간 실행!
 const saveWorkOrder = async () => {
-  
-  if (!form.value.wko_code){
-  const now = new Date();
-  const year = now.getFullYear();
-  // 월, 일은 10보다 작으면 앞에'0을 붙여서 2자리로
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  const todayDate = `${year}${month}${day}`;
-  const prefix = `WKO-${todayDate}`;
+  if (!form.value.wko_code) {
+    const now = new Date();
+    const year = now.getFullYear();
+    // 월, 일은 10보다 작으면 앞에'0을 붙여서 2자리로
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const todayDate = `${year}${month}${day}`;
+    const prefix = `WKO-${todayDate}`;
 
-  // 중복 피하기 위해 DB에서 최신 목록을 한 번 더 - store에 fetchWorkOrders 실행
-  await store.fetchWorkOrders();
+    // 중복 피하기 위해 DB에서 최신 목록을 한 번 더 - store에 fetchWorkOrders 실행
+    await store.fetchWorkOrders();
 
-  // wkoList에서 오늘 만든 번호만 골라냄
-  const todayOrders = wkoList.value.filter((item) => {
-    return item.wko_code && item.wko_code.startsWith(prefix);
-  });
-
-  let nextNumber = 1;
-
-  // 오늘 등록된 데이터가 있으면 젤 큰 번호를 찾아 +1
-  if (todayOrders.length > 0) {
-    const numbers = todayOrders.map((item) => {
-      //- 기준으로 쪼개서
-      const parts = item.wko_code.split('-');
-      // 3번째(인덱스 2번)를 숫자로 변환
-      return parseInt(parts[2]);
+    // wkoList에서 오늘 만든 번호만 골라냄
+    const todayOrders = wkoList.value.filter((item) => {
+      return item.wko_code && item.wko_code.startsWith(prefix);
     });
-    // 찾아낸 숫자들 중 가장 큰 값에 1 더함
-    nextNumber = Math.max(...numbers) + 1;
+
+    let nextNumber = 1;
+
+    // 오늘 등록된 데이터가 있으면 젤 큰 번호를 찾아 +1
+    if (todayOrders.length > 0) {
+      const numbers = todayOrders.map((item) => {
+        //- 기준으로 쪼개서
+        const parts = item.wko_code.split('-');
+        // 3번째(인덱스 2번)를 숫자로 변환
+        return parseInt(parts[2]);
+      });
+      // 찾아낸 숫자들 중 가장 큰 값에 1 더함
+      nextNumber = Math.max(...numbers) + 1;
+    }
+
+    const finalSeq = String(nextNumber).padStart(3, '0');
+
+    form.value.wko_code = `${prefix}-${finalSeq}`;
   }
-
-  const finalSeq = String(nextNumber).padStart(3, '0');
-
-  form.value.wko_code = `${prefix}-${finalSeq}`;
-}
 
   try {
     await store.saveWorkOrder(form.value);
@@ -223,6 +222,13 @@ const deleteCurrentWko = async () => {
   alert(`${code}를 삭제했습니다`);
   resetForm();
 };
+
+const filteredLines = computed(() => {
+  const list = Array.isArray(lines.value) ? lines.value : [];
+  const prod = form.value.prod_code;
+  if (!prod) return list;
+  return list.filter((l) => l.prod_code === prod);
+});
 </script>
 
 <template>
@@ -304,7 +310,7 @@ const deleteCurrentWko = async () => {
 
       <div class="col-span-12 lg:col-span-6 flex items-center gap-3">
         <label class="w-28 shrink-0 text-lg font-semibold">라인 코드</label>
-        <Dropdown v-model="form.line_code" :options="lines" optionLabel="line_code" optionValue="line_code" placeholder="라인 선택" class="w-full" />
+        <Dropdown v-model="form.line_code" :options="filteredLines" optionLabel="line_code" optionValue="line_code" placeholder="라인 선택" class="w-full" />
       </div>
 
       <div class="col-span-12 lg:col-span-12 flex items-center gap-3">
@@ -335,7 +341,7 @@ const deleteCurrentWko = async () => {
         </template>
       </Column>
       <!-- <Column field="due_date" header="납기일자" /> -->
-        <Column header="작업시작일">
+      <Column header="작업시작일">
         <template #body="{ data }">
           {{ convertDate(data.start_date) }}
         </template>

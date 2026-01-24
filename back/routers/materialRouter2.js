@@ -24,8 +24,8 @@ router.get("/getMrpCode", async (req, res) => {
 
 // 자재 선택 - 자재 정보 조회
 router.get(`/mat-info`, async (req, res) => {
-  const { keyword = "" } = req.query;
-  let list = await materialService2.findByMatCodeMatTbl(keyword);
+  const { keyword = "", mrpCode = null } = req.query;
+  let list = await materialService2.findByMatCodeMatTbl({ keyword, mrpCode });
   res.send(list);
 });
 
@@ -137,10 +137,17 @@ router.get("/mpr-request/:mprCode/editable", async (req, res) => {
   res.send({ isEditable });
 });
 
-// 입출고내역조회
+// 자재 입출고내역조회
 router.get("/mat-inout", async (req, res) => {
   const params = req.query;
   const list = await materialService2.findMaterialInOutList(params);
+  res.send(list);
+});
+
+// 완제품 입출고내역조회
+router.get("/prod-inout", async (req, res) => {
+  const params = req.query;
+  const list = await materialService2.findProductInOutList(params);
   res.send(list);
 });
 

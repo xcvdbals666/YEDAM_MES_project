@@ -57,7 +57,8 @@ const goDetail = (row) => {
   if (!row?.wko_code) return;
   router.push({
     name: 'WorkInProcessBulletin', //router에추가
-    params: { wko_code: row.wko_code }
+    params: { wko_code: row.wko_code },
+    query: { line_code: row.line_code }
   });
 };
 

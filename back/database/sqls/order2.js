@@ -130,7 +130,7 @@ LEFT JOIN (
 WHERE od.ord_code = ?
 `;
 
-// 출고 코드 생성
+// 출고 요청 코드 생성
 const generateOutCode = `
 SELECT CONCAT(
   'OUT-', DATE_FORMAT(NOW(), '%Y%m%d'), '-', 
@@ -192,7 +192,7 @@ SELECT r.out_req_code,
 
        c.client_name, 
 
-       e.emp_name,
+       e.emp_name
 
 FROM out_req_tbl r
 JOIN ord_tbl ord ON ord.ord_code = r.ord_code
@@ -203,7 +203,54 @@ WHERE r.out_req_code = ?
 
 // 출고요청 제품 조회
 const selectProdListByOutreq = `
+SELECT
+  p.prod_name, 
+  p.com_value AS prod_type_code,
 
+  c_type.note AS prod_type,
+  c_spec.note AS spec,
+  c_unit.note AS unit,
+
+  outreqd.out_req_d_amount AS out_req_amount,
+
+  COALESCE(already_out.already_outbnd_qtt, 0) AS already_outbnd_qtt,
+  (outreqd.out_req_d_amount - COALESCE(already_out.already_outbnd_qtt, 0)) AS not_outbnd_qtt,
+  (COALESCE(stock_in.total_in, 0) - COALESCE(stock_out.total_out, 0)) AS current_stock,
+
+  od.prod_code,
+  od.delivery_date,
+  od.spec AS spec_code,
+  od.unit AS unit_code
+
+FROM ord_d_tbl od
+
+JOIN prod_tbl p ON od.prod_code = p.prod_code
+JOIN out_req_tbl outreq ON outreq.ord_code = od.ord_code
+JOIN out_req_d_tbl outreqd ON outreqd.out_req_code = outreq.out_req_code AND outreqd.prod_code = od.prod_code
+JOIN common_code c_type ON c_type.com_value = p.com_value
+JOIN common_code c_spec ON c_spec.com_value = od.spec
+JOIN common_code c_unit ON c_unit.com_value = od.unit
+
+LEFT JOIN (
+  SELECT prod_code, SUM(qtt) AS total_in
+  FROM pinbnd_tbl
+  GROUP BY prod_code
+) stock_in ON stock_in.prod_code = od.prod_code
+
+LEFT JOIN (
+  SELECT prod_code, SUM(outbnd_qtt) AS total_out
+  FROM poutbnd_tbl
+  GROUP BY prod_code
+) stock_out ON stock_out.prod_code = od.prod_code
+
+LEFT JOIN (
+  SELECT prod_code, SUM(outbnd_qtt) AS already_outbnd_qtt
+  FROM poutbnd_tbl
+  WHERE outbound_request_code = ?
+  GROUP BY prod_code
+) already_out ON already_out.prod_code = od.prod_code
+
+WHERE outreq.out_req_code = ?
 `;
 
 module.exports = {
@@ -215,4 +262,6 @@ module.exports = {
   insertOutReq,
   insertOutReqDetail,
   updateOrdStat,
+  selectByOutReqCode,
+  selectProdListByOutreq
 };

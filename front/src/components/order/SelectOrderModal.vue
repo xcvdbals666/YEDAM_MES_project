@@ -56,7 +56,7 @@ const close = () => {
   emit('update:visible', false);
 };
 
-// 출고 코드 선택
+// 주문 코드 선택
 const confirm = () => {
   if (!selectedOrder.value) return;
   emit('select', selectedOrder.value);

@@ -43,9 +43,13 @@ const findAllMrpCodeMrpTbl = async () => {
 };
 
 // 자재 선택 - 자재 정보 조회
-const findByMatCodeMatTbl = async (keyword) => {
+const findByMatCodeMatTbl = async ({ keyword, mrpCode }) => {
   const like = `%${keyword || ""}%`;
-  const list = await mysql.query("selectByMatCodeMatTbl", like, "material2");
+  const list = await mysql.query(
+    "selectByMatCodeMatTbl",
+    [mrpCode || null, mrpCode || null, like],
+    "material2",
+  );
   return list;
 };
 
@@ -62,7 +66,10 @@ const modifyMprTbl = async ({ request, requestDetail }) => {
     const rows = await mysql.query("selectMaxMprCode", [], "material2");
     const last = rows[0]?.last_code || "MPR-000";
 
-    mprCode = `MPR-${String(Number(last.replace("MPR-", "")) + 1).padStart(3, "0")}`;
+    mprCode = `MPR-${String(Number(last.replace("MPR-", "")) + 1).padStart(
+      3,
+      "0",
+    )}`;
 
     await mysql.query(
       "insertMprTbl",
@@ -82,6 +89,11 @@ const modifyMprTbl = async ({ request, requestDetail }) => {
       "material2",
     );
 
+    if (!origin.length) {
+      throw new Error("존재하지 않는 구매요청입니다.");
+    }
+
+    // 수정 시 MRP 변경 차단
     if (origin[0].mrp_code !== mrpCode) {
       throw new Error("수정 시에는 MRP를 추가하거나 변경할 수 없습니다.");
     }
@@ -96,20 +108,31 @@ const modifyMprTbl = async ({ request, requestDetail }) => {
   }
 
   // =========================
-  // 2. 상세 처리
+  // 2. 상세 데이터 1차 필터
   // =========================
-  for (const mat of requestDetail) {
-    // 기존 row의 source_type 조회
+  const details = requestDetail.filter(
+    (m) => m.matCode && m.reqQtt && m.reqQtt > 0,
+  );
+
+  // =========================
+  // 3. 상세 처리
+  // =========================
+  for (const mat of details) {
+    // 의미 없는 삭제 요청 방어
+    if (mat.is_deleted && !mat.mprDCode) continue;
+
+    // 기존 row인 경우 source_type 확인
     if (mat.mprDCode) {
-      const [row] = await mysql.query(
+      const rows = await mysql.query(
         "selectByMprDCodeSourceType",
         [mat.mprDCode],
         "material2",
       );
 
-      if (row.source_type === "mrp") {
-        continue; // MRP 자재는 수정/삭제 불가
-      }
+      if (!rows.length) continue;
+
+      // MRP 자재는 수정 / 삭제 불가
+      if (rows[0].source_type === "mrp") continue;
     }
 
     // 삭제
@@ -135,7 +158,9 @@ const modifyMprTbl = async ({ request, requestDetail }) => {
       continue;
     }
 
-    // 신규 INSERT
+    // =========================
+    // 신규 INSERT (수동 / MRP 모두 허용)
+    // =========================
     const dRows = await mysql.query("selectMaxMprDCode", [], "material2");
     const lastD = dRows[0]?.last_code || "MPR-D-000";
 
@@ -143,20 +168,28 @@ const modifyMprTbl = async ({ request, requestDetail }) => {
       Number(lastD.replace("MPR-D-", "")) + 1,
     ).padStart(3, "0")}`;
 
-    await mysql.query(
-      "insertMprDTbl",
-      [
-        newMprDCode,
-        mat.reqQtt,
-        mat.unitCode,
-        mat.note,
-        mprCode,
-        mat.matSup,
-        mat.matCode,
-        mat.sourceType || "manual",
-      ],
-      "material2",
-    );
+    try {
+      await mysql.query(
+        "insertMprDTbl",
+        [
+          newMprDCode,
+          mat.reqQtt,
+          mat.unitCode,
+          mat.note,
+          mprCode,
+          mat.matSup,
+          mat.matCode,
+          mat.sourceType || "manual",
+        ],
+        "material2",
+      );
+    } catch (err) {
+      // UNIQUE 제약에 걸린 경우만 무시
+      if (err.code === "ER_DUP_ENTRY") {
+        continue; // 이미 존재 → 그냥 스킵
+      }
+      throw err;
+    }
   }
 
   return { mprCode };
@@ -313,18 +346,49 @@ const findIsEditable = async (mprCode) => {
   return list.length === 0;
 };
 
-// 입출고내역조회
+// 자재 입출고내역조회
 const findMaterialInOutList = async (params) => {
   const {
     ioType = "ALL",
     dateFrom = null,
     dateTo = null,
-    keyword = null,
+    keyword = "",
     status = "ALL",
   } = params;
 
   const list = await mysql.query(
     "selectMaterialInOutList",
+    [
+      ioType, // 입출고 타입
+      ioType,
+      dateFrom, // 시작일
+      dateFrom,
+      dateTo, // 종료일
+      dateTo,
+      keyword, // 검색어 없음
+      keyword, // 자재명
+      keyword,
+      status, // 처리 상태
+      status,
+    ],
+    "material2",
+  );
+
+  return list;
+};
+
+// 완제품 입출고내역조회
+const findProductInOutList = async (params) => {
+  const {
+    ioType = "ALL",
+    dateFrom = null,
+    dateTo = null,
+    keyword = "",
+    status = "ALL",
+  } = params;
+
+  const list = await mysql.query(
+    "selectProductInOutList",
     [
       ioType, // 입출고 타입
       ioType,
@@ -361,4 +425,5 @@ module.exports = {
   findIsEditable,
   removeMpr,
   findMaterialInOutList,
+  findProductInOutList,
 };

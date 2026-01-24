@@ -190,8 +190,8 @@ const fetchAll = async () => {
     </div>
   </div>
 
-  <section class="flex-1 bg-white px-6 pt-15 pb-6 rounded-xl shadow-sm border border-gray-200 flex flex-col">
-    <div class="flex justify-between items-center mb-5">
+  <section class="flex-1 bg-white px-6 pt-5 pb-6 rounded-xl shadow-sm border border-gray-200 flex flex-col">
+    <div class="flex justify-between items-center mb-2">
       <div class="text-s text-gray-800">
         검색결과
         <span class="text-orange-500 font-bold">{{ filteredResults.length }}</span> 건
@@ -202,7 +202,7 @@ const fetchAll = async () => {
     <!--수정해야함-->
 
     <div class="flex-1 overflow-auto rounded-lg border border-gray-200">
-      <DataTable :value="filteredResults">
+      <DataTable :value="filteredResults" rowHover class="hover-table" scrollable scrollHeight="400px">
         <template #empty>
           <div class="text-center py-6 text-gray-400">데이터 없음</div>
         </template>
@@ -243,3 +243,9 @@ const fetchAll = async () => {
     </div>
   </section>
 </template>
+<style scoped>
+/* hover 시 텍스트 살짝 강조 */
+.hover-table :deep(.p-datatable-tbody > tr:hover td) {
+  font-weight: 500;
+}
+</style>
