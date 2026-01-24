@@ -13,8 +13,8 @@ const store = useProductionsStore();
 const { wipDetail, wipDetailLoading, lineEquipments, processOptions, prdrStatusList, prdrDDetail } = storeToRefs(store);
 
 const wkoCode = computed(() => route.params.wko_code);
-//const selectedPoCode = computed(() => route.query.po_code); // Bulletin에서 넘어온 공정코드
-const selectedPoCode = computed(() => 'PO-005');
+const selectedPoCode = computed(() => route.params.po_code); // Bulletin에서 넘어온 공정코드
+//const selectedPoCode = computed(() => 'PO-001');
 
 const goBack = () => router.back();
 
@@ -85,23 +85,38 @@ const loadCurrentPrdrDetailForSelectedEq = async () => {
   }
 };
 
-// 작업시작
 const onStart = async () => {
-  if (!selectedPoCode.value) return alert('공정 정보가 없습니다. (po_code 누락)');
-  if (!selectedLineEqCode.value) return alert('해당 공정 설비를 찾지 못했습니다');
-  if (!inputQtt.value || Number(inputQtt.value) <= 0) return alert('투입량을 입력하세요');
+  // 1. 필수값 사전 검증 (Guard Clauses)
+  if (!selectedPoCode.value) return alert('공정 정보가 없습니다.');
+  if (!selectedLineEqCode.value) return alert('설비 정보가 없습니다.');
 
-  await store.startWork({
+  // 2. 투입량 검증 (1번 공정일 때만)
+  const isInvalidInput = isFirstProcess.value && (!inputQtt.value || inputQtt.value <= 0);
+  if (isInvalidInput) {
+    return alert('투입량을 입력하세요.');
+  }
+
+  // 3. 서버에 보낼 데이터 구성
+  const payload = {
     wko_code: wkoCode.value,
-    line_eq_code: selectedLineEqCode.value,
-    input_qtt: Number(inputQtt.value)
-  });
+    line_eq_code: selectedLineEqCode.value
+  };
 
-  // 시작 후 상태/상세 갱신
-  await store.fetchPrdrStatusByWko(wkoCode.value);
-  await loadCurrentPrdrDetailForSelectedEq();
+  // 1번 공정이면 input_qtt를 명시적으로 추가
+  if (isFirstProcess.value) {
+    payload.input_qtt = Number(inputQtt.value);
+  }
 
-  alert('작업 시작 처리 완료');
+  try {
+    // 4. 작업 실행 및 데이터 갱신
+    await store.startWork(payload);
+
+    await Promise.all([store.fetchPrdrStatusByWko(wkoCode.value), loadCurrentPrdrDetailForSelectedEq()]);
+
+    alert('작업 시작 처리 완료');
+  } catch (error) {
+    alert(`오류 발생: ${error.message}`);
+  }
 };
 
 onMounted(async () => {
@@ -131,6 +146,38 @@ watch([selectedPoCode, processOptions, lineEquipments], async () => {
 watch(prdrStatusList, async () => {
   await loadCurrentPrdrDetailForSelectedEq();
 });
+
+const isFirstProcess = computed(() => Number(selectedProcessRow.value?.no) === 1);
+
+const makeQtt = ref(0);
+const defQtt = ref(0);
+const procRate = ref(0);
+
+const isEnded = computed(() => !!prdrDDetail.value?.end_date);
+
+//작업종료
+const onEnd = async () => {
+  const prdrDCode = prdrDDetail.value?.prdr_d_code;
+  if (!prdrDCode) return alert('종료할 작업(prdr_d_code)을 찾지 못했습니다.');
+
+  if (makeQtt.value == null || Number(makeQtt.value) <= 0) return alert('생산수량은 0 이상');
+  if (defQtt.value == null || Number(defQtt.value) < 0) return alert('불량수량은 0 이상');
+  if (procRate.value == null || Number(procRate.value) <= 0) return alert('진행률은 0 이상');
+
+  await store.endWork({
+    prdr_d_code: prdrDCode,
+    make_qtt: Number(makeQtt.value),
+    def_qtt: Number(defQtt.value),
+    proc_rate: Number(procRate.value),
+    po_code: selectedPoCode.value, // 마지막 공정인거 확인해서 prdr_tbl에 production_qtt삽입하려고
+    wko_code: wkoCode.value // 마지막 공정인거 확인해서 prdr_tbl에 production_qtt삽입하려고
+  });
+
+  await store.fetchPrdrStatusByWko(wkoCode.value);
+  await loadCurrentPrdrDetailForSelectedEq();
+
+  alert('작업 종료 처리 완료');
+};
 </script>
 
 <template>
@@ -191,7 +238,8 @@ watch(prdrStatusList, async () => {
         </template>
 
         <template v-else>
-          <input type="number" class="w-full p-inputtext" min="0" v-model.number="inputQtt" placeholder="숫자입력" />
+          <input v-if="isFirstProcess" type="number" class="w-full p-inputtext" min="0" v-model.number="inputQtt" placeholder="숫자입력" />
+          <input v-else type="text" class="w-full p-inputtext" value="첫 공정(원료 배합)에서만 입력합니다" readonly />
         </template>
       </div>
 
@@ -200,19 +248,41 @@ watch(prdrStatusList, async () => {
         <InputText :modelValue="wipDetail?.wko_qtt ?? ''" class="w-full" readonly />
       </div>
 
+      <!-- 시작 후 , 종료 전에만 열리게 -->
+      <!-- 생산수량 -->
       <div class="col-span-12 lg:col-span-6 flex items-center gap-3">
         <label class="w-28 shrink-0 text-lg font-semibold">생산수량</label>
-        <input type="number" class="w-full p-inputtext" min="0" placeholder="숫자입력" />
+
+        <template v-if="isEnded">
+          <input type="number" class="w-full p-inputtext" :value="prdrDDetail?.make_qtt ?? ''" readonly />
+        </template>
+        <template v-else>
+          <input type="number" class="w-full p-inputtext" min="0" v-model.number="makeQtt" placeholder="숫자입력" :disabled="!isStarted" />
+        </template>
       </div>
 
+      <!-- 불량수량 -->
       <div class="col-span-12 lg:col-span-6 flex items-center gap-3">
         <label class="w-28 shrink-0 text-lg font-semibold">불량수량</label>
-        <input type="number" class="w-full p-inputtext" min="0" placeholder="숫자입력" />
+
+        <template v-if="isEnded">
+          <input type="number" class="w-full p-inputtext" :value="prdrDDetail?.def_qtt ?? ''" readonly />
+        </template>
+        <template v-else>
+          <input type="number" class="w-full p-inputtext" min="0" v-model.number="defQtt" placeholder="숫자입력" :disabled="!isStarted" />
+        </template>
       </div>
 
       <div class="col-span-12 lg:col-span-6 flex items-center gap-3">
         <label class="w-28 shrink-0 text-lg font-semibold">진행률</label>
-        <input type="text" class="w-full p-inputtext" />
+
+        <template v-if="isEnded">
+          <input type="number" class="w-full p-inputtext" :value="prdrDDetail?.proc_rate ?? ''" readonly />
+        </template>
+
+        <template v-else>
+          <input type="number" class="w-full p-inputtext" min="0" max="100" v-model.number="procRate" placeholder="0~100" :disabled="!isStarted" />
+        </template>
       </div>
     </div>
 
@@ -221,7 +291,7 @@ watch(prdrStatusList, async () => {
       <!-- 작업시작 되면 버튼 못누름 -->
       <Button label="작업시작" severity="success" @click="onStart" :disabled="isStarted" />
 
-      <Button label="작업종료" severity="info" />
+      <Button label="작업종료" severity="info" @click="onEnd" :disabled="!isStarted || isEnded" />
     </div>
   </div>
 
