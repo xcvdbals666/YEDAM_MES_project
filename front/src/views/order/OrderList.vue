@@ -231,47 +231,51 @@ watch(
   </Dialog>
   <Fluid>
     <div class="card mb-4">
-      <div class="font-semibold text-xl flex justify-between items-center">
+      <div class="font-semibold text-xl flex justify-between items-center mb-4">
         <div>검색 조건</div>
         <div class="flex items-center gap-2">
-          <Button label="초기화" severity="contrast" variant="outlined" class="min-w-[65px]" @click="resetBtn" />
+          <Button label="초기화" severity="contrast" variant="outlined" class="w-full sm:w-auto" @click="resetBtn" />
         </div>
       </div>
-      <div class="flex flex-wrap gap-4 items-end">
+
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 items-end">
         <div class="flex flex-col gap-2">
-          <label for="search" class="font-bold">주문코드</label>
+          <label for="search_code" class="font-bold">주문코드</label>
           <IconField>
             <InputIcon class="pi pi-search" />
-            <InputText id="search" v-model="filters['ord_code'].value" placeholder="주문코드" class="!w-[500px]" />
+            <InputText id="search_code" v-model="filters['ord_code'].value" placeholder="주문코드" class="w-full" />
           </IconField>
         </div>
+
         <div class="flex flex-col gap-2">
-          <label for="search" class="font-bold">주문명</label>
+          <label for="search_name" class="font-bold">주문명</label>
           <IconField>
             <InputIcon class="pi pi-search" />
-            <InputText id="search" v-model="filters['ord_name'].value" placeholder="주문명" class="!w-[500px]" />
+            <InputText id="search_name" v-model="filters['ord_name'].value" placeholder="주문명" class="w-full" />
           </IconField>
         </div>
+
         <div class="flex flex-col gap-2">
-          <label for="search" class="font-bold">거래처</label>
+          <label for="search_client" class="font-bold">거래처</label>
           <IconField>
             <InputIcon class="pi pi-search" />
-            <InputText id="search" v-model="filters['client_name'].value" placeholder="거래처" class="!w-[500px]" />
+            <InputText id="search_client" v-model="filters['client_name'].value" placeholder="거래처" class="w-full" />
           </IconField>
         </div>
+
         <div class="flex flex-col gap-2">
+          <label for="search_stat" class="font-bold">주문상태</label>
+          <Select id="search_stat" v-model="filters['ord_stat'].value" placeholder="주문상태 선택" class="w-full" :options="statOptions" option-label="note" option-value="com_value" />
+        </div>
+
+        <div class="flex flex-col gap-2 md:col-span-2 xl:col-span-2">
           <label class="font-bold text-sm">주문일자 (기간)</label>
           <div class="flex items-center gap-2">
-            <DatePicker v-model="startDate" showIcon dateFormat="yy-mm-dd" placeholder="시작일" class="!w-[240px]" />
-            <span>~</span>
-            <DatePicker v-model="endDate" showIcon dateFormat="yy-mm-dd" placeholder="종료일" class="!w-[240px]" />
+            <DatePicker v-model="startDate" showIcon dateFormat="yy-mm-dd" placeholder="시작일" class="w-full" />
+            <span class="text-gray-500">~</span>
+            <DatePicker v-model="endDate" showIcon dateFormat="yy-mm-dd" placeholder="종료일" class="w-full" />
           </div>
         </div>
-        <div class="flex flex-col gap-2">
-          <label for="search" class="font-bold">주문상태</label>
-          <Select id="search" v-model="filters['ord_stat'].value" placeholder="주문상태" class="!w-[500px]" :options="statOptions" option-label="note" option-value="com_value" />
-        </div>
-        <div class="ml-auto flex gap-2"></div>
       </div>
     </div>
 

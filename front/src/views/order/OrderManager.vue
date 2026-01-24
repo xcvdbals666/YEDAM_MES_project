@@ -3,6 +3,7 @@ import { ref, computed, onBeforeMount } from 'vue';
 import { useOrderStore } from '@/stores/order1';
 import BaseDialog from '@/components/order/BaseDialog.vue';
 import { FilterMatchMode } from '@primevue/core/api';
+import OverlayPanel from 'primevue/overlaypanel';
 const order = useOrderStore();
 let after3day = new Date();
 after3day.setDate(after3day.getDate() + 3);
@@ -194,6 +195,7 @@ const saveBtn = async () => {
     orderInfo.value.ord_code = result;
     await order.getOrderDetail(orderInfo.value.ord_code);
     products.value = order.details;
+    alert('주문 등록이 완료되었습니다.');
   } else if (orderInfo.value.ord_code.length > 0) {
     // ord_code가 있으면 수정
     console.log(`ord_code's length is not 0`);
@@ -218,6 +220,32 @@ const deleteBtn = async () => {
       resetBtn();
     }
   }
+};
+
+const op = ref(); // OverlayPanel 참조 변수
+const currentAiReason = ref({}); // 현재 클릭한 행의 AI 분석 결과 담을 변수
+
+// AI 분석 실행 함수
+const runAiCheck = async (product, event) => {
+  if (!product.prod_code || !product.ord_amount) return;
+
+  product.isLoading = true; // 로딩 시작 (행별로 관리 필요)
+
+  // 스토어 액션 호출 (구현하신 것)
+  const result = await order.expectDateByAI(product.prod_code, product.ord_amount);
+
+  if (result) {
+    product.delivery_date = result.estimated_date; // 날짜 자동 입력
+    product.ai_data = result; // 결과 저장 (risk_level, reason 등)
+  }
+
+  product.isLoading = false; // 로딩 끝
+};
+
+// 말풍선 보여주기 함수
+const toggleReason = (event, product) => {
+  currentAiReason.value = product.ai_data;
+  op.value.toggle(event);
 };
 </script>
 
@@ -375,6 +403,16 @@ const deleteBtn = async () => {
           </div>
         </div>
         <div>
+          <OverlayPanel ref="op">
+            <div v-if="currentAiReason" class="w-[300px]">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="font-bold text-lg">🤖 AI 납기 분석</span>
+                <Tag :severity="currentAiReason.risk_level === 'High' ? 'danger' : 'success'" :value="currentAiReason.risk_level" />
+              </div>
+              <p class="text-gray-700 mb-2">{{ currentAiReason.reason }}</p>
+              <div class="text-xs text-gray-500 bg-gray-100 p-2 rounded">예상 소요: {{ currentAiReason.days_needed }}일</div>
+            </div>
+          </OverlayPanel>
           <table class="w-full min-w-[800px] border-collapse text-sm">
             <thead>
               <tr>
@@ -407,18 +445,38 @@ const deleteBtn = async () => {
                 <td class="min-w-[10px] border border-gray-200 p-3 text-center text-gray-700">
                   <InputGroup>
                     <InputNumber v-model="product.spec_note" placeholder="규격" class="w-full" readonly />
-                    <InputGroupAddon>{{ product.unit_note || 'ea' }}</InputGroupAddon>
+                    <InputGroupAddon>ea</InputGroupAddon>
                   </InputGroup>
                 </td>
                 <td class="min-w-[90px] border border-gray-200 p-3 text-center text-gray-700">
-                  <InputNumber max="9999999999" min="0" v-model="product.ord_amount" placeholder="수량" class="w-full" @value-change="calculateTotal(product)" show-buttons="true" :disabled="orderInfo.ord_stat != 'a1' && orderInfo.ord_stat != null" />
+                  <InputGroup>
+                    <InputNumber
+                      max="9999999999"
+                      min="0"
+                      v-model="product.ord_amount"
+                      placeholder="수량"
+                      class="w-full"
+                      @value-change="calculateTotal(product)"
+                      show-buttons="true"
+                      :disabled="orderInfo.ord_stat != 'a1' && orderInfo.ord_stat != null"
+                      @blur="runAiCheck(product)"
+                    />
+                    <InputGroupAddon>{{ product.unit_note || 'ea' }}</InputGroupAddon>
+                  </InputGroup>
                 </td>
                 <td class="min-w-[100px] border border-gray-200 p-3 text-center text-gray-700">
                   <InputNumber max="9999999999" min="0" v-model="product.prod_price" placeholder="단가" class="w-full" @value-change="calculateTotal(product)" :disabled="orderInfo.ord_stat != 'a1' && orderInfo.ord_stat != null" />
                 </td>
                 <td class="min-w-[150px] border border-gray-200 p-3 text-center text-gray-700">
-                  <InputText type="date" v-model="product.delivery_date" class="w-full" />
+                  <InputGroup>
+                    <InputText type="date" v-model="product.delivery_date" class="w-full" :disabled="product.isLoading" />
+
+                    <Button v-if="product.isLoading" icon="pi pi-spin pi-spinner" severity="secondary" disabled />
+                    <Button v-else-if="product.ai_data" icon="pi pi-sparkles" :severity="product.ai_data.risk_level === 'High' ? 'danger' : 'success'" v-tooltip.top="'AI 분석 결과 보기'" @click="toggleReason($event, product)" />
+                    <Button v-else icon="pi pi-search" severity="secondary" v-tooltip.top="'AI 납기 조회'" @click="runAiCheck(product)" text />
+                  </InputGroup>
                 </td>
+
                 <td class="min-w-[80px] border border-gray-200 p-3 text-center text-gray-700">
                   <InputNumber min="1" max="5" v-model="product.ord_priority" class="w-full" show-buttons="true" />
                 </td>
