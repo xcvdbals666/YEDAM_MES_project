@@ -27,7 +27,6 @@ watch(
     }
   }
 );
-
 // 탭 변경 시
 watch(activeTab, (newTab) => {
   if (props.visible) {
@@ -43,23 +42,23 @@ watch(activeTab, (newTab) => {
 
 // 현재 탭에 따른 리스트
 const currentList = ref([]);
-
+const filteredList = ref([]);
 watch(
   () => [activeTab.value, store.passedQioList, store.passedProductQioList],
   () => {
     currentList.value = activeTab.value === 0 ? store.passedQioList : store.passedProductQioList;
+    filteredList.value = currentList.value; // 필터 초기화
+    searchKeyword.value = ''; // 검색어 초기화
   },
-  { deep: true }
+  { deep: true, immediate: true }
 );
 // 검색 (프론트 필터링)
-const filteredList = ref([]);
 watch(
   () => store.passedQioList,
   (list) => {
     filteredList.value = list;
   }
 );
-
 const handleSearch = () => {
   if (!searchKeyword.value) {
     filteredList.value = currentList.value;

@@ -3,7 +3,6 @@ import { ref } from 'vue';
 import { useMaterialStore } from '@/stores/material1';
 import SelectModal from '@/components/material/modal/SelectModal.vue';
 import AddMaterialModal from '@/components/material/modal/AddMaterialModal.vue';
-
 import InboundModal from '@/components/material/modal/InboundModal.vue';
 
 const store = useMaterialStore();
@@ -63,11 +62,6 @@ const handleSelectMat = (mat) => {
   inboundForm.value.matName = mat.mat_name;
   inboundForm.value.matType = mat.material_type_code;
   inboundForm.value.unit = mat.unit;
-  // 자재에 연결된 공급업체 정보가 있으면 자동 입력
-  // if (mat.client_code) {
-  //   inboundForm.value.clientCode = mat.client_code;
-  //   inboundForm.value.clientName = mat.supplier_name;
-  // }
 };
 
 // 공급업체 선택
@@ -99,29 +93,45 @@ const handleSelectRowEmp = (emp) => {
 // 품질검사 합격 목록 선택
 const handleSelectQir = (items) => {
   items.forEach((item) => {
-    // 중복 체크
-    const exists = inboundList.value.some((row) => row.qirCode === item.qir_code);
+    const exists = inboundList.value.some((row) => row.qioCode === item.qio_code);
     if (!exists) {
-      inboundList.value.push({
-        qirCode: item.qir_code,
-        qioCode: item.qio_code,
-        mpoDCode: item.mpo_d_code,
-        matCode: item.mat_code,
-        matName: item.mat_name,
-        matType: item.material_type_code,
-        unit: item.unit,
-        clientCode: item.client_code,
-        clientName: item.client_name,
-        empCode: item.emp_code || '',
-        empName: item.emp_name || '',
-        inbndQtt: item.pass_qtt || 0,
-        inbndDate: new Date()
-      });
+      if (item.itemType === 'material') {
+        // 자재 입고
+        inboundList.value.push({
+          itemType: 'material',
+          qirCode: item.qir_code,
+          qioCode: item.qio_code,
+          matCode: item.mat_code,
+          matName: item.mat_name,
+          matType: item.material_type_code,
+          unit: item.unit,
+          clientCode: item.client_code,
+          clientName: item.client_name,
+          empCode: item.emp_code || '',
+          empName: item.emp_name || '',
+          inbndQtt: item.pass_qtt || 0,
+          inbndDate: new Date()
+        });
+      } else if (item.itemType === 'product') {
+        // 완제품 입고
+        inboundList.value.push({
+          itemType: 'product',
+          qirCode: item.qir_code,
+          qioCode: item.qio_code,
+          prodCode: item.prod_code,
+          prodName: item.prod_name,
+          unit: item.unit,
+          empCode: item.emp_code || '',
+          empName: item.emp_name || '',
+          inbndQtt: item.pass_qtt || 0,
+          inbndDate: new Date()
+        });
+      }
     }
   });
 };
 
-// 추가 버튼
+// 추가 버튼 (자재만)
 const addToList = () => {
   if (!inboundForm.value.matCode) {
     alert('자재를 선택해주세요.');
@@ -141,9 +151,9 @@ const addToList = () => {
   }
 
   inboundList.value.push({
+    itemType: 'material',
     qirCode: null,
     qioCode: null,
-    mpoDCode: null,
     matCode: inboundForm.value.matCode,
     matName: inboundForm.value.matName,
     matType: inboundForm.value.matType,
@@ -203,43 +213,78 @@ const submitInbound = async () => {
     return;
   }
 
-  // 담당자 확인
   const noEmp = inboundList.value.some((item) => !item.empCode);
   if (noEmp) {
     alert('모든 항목의 담당자를 선택해주세요.');
     return;
   }
 
-  const payload = inboundList.value.map((item) => ({
-    mat_code: item.matCode,
-    mat_type: item.matType,
-    unit: item.unit,
-    inbnd_qtt: item.inbndQtt,
-    inbnd_date: formatDate(item.inbndDate),
-    mat_sup: item.clientCode,
-    mcode: item.empCode,
-    qio_code: item.qioCode
-  }));
+  // 자재와 완제품 분리
+  const materials = inboundList.value.filter((item) => item.itemType === 'material');
+  const products = inboundList.value.filter((item) => item.itemType === 'product');
 
-  const result = await store.addInbound(payload);
+  try {
+    // 자재 입고
+    if (materials.length > 0) {
+      const matPayload = materials.map((item) => ({
+        mat_code: item.matCode,
+        mat_type: item.matType,
+        unit: item.unit,
+        inbnd_qtt: item.inbndQtt,
+        inbnd_date: formatDate(item.inbndDate),
+        mat_sup: item.clientCode,
+        mcode: item.empCode,
+        qio_code: item.qioCode
+      }));
+      await store.addInbound(matPayload);
+    }
 
-  if (result.status === 'success') {
+    // 완제품 입고
+    if (products.length > 0) {
+      const prodPayload = products.map((item) => ({
+        prod_code: item.prodCode || '',
+        prod_type: '',
+        unit: item.unit || '',
+        inbnd_qtt: item.inbndQtt,
+        inbnd_date: formatDate(item.inbndDate),
+        mcode: item.empCode,
+        qio_code: item.qioCode
+      }));
+      await store.addProductInbound(prodPayload);
+    }
+
     alert('입고 등록이 완료되었습니다!');
     cancelAll();
-  } else {
+  } catch (error) {
+    console.error(error);
     alert('등록에 실패했습니다.');
+  }
+};
+
+// 품목명 표시 (자재/완제품 구분)
+const getItemName = (item) => {
+  return item.itemType === 'material' ? item.matName : item.prodName;
+};
+
+// 품목코드 표시
+const getItemCode = (item) => {
+  return item.itemType === 'material' ? item.matCode : item.prodCode;
+};
+
+// 분류 표시
+const getItemType = (item) => {
+  if (item.itemType === 'material') {
+    return getMatTypeName(item.matType);
+  } else {
+    return '완제품';
   }
 };
 </script>
 
 <template>
   <div>
-    <!-- 페이지 헤더 -->
-    <div class="flex justify-between items-center mb-4"></div>
-
     <!-- 입고 정보 입력 -->
     <div class="card">
-      <!-- <h2 class="text-2xl font-bold">자재 입고 등록</h2> -->
       <div class="flex justify-between items-center mb-4">
         <h4 class="m-0 flex items-center gap-2">
           <i class="pi pi-pencil"></i>
@@ -336,24 +381,30 @@ const submitInbound = async () => {
           <template #body="{ index }">{{ index + 1 }}</template>
         </Column>
 
-        <Column field="matCode" header="자재코드" sortable style="width: 120px">
-          <template #body="{ data }">{{ data.matCode }}</template>
+        <Column header="구분" style="width: 80px">
+          <template #body="{ data }">
+            {{ data.itemType === 'material' ? '자재' : '완제품' }}
+          </template>
         </Column>
 
-        <Column field="matName" header="자재명" style="min-width: 120px">
-          <template #body="{ data }">{{ data.matName }}</template>
+        <Column header="품목코드" sortable style="width: 120px">
+          <template #body="{ data }">{{ getItemCode(data) }}</template>
+        </Column>
+
+        <Column header="품목명" style="min-width: 120px">
+          <template #body="{ data }">{{ getItemName(data) }}</template>
         </Column>
 
         <Column header="분류" style="width: 80px">
-          <template #body="{ data }">{{ getMatTypeName(data.matType) }}</template>
+          <template #body="{ data }">{{ getItemType(data) }}</template>
         </Column>
 
         <Column header="단위" style="width: 70px">
           <template #body="{ data }">{{ getUnitName(data.unit) }}</template>
         </Column>
 
-        <Column field="clientName" header="공급업체" style="width: 120px">
-          <template #body="{ data }">{{ data.clientName }}</template>
+        <Column header="공급업체" style="width: 120px">
+          <template #body="{ data }">{{ data.clientName || '-' }}</template>
         </Column>
 
         <Column header="담당자" style="width: 120px">
