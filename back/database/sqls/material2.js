@@ -49,7 +49,7 @@ const insertMprTbl = `INSERT INTO mpr_tbl (mpr_code, reqdate, deadline, mrp_code
 
 // 자재구매요청 상세정보 저장
 const insertMprDTbl = `INSERT INTO mpr_d_tbl (mpr_d_code, req_qtt, unit, note, mpr_code, mat_sup, mat_code, source_type) 
-                                   VALUES (?, ?, ?, ?, ?, ?, ?)`;
+                                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
 
 // 자재구매요청서 전체 목록 조회
 // const selectAllMprTbl = `SELECT m.mpr_code, m.reqdate, m.mcode, m.deadline, m.mrp_code,
