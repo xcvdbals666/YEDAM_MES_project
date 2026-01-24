@@ -75,9 +75,9 @@ onMounted(async () => {
         </tr>
         <tr>
           <th>시작일자</th>
-          <td><DatePicker :showIcon="true" :showButtonBar="true" v-model="data.startDate" placeholder="날짜 선택"></DatePicker></td>
+          <td><DatePicker :showIcon="true" :showButtonBar="true" v-model="data.startDate" dateFormat="yy-mm-dd" placeholder="날짜 선택"></DatePicker></td>
           <th>종료일자</th>
-          <td><DatePicker :showIcon="true" :showButtonBar="true" v-model="data.endDate" placeholder="날짜 선택"></DatePicker></td>
+          <td><DatePicker :showIcon="true" :showButtonBar="true" v-model="data.endDate" dateFormat="yy-mm-dd" placeholder="날짜 선택"></DatePicker></td>
           <th></th>
           <td></td>
         </tr>
