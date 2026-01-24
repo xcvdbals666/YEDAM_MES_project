@@ -50,7 +50,7 @@ const searchWorkOrders = async ({ from, to, stat, line, name, wko }) => {
     params.push(`%${wko}%`);
   }
 
-  sql += ` ORDER BY reg_date DESC`;
+  sql += ` ORDER BY wko_code DESC`;
 
   return await mysql.rquery(sql, params);
 };
