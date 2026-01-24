@@ -23,22 +23,26 @@ const selectQiOrderItem = `SELECT q.qio_code, q.insp_vol, m.deadline, b.mat_name
                            WHERE q.qio_code = ?
                            GROUP BY q.qio_code, q2.inspection_item`;
 
-// 생산실적 불러오기
-const selectQiProduceList = `SELECT w.prdp_code, p.end_date, p.production_qtt, p.prdr_code, c.note, p4.po_code, p4.po_name, p7.prod_name, p7.prod_type, c2.note AS type  
+// 검사지에 해당하는 생산 및 검사항목
+const selectQiProdInfo = `SELECT p.prdr_code, w.prdp_code, p6.prod_name, p6.prod_type, p5.end_date, p.production_qtt, c.note, q.qio_code
                              FROM prdr_tbl p 
-                             LEFT JOIN qio_tbl q ON p.prdr_code = q.prdr_code
-                             LEFT JOIN common_code c ON p.stat = c.com_value  
-                             LEFT JOIN  wko_tbl w ON p.work_order_code = w.wko_code
-                             LEFT JOIN prdr_d_tbl p2 ON p.prdr_code = p2.prdr_code
-                             LEFT JOIN line_d_tbl l ON p2.line_eq_code = l.line_eq_code
-                             LEFT JOIN prod_proc_d_tbl p3 ON l.pp_code = p3.pp_code
-                             LEFT JOIN po_tbl p4 ON p3.po_code = p4.po_code
+                             LEFT JOIN wko_tbl w ON p.work_order_code = w.wko_code
                              LEFT JOIN prdp_tbl p5 ON w.prdp_code = p5.prdp_code
-                             LEFT JOIN prdp_d_tbl p6 ON p5.prdp_code = p6.prdp_code
-                             LEFT JOIN prod_tbl p7 ON p6.prod_code = p7.prod_code
-                             LEFT JOIN common_code c2 ON p7.prod_type = c2.com_value
-                             WHERE q.qio_code is null AND p.stat = 'b3'
-                             GROUP BY p5.prdp_code`;
+                             LEFT JOIN qio_tbl q ON q.prdr_code = p.prdr_code
+                             LEFT JOIN prod_tbl p6 ON p.prod_code = p6.prod_code 
+                             LEFT JOIN common_code c ON p6.prod_type = c.com_value 
+                             WHERE q.qio_code = ?`;
+
+// 생산실적 불러오기
+const selectQiProduceList = `SELECT p.prdr_code, w.prdp_code, p6.prod_name, p6.prod_type, p5.end_date, p.production_qtt, c.note
+                             FROM prdr_tbl p 
+                             LEFT JOIN wko_tbl w ON p.work_order_code = w.wko_code
+                             LEFT JOIN prdp_tbl p5 ON w.prdp_code = p5.prdp_code
+                             LEFT JOIN qio_tbl q ON q.prdr_code = p.prdr_code
+                             LEFT JOIN prod_tbl p6 ON p.prod_code = p6.prod_code 
+                             LEFT JOIN common_code c ON p6.prod_type = c.com_value 
+                             WHERE q.qio_code IS NULL
+                             ORDER BY prdp_code DESC`;
 
 // 발주서상세 불러오기
 const selectQiMpoList = `SELECT m.mpo_d_code, m.deadline, q.qio_code, ifnull(q.insp_vol,0) insp_vol, b.mat_code, b.mat_name, b.mat_type, m.req_qtt, c2.note, m.req_qtt - ifnull(q.insp_vol,0) as remaining_amount
@@ -46,7 +50,8 @@ const selectQiMpoList = `SELECT m.mpo_d_code, m.deadline, q.qio_code, ifnull(q.i
                          LEFT JOIN qio_tbl q ON m.mpo_d_code = q.mpo_d_code 
                          JOIN bom_mat b ON m.mat_code = b.mat_code
                          JOIN common_code c2 ON b.mat_type = c2.com_value
-                         WHERE qio_code IS NULL                         
+                         WHERE qio_code IS NULL
+                         ORDER BY mpo_d_code DESC;                         
                           `;
 
 // qio_code 생성
@@ -86,7 +91,8 @@ const selectAllQirQioOrder = `SELECT q.qio_code, qio_date, e.emp_name, q.prdr_co
                           FROM qio_tbl q
                           left JOIN emp_tbl e ON q.emp_code = e.emp_code
                           left join qir_tbl q2 ON q.qio_code = q2.qio_code
-                          WHERE qir_code IS NULL`;
+                          WHERE qir_code IS NULL
+                          ORDER BY qio_date DESC`;
 
 // 검사결과서 코드 생성(qir_code)
 const createQirCode = `SELECT concat(
@@ -125,7 +131,7 @@ const selectQirProdInfo = `SELECT w.prdp_code,q.qio_code, p.end_date, p.producti
                              LEFT JOIN prdp_d_tbl p6 ON p5.prdp_code = p6.prdp_code
                              LEFT JOIN prod_tbl p7 ON p6.prod_code = p7.prod_code
                              LEFT JOIN common_code c2 ON p7.prod_type = c2.com_value
-                             WHERE q.qio_code = ?
+                             WHERE q.qio_code = ?                             
                              GROUP BY p.prdr_code`;
 
 // 검사결과서 정보 불러오기
@@ -133,7 +139,8 @@ const selectQirList = `SELECT  e.emp_name, q.end_date, IFNULL(q2.insp_vol,0) ins
                        FROM qir_tbl q
                        LEFT JOIN emp_tbl e ON q.qir_emp_code = e.emp_code
                        LEFT JOIN qio_tbl q2 ON q.qio_code = q2.qio_code
-                                              `;
+                       WHERE q.result IS NULL
+                       ORDER BY q.start_date DESC`;
 
 // 검사 결과서 합격 불합격 수정
 const updateQirList = `UPDATE qir_tbl 
@@ -166,4 +173,5 @@ const selectAllQirOrder = (module.exports = {
   selectQirList,
   updateQirList,
   deleteQir,
+  selectQiProdInfo,
 });

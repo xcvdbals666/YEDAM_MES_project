@@ -39,7 +39,7 @@ QiOrderItemInput.value = props.selectedMinbnd;
         <div class="col-span-2">
           <div class="grid grid-cols-2">
             <label for="checkNum" class="col-span-1">검사수량</label>
-            <InputText id="checkNum" type="text" class="col-span-2" v-model="QiOrderItemInput.insp_vol" :readonly="checkCallQir" />
+            <InputText id="checkNum" type="text" class="col-span-2" v-model="QiOrderItemInput.insp_vol" readonly />
           </div>
         </div>
       </div>
