@@ -17,25 +17,23 @@ watch(
   () => props.visible,
   (val) => {
     if (val) {
-      // 탭에 따라 데이터 불러오기
       if (activeTab.value === 0) {
-        store.fetchPassedQioList(); //자재
+        store.fetchPassedQioList();
       } else {
-        store.fetchPassedProductQioList(); // 완제품
+        store.fetchPassedProductQioList();
       }
       selectedItems.value = [];
       searchKeyword.value = '';
     }
   }
 );
-
 // 탭 변경 시
 watch(activeTab, (newTab) => {
   if (props.visible) {
     if (newTab === 0) {
-      store.fetchPassedQioList(); // 자재
+      store.fetchPassedQioList();
     } else {
-      store.fetchPassedProductQioList(); // 완제품
+      store.fetchPassedProductQioList();
     }
     selectedItems.value = [];
     searchKeyword.value = '';
@@ -44,26 +42,23 @@ watch(activeTab, (newTab) => {
 
 // 현재 탭에 따른 리스트
 const currentList = ref([]);
-
+const filteredList = ref([]);
 watch(
   () => [activeTab.value, store.passedQioList, store.passedProductQioList],
   () => {
     currentList.value = activeTab.value === 0 ? store.passedQioList : store.passedProductQioList;
-
-    filteredList.value = currentList.value; // 화면 즉시 반영
+    filteredList.value = currentList.value; // 필터 초기화
+    searchKeyword.value = ''; // 검색어 초기화
   },
-  { deep: true }
+  { deep: true, immediate: true }
 );
-
 // 검색 (프론트 필터링)
-const filteredList = ref([]);
 watch(
-  () => store.passedQirList,
+  () => store.passedQioList,
   (list) => {
     filteredList.value = list;
   }
 );
-
 const handleSearch = () => {
   if (!searchKeyword.value) {
     filteredList.value = currentList.value;

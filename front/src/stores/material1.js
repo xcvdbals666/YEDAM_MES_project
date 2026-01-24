@@ -190,6 +190,10 @@ export const useMaterialStore = defineStore('material', {
       const response = await axios.get('/api/material/inbound/product/passed');
       this.passedProductQioList = response.data;
       return this.passedProductQioList;
+    },
+    async addProductInbound(items) {
+      const response = await axios.post('/api/material/inbound/product', items);
+      return response.data;
     }
   },
   persist: true
