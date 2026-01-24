@@ -23,6 +23,11 @@ const statusMap = {
   v4: '작업취소'
 };
 
+const convertDate = (d) => {
+  if (!d) return '';
+  return d.slice(0, 10);
+};
+
 onMounted(() => {
   store.fetchWorkOrders();
   store.fetchLines();
@@ -81,8 +86,19 @@ onMounted(() => {
       <Column field="wko_code" header="지시서번호" />
       <Column field="prod_name" header="제품명" />
       <Column field="line_code" header="라인코드" />
-      <Column field="start_date" header="시작시간" />
-      <Column field="end_date" header="완료예정일" />
+      <Column header="시작시간">
+        <template #body="{ data }">
+          {{ convertDate(data.start_date) }}
+        </template>
+      </Column>
+
+      <!-- <Column field="start_date" header="시작시간" /> -->
+      <!-- <Column field="end_date" header="완료예정일" /> -->
+        <Column header="완료예정일">
+        <template #body="{ data }">
+          {{ convertDate(data.end_date) }}
+        </template>
+      </Column>
       <Column header="상태">
         <template #body="{ data }">
           {{ statusMap[data.stat] || data.stat }}

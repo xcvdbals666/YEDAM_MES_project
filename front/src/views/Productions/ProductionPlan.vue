@@ -357,15 +357,15 @@ const searchProd = async () => {
             </tr>
             <tr>
               <th>계획일자</th>
-              <td><DatePicker :showIcon="true" :showButtonBar="true" v-model="planInfo.prdpDate" disabled></DatePicker></td>
+              <td><DatePicker :showIcon="true" :showButtonBar="true" v-model="planInfo.prdpDate" dateFormat="yy-mm-dd" disabled></DatePicker></td>
               <th>작성자</th>
               <td><InputText v-model="planInfo.empName" disabled></InputText></td>
             </tr>
             <tr>
               <th>계획시작일</th>
-              <td><DatePicker :showIcon="true" :showButtonBar="true" v-model="planInfo.startDate" placeholder="날짜 선택"></DatePicker></td>
+              <td><DatePicker :showIcon="true" :showButtonBar="true" v-model="planInfo.startDate" dateFormat="yy-mm-dd" placeholder="날짜 선택"></DatePicker></td>
               <th>계획종료일</th>
-              <td><DatePicker :showIcon="true" :showButtonBar="true" v-model="planInfo.endDate" placeholder="날짜 선택"></DatePicker></td>
+              <td><DatePicker :showIcon="true" :showButtonBar="true" v-model="planInfo.endDate" dateFormat="yy-mm-dd" placeholder="날짜 선택"></DatePicker></td>
             </tr>
             <tr>
               <th>주문코드</th>
@@ -376,7 +376,7 @@ const searchProd = async () => {
                 </IconField>
               </td>
               <th>납기일자</th>
-              <td><DatePicker :showIcon="true" :showButtonBar="true" v-model="planInfo.dueDate" placeholder="날짜 선택"></DatePicker></td>
+              <td><DatePicker :showIcon="true" :showButtonBar="true" v-model="planInfo.dueDate" dateFormat="yy-mm-dd" placeholder="날짜 선택"></DatePicker></td>
             </tr>
             <tr>
               <th>비고</th>
@@ -396,35 +396,35 @@ const searchProd = async () => {
             <InputIcon class="pi pi-search" @click="searchPrdp" />
           </IconField>
         </Fluid>
-        <DataTable :value="prdpList" v-model:selection="selectedPrdp" :paginator="true" :rows="10" dataKey="prdp_code" :rowHover="true" showGridlines>
+        <DataTable :value="prdpList" v-model:selection="selectedPrdp" sortField="prdp_code" :sortOrder="-1" :paginator="true" :rows="10" dataKey="prdp_code" :rowHover="true" showGridlines>
           <template #empty>
             <div class="text-center py-6 text-gray-400">데이터 없음</div>
           </template>
           <Column selectionMode="single" headerClass="table-header truncate w-2" bodyClass="table-body truncate" />
-          <Column field="prdp_code" header="생산계획코드" headerClass="table-header truncate" bodyClass="table-body truncate" style="width: 140px" />
+          <Column sortable field="prdp_code" header="생산계획코드" headerClass="table-header truncate" bodyClass="table-body truncate" style="width: 140px" />
           <Column field="prdp_name" header="계획명" headerClass="table-header truncate" bodyClass="table-body truncate" style="width: 140px" />
-          <Column field="prdp_date" header="계획일자" headerClass="table-header truncate" bodyClass="table-body truncate" style="width: 95px">
+          <Column sortable field="prdp_date" header="계획일자" headerClass="table-header truncate" bodyClass="table-body truncate" style="width: 95px">
             <template #body="{ data }">
               {{ data.prdp_date.slice(0, 10) }}
             </template>
           </Column>
-          <Column field="start_date" header="계획시작일" headerClass="table-header truncate" bodyClass="table-body truncate" style="width: 95px">
+          <Column sortable field="start_date" header="계획시작일" headerClass="table-header truncate" bodyClass="table-body truncate" style="width: 95px">
             <template #body="{ data }">
               {{ data.start_date.slice(0, 10) }}
             </template>
           </Column>
-          <Column field="end_date" header="계획종료일" headerClass="table-header truncate" bodyClass="table-body truncate" style="width: 95px">
+          <Column sortable field="end_date" header="계획종료일" headerClass="table-header truncate" bodyClass="table-body truncate" style="width: 95px">
             <template #body="{ data }">
               {{ data.end_date.slice(0, 10) }}
             </template>
           </Column>
-          <Column field="due_date" header="납기일자" headerClass="table-header truncate" bodyClass="table-body truncate" style="width: 95px">
+          <Column sortable field="due_date" header="납기일자" headerClass="table-header truncate" bodyClass="table-body truncate" style="width: 95px">
             <template #body="{ data }">
               {{ data.due_date.slice(0, 10) }}
             </template>
           </Column>
           <Column field="emp_name" header="작성자" headerClass="table-header truncate" bodyClass="table-body truncate" style="width: 60px" />
-          <Column field="ord_code" header="주문코드" headerClass="table-header truncate" bodyClass="table-body truncate" style="width: 140px" />
+          <Column sortable field="ord_code" header="주문코드" headerClass="table-header truncate" bodyClass="table-body truncate" style="width: 140px" />
           <Column field="note" header="비고" headerClass="table-header truncate" bodyClass="table-body truncate" style="width: 100px" />
         </DataTable>
         <template #footer>
@@ -443,17 +443,17 @@ const searchProd = async () => {
             <InputIcon class="pi pi-search" @click="searchOrder" />
           </IconField>
         </Fluid>
-        <DataTable :value="orderList" v-model:selection="selectedOrder" :paginator="true" :rows="10" dataKey="idx" :rowHover="true" showGridlines>
+        <DataTable :value="orderList" v-model:selection="selectedOrder" sortField="ord_code" :sortOrder="-1" :paginator="true" :rows="10" dataKey="idx" :rowHover="true" showGridlines>
           <template #empty>
             <div class="text-center py-6 text-gray-400">데이터 없음</div>
           </template>
           <Column selectionMode="single" headerClass="table-header truncate w-2" bodyClass="table-body truncate" />
-          <Column field="ord_code" header="주문코드" headerClass="table-header truncate" bodyClass="table-body truncate" style="width: 180px" />
+          <Column sortable field="ord_code" header="주문코드" headerClass="table-header truncate" bodyClass="table-body truncate" style="width: 180px" />
           <Column field="prod_code" header="제품코드" headerClass="table-header truncate" bodyClass="table-body truncate" style="width: 140px" />
           <Column field="prod_name" header="제품명" headerClass="table-header truncate" bodyClass="table-body truncate" style="width: 120px" />
           <Column field="ord_amount" header="주문수량" headerClass="table-header truncate" bodyClass="table-body truncate" style="width: 60px" />
           <Column field="ord_name" header="주문명" headerClass="table-header truncate" bodyClass="table-body truncate" style="width: 140px" />
-          <Column field="ord_date" header="주문일자" headerClass="table-header truncate" bodyClass="table-body truncate" style="width: 95px" />
+          <Column sortable field="ord_date" header="주문일자" headerClass="table-header truncate" bodyClass="table-body truncate" style="width: 95px" />
         </DataTable>
         <template #footer>
           <div class="flex gap-2 justify-center">
