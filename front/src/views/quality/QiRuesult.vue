@@ -29,6 +29,7 @@ let callQiOrder = ref(false);
 
 const selectedOrder = async (data) => {
   allQiList.value = [];
+  quality1.state = 0;
   orderInput.value = data;
   console.log(data);
   await quality1.fetchQcrInfo();
@@ -123,9 +124,7 @@ const submitQiResult = async () => {
 let qirDisplay = ref(false);
 const callQiResult = async () => {
   await quality1.fetchQirList();
-  if (quality1.qirList.length > 0) {
-    quality1.state = 1;
-  }
+
   qirDisplay.value = true;
 };
 
@@ -150,6 +149,7 @@ const selectQirList = (data) => {
 
   selectedOrder(data);
   checkCallQir.value = false;
+  quality1.state = 1;
 };
 
 // 검사결과서 저장(합격/불합격수량 입력)
