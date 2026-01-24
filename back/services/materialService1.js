@@ -391,7 +391,7 @@ const addProductInbound = async (items) => {
   const results = [];
 
   for (let item of items) {
-    // 1. 완제품 LOT번호 생성 (LOT-200)
+    // 1. 완제품 LOT번호 생성 (LOT-400)
     let lotResult = await mysql.query(
       "selectNextProductLotNum",
       [],
@@ -402,7 +402,7 @@ const addProductInbound = async (items) => {
     // 2. LOT 등록
     await mysql.query(
       "insertProductLot",
-      [lotNum, item.prod_type, item.prod_code],
+      [lotNum, item.prod_type || "", item.prod_code || ""],
       "material1",
     );
 
@@ -414,19 +414,16 @@ const addProductInbound = async (items) => {
     );
     let pinbndCode = pinbndResult[0].next_code;
 
-    // 4. 완제품 입고 등록
+    // 4. 완제품 입고 등록 (파라미터 순서 수정!)
     await mysql.query(
       "insertPinbnd",
       [
-        pinbndCode,
-        item.prod_code,
-        item.prod_type,
-        item.unit,
-        item.inbnd_qtt,
-        formatDate(item.inbnd_date),
-        lotNum,
-        item.qio_code || null,
-        item.mcode,
+        pinbndCode, // pinbnd_code
+        item.prod_code || "", // prod_code
+        item.inbnd_qtt, // qtt
+        lotNum, // lot_num
+        item.qio_code || null, // qio_code
+        item.mcode, // mcode
       ],
       "material1",
     );
@@ -439,7 +436,6 @@ const addProductInbound = async (items) => {
 
   return { status: "success", results };
 };
-
 module.exports = {
   // 발주서 (MPO)
   findAllMpoTbl,

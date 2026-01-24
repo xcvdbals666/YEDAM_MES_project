@@ -443,30 +443,29 @@ SELECT
   qio.qio_code AS qio_code,
   qir.qir_code,
   qir.pass_qtt,
-
-  qio.prdr_code AS prod_code,
+  
+  prdr.prod_code AS prod_code,
   p.prod_name,
   p.unit,
-
+  
   e.emp_name,
   DATE(NOW()) AS inbnd_date
-
 FROM qir_tbl qir
 JOIN qio_tbl qio 
   ON qir.qio_code = qio.qio_code
-
+LEFT JOIN prdr_tbl prdr
+  ON qio.prdr_code = prdr.prdr_code
 LEFT JOIN prod_tbl p
-  ON qio.prdr_code = p.prod_code
-
+  ON prdr.prod_code = p.prod_code
 LEFT JOIN emp_tbl e 
   ON qio.emp_code = e.emp_code
-
 WHERE qir.result = 'g2'
-AND NOT EXISTS (
-  SELECT 1
-  FROM pinbnd_tbl pb
-  WHERE pb.qir_code = qir.qir_code
-)
+  AND qio.prdr_code IS NOT NULL
+  AND NOT EXISTS (
+    SELECT 1
+    FROM pinbnd_tbl pb
+    WHERE pb.qir_code = qir.qir_code
+  )
 `;
 
 // 품질검사 합격 목록 조회 (입고 안 된 것만)
@@ -475,40 +474,32 @@ SELECT
   qio.qio_code,
   qir.qir_code,
   qir.pass_qtt,
-
   mpod.mat_code,
   m.mat_name,
   m.material_type_code,
   mpod.unit,
-
   mpod.client_code,
   c.client_name,
-
   e.emp_name,
   DATE(NOW()) AS inbnd_date
-
 FROM qir_tbl qir
 JOIN qio_tbl qio 
   ON qir.qio_code = qio.qio_code
-
 LEFT JOIN mpo_d_tbl mpod 
-  ON qir.mpo_d_code = mpod.mpo_d_code
-
+  ON qio.mpo_d_code = mpod.mpo_d_code
 LEFT JOIN mat_tbl m 
   ON mpod.mat_code = m.mat_code
-
 LEFT JOIN client_tbl c 
   ON mpod.client_code = c.client_code
-
 LEFT JOIN emp_tbl e 
   ON qio.emp_code = e.emp_code
-
 WHERE qir.result = 'g2'
-AND NOT EXISTS (
-  SELECT 1
-  FROM minbnd_tbl mnb
-  WHERE mnb.qio_code = qio.qio_code
-)
+  AND qio.mpo_d_code IS NOT NULL
+  AND NOT EXISTS (
+    SELECT 1
+    FROM minbnd_tbl mnb
+    WHERE mnb.qio_code = qio.qio_code
+  )
 `;
 
 // 발주서 상태 업데이트
