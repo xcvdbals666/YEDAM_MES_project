@@ -15,7 +15,8 @@ export const useMaterialStore = defineStore('material2', {
     headerModals: [], // MPR 불러오기용 모달 + 검색
     requestHeader: null, // MPR 불러오기용 조회 - 헤더 정보
     mrpList: [], //MRP 기준 정보 불러오기
-    matInOutList: [] // 자재 입출고 내역 정보
+    matInOutList: [], // 자재 입출고 내역 정보
+    prodInOutList: [] // 완제품 입출고 내역 정보
   }),
   // getters
   // actions
@@ -35,8 +36,8 @@ export const useMaterialStore = defineStore('material2', {
     },
 
     // 자재 정보 불러오기
-    async fetchMaterials({ keyword }) {
-      const response = await axios.get(`/api/material/mat-info`, { params: { keyword: keyword || '' } });
+    async fetchMaterials({ keyword, mrpCode }) {
+      const response = await axios.get(`/api/material/mat-info`, { params: { keyword: keyword || '', mrpCode: mrpCode || null } });
       this.materials = response.data;
     },
 
@@ -109,10 +110,16 @@ export const useMaterialStore = defineStore('material2', {
       return response.data.isEditable; // true면 수정 가능
     },
 
-    // 입출고내역조회
+    // 자재 입출고내역조회
     async fetchInOutList(params) {
       const response = await axios.get(`/api/material/mat-inout`, { params });
       this.matInOutList = response.data;
+    },
+
+    // 완제품 입출고내역조회
+    async fetchProductInOutList(params) {
+      const res = await axios.get('/api/material/prod-inout', { params });
+      this.prodInOutList = res.data;
     }
   },
   persist: true

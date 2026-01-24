@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, computed, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { downloadExcel } from '@/utils/excel';
 import { useMaterialStore } from '@/stores/material2';
@@ -18,13 +18,13 @@ const searchValue = ref({
 });
 
 onMounted(() => {
-  store.fetchInOutList(searchValue.value);
+  store.fetchProductInOutList(searchValue.value);
 });
 
-const list = computed(() => store.matInOutList);
-
+const list = computed(() => store.prodInOutList);
 const selectedRows = ref([]);
 
+// 날짜 포맷
 const formatDate = (val) => {
   if (!val) return '-';
   const d = new Date(val);
@@ -34,15 +34,14 @@ const formatDate = (val) => {
   return `${yyyy}-${mm}-${dd}`;
 };
 
+// 조회
 const search = () => {
-  store.fetchInOutList(searchValue.value);
+  store.fetchProductInOutList(searchValue.value);
 };
 
 // 초기화
 const doReset = async (askConfirm = true) => {
-  if (askConfirm) {
-    if (!confirm('입력한 검색 조건을 모두 초기화하시겠습니까?')) return;
-  }
+  if (askConfirm && !confirm('입력한 검색 조건을 모두 초기화하시겠습니까?')) return;
 
   searchValue.value = {
     ioType: 'ALL',
@@ -52,18 +51,10 @@ const doReset = async (askConfirm = true) => {
     status: 'ALL'
   };
 
-  store.fetchInOutList(searchValue.value);
+  store.fetchProductInOutList(searchValue.value);
 };
 
-// 초기화 버튼
 const reset = () => doReset(true);
-
-// watch(
-//   () => store.matInOutList,
-//   () => {
-//     selectedRows.value = [];
-//   }
-// );
 
 // 엑셀 다운로드
 const handleExcelDownload = () => {
@@ -72,23 +63,22 @@ const handleExcelDownload = () => {
     return;
   }
 
-  const headers = ['구분', '처리일자', '자재코드', '자재명', '규격', '요청수량', '처리수량', '단위', '처리상태', '담당자'];
+  const headers = ['구분', '처리일자', '제품코드', '제품명', '요청수량', '처리수량', '처리상태', '담당자'];
   const mapFunction = (item) => [
     item.io_type === 'IN' ? '입고' : '출고',
     formatDate(item.process_date),
-    item.mat_code,
-    item.mat_name,
-    item.spec,
+    item.prod_code,
+    item.prod_name,
     item.req_qtt,
     item.proc_qtt,
-    item.unit_label,
-    item.status_code === 'c2' ? '입고완료' : item.status_code === 'c3' ? '부분입고' : item.status_code === 'c4' ? '출고완료' : '-',
+    item.status_code === 'c2' ? '입고완료' : item.status_code === 'c4' ? '출고완료' : '-',
     item.emp_name
   ];
-  downloadExcel(selectedRows.value.length > 0 ? selectedRows.value : list.value, headers, mapFunction, '입출고내역');
+
+  downloadExcel(selectedRows.value.length > 0 ? selectedRows.value : list.value, headers, mapFunction, '완제품입출고내역');
 };
 
-// 탭 관련
+// 탭
 const tabs = [
   { label: '자재 입출고', path: '/matInout' },
   { label: '완제품 입출고', path: '/prodInout' }
@@ -116,7 +106,7 @@ const activeTab = computed({
 
     <TabMenu :model="tabs" v-model:activeIndex="activeTab" class="mb-4" />
 
-    <!-- 검색 조건 영역 -->
+    <!-- 검색 -->
     <div class="search-section">
       <div class="search-grid">
         <!-- 구분 -->
@@ -129,7 +119,7 @@ const activeTab = computed({
           </div>
         </div>
 
-        <!-- 입출고일자 -->
+        <!-- 일자 -->
         <div class="search-item search-item-date">
           <label class="search-label">입출고일자</label>
           <div class="flex gap-2">
@@ -138,20 +128,19 @@ const activeTab = computed({
           </div>
         </div>
 
-        <!-- 자재 검색 -->
+        <!-- 제품 검색 -->
         <div class="search-item search-item-keyword">
-          <label class="search-label">자재 검색</label>
-          <InputText v-model="searchValue.keyword" placeholder="자재코드 / 자재명" class="w-full" />
+          <label class="search-label">제품 검색</label>
+          <InputText v-model="searchValue.keyword" placeholder="제품코드 / 제품명" class="w-full" />
         </div>
 
-        <!-- 처리 상태 -->
+        <!-- 상태 -->
         <div class="search-item search-item-status">
           <label class="search-label">처리 상태</label>
           <Select
             v-model="searchValue.status"
             :options="[
               { label: '전체', value: 'ALL' },
-              { label: '부분입고', value: 'c3' },
               { label: '입고완료', value: 'c2' },
               { label: '출고완료', value: 'c4' }
             ]"
@@ -164,17 +153,16 @@ const activeTab = computed({
     </div>
   </div>
 
+  <!-- 테이블 -->
   <div class="card mt-6 h-[560px]">
-    <div class="flex justify-between align-items-center mb-3">
-      <h4 class="m-0">입출고 내역</h4>
+    <div class="flex justify-between items-center mb-3">
+      <h4 class="m-0">완제품 입출고 내역</h4>
       <Button icon="pi pi-file-excel" label="엑셀 다운로드" @click="handleExcelDownload" class="px-3 py-1 h-[35px] gap-2" />
     </div>
 
-    <div class="flex justify-between items-center mb-2">
-      <span
-        >총 <span class="font-black">{{ list.length }}</span
-        >건</span
-      >
+    <div class="mb-2">
+      총 <span class="font-black">{{ list.length }}</span
+      >건
     </div>
 
     <DataTable :value="list" dataKey="io_code" v-model:selection="selectedRows" selectionMode="checkbox" showGridlines scrollable scroll-height="380px" paginator :rows="10" class="p-datatable-sm">
@@ -184,32 +172,24 @@ const activeTab = computed({
 
       <Column selectionMode="multiple" headerStyle="width: 48px" />
 
-      <Column header="구분" field="io_type" sortable headerStyle="width: 90px">
+      <Column header="구분" field="io_type" headerStyle="width: 90px">
         <template #body="{ data }">
           <Tag :value="data.io_type === 'IN' ? '입고' : '출고'" :severity="data.io_type === 'IN' ? 'success' : 'warn'" />
         </template>
       </Column>
 
-      <Column header="처리일자" field="process_date" sortable headerStyle="width: 130px">
+      <Column header="처리일자" field="process_date" headerStyle="width: 130px">
         <template #body="{ data }">{{ formatDate(data.process_date) }}</template>
       </Column>
 
-      <Column header="자재코드" field="mat_code" sortable headerStyle="width: 140px" />
-      <Column header="자재명" field="mat_name" headerStyle="width: 160px" />
-      <Column header="규격" field="spec" headerStyle="width: 150px" />
-      <Column header="요청수량" field="req_qtt" sortable headerStyle="width: 120px" />
-      <Column header="처리수량" field="proc_qtt" sortable headerStyle="width: 120px" bodyStyle="color: blue; font-weight: bold;" />
-      <Column header="단위" field="unit_label" headerStyle="width: 80px">
-        <template #body="{ data }">
-          {{ data.unit_label ? data.unit_label : '-' }}
-        </template>
-      </Column>
+      <Column header="제품코드" field="prod_code" headerStyle="width: 160px" />
+      <Column header="제품명" field="prod_name" headerStyle="width: 200px" />
+      <Column header="요청수량" field="req_qtt" headerStyle="width: 120px" />
+      <Column header="처리수량" field="proc_qtt" headerStyle="width: 120px" bodyStyle="color: blue; font-weight: bold;" />
+
       <Column header="처리상태" field="status_code" headerStyle="width: 120px">
         <template #body="{ data }">
-          <Tag
-            :value="data.status_code === 'c2' ? '입고완료' : data.status_code === 'c3' ? '부분입고' : data.status_code === 'c4' ? '출고완료' : '-'"
-            :severity="data.status_code === 'c2' ? 'success' : data.status_code === 'c3' ? 'info' : data.status_code === 'c4' ? 'warn' : 'secondary'"
-          />
+          <Tag :value="data.status_code === 'c2' ? '입고완료' : '출고완료'" :severity="data.status_code === 'c2' ? 'success' : 'warn'" />
         </template>
       </Column>
 
@@ -217,7 +197,6 @@ const activeTab = computed({
     </DataTable>
   </div>
 </template>
-
 <style scoped>
 /* 검색 영역 */
 .search-section {

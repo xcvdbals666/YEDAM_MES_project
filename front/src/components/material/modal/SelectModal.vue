@@ -10,6 +10,10 @@ const props = defineProps({
   type: {
     type: String,
     required: true // 'employee' | 'material' | 'mpr' | 'client'
+  },
+  mrpCode: {
+    type: String,
+    default: null
   }
 });
 
@@ -45,7 +49,7 @@ const CONFIG = {
   material: {
     title: '자재 선택',
     placeholder: '자재명을 입력해주세요',
-    fetch: (keyword) => store.fetchMaterials({ keyword }),
+    fetch: (keyword) => store.fetchMaterials({ keyword, mrpCode: props.mrpCode }),
     list: () => store.materials,
     dataKey: 'mat_code',
     columns: [
