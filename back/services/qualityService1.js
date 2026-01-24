@@ -20,6 +20,12 @@ const findQiOrderItemInfo = async (qio_code) => {
   return list;
 };
 
+// 검사지에 해당하는 생산 및 검사항목 불러오기
+const findQiProdInfo = async (qio_code) => {
+  let list = await mysql.query("selectQiProdInfo", [qio_code], "quality1");
+  return list;
+};
+
 // 생산실적 불러오기
 const findQiProduceList = async () => {
   let list = await mysql.query("selectQiProduceList", [], "quality1");
@@ -44,7 +50,7 @@ const addQiOrderForm = async (data) => {
   console.log("newQio_code: :", qio_code);
 
   try {
-    if (data.mpo_d_code != null || data.mpo_d_code != "") {
+    if (data.mpo_d_code != null || data.mpo_d_code != undefined) {
       const { insp_date, insp_vol, mpo_d_code } = data;
       console.log("전송 데이터:", [qio_code, insp_date, insp_vol, mpo_d_code]);
       let list = await mysql.query(
@@ -53,7 +59,7 @@ const addQiOrderForm = async (data) => {
         "quality1",
       );
       return list;
-    } else {
+    } else if (data.prdr_code != null || data.prdr_code != undefined) {
       const { insp_date, insp_vol, prdr_code } = data;
       console.log("전송 데이터:", [qio_code, insp_date, insp_vol, prdr_code]);
       let list = await mysql.query(
@@ -162,4 +168,5 @@ module.exports = {
   findQirList,
   modifyQirList,
   removeqir,
+  findQiProdInfo,
 };

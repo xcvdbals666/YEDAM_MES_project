@@ -8,6 +8,7 @@ export const useQuality1Store = defineStore('quality', {
     qiOrderThing: [], // 불러온 검사지 대상 정보
     qiProduceList: [], // 생산실적 중 검사지시서에 없는 것들
     qiMpoList: [], // 발주서 상세에 있는 목록들
+    qiProdInfo: [], // 검사지시서 생산품 선택시
 
     // 결과서 관리
     qirProdInfo: [], // 검사지시서 불러오기(생산일경우)
@@ -36,13 +37,21 @@ export const useQuality1Store = defineStore('quality', {
       return this.qiOrderList;
     },
 
-    // 불러온 검사지 대상 정보
+    // 불러온 검사지 대상 정보(자재)
     async fetchOrderItemInfo(id) {
       const response = await axios.get('/api/quality/qiorderiteminfo/' + id);
       this.qiOrderThing = response.data;
       console.log('qiOrderThing: ', this.qiOrderThing);
 
       return this.qiOrderThing;
+    },
+    // 불러온 검사지 대상 정보(생산)
+    async fetchOrderProdInfo(id) {
+      const response = await axios.get('/api/quality/qiorderProdinfo/' + id);
+      this.qiProdInfo = response.data[0];
+      console.log('qiProdInfo: ', this.qiProdInfo);
+
+      return this.qiProdInfo;
     },
 
     // 생산실적 불러오기
