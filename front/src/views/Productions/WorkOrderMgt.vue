@@ -323,9 +323,24 @@ const deleteCurrentWko = async () => {
       <Column selectionMode="single" headerStyle="width:3rem" />
       <Column field="prdp_code" header="계획번호" />
       <Column field="prdp_name" header="계획명" />
-      <Column field="prdp_date" header="계획일자" />
-      <Column field="due_date" header="납기일자" />
-      <Column field="start_date" header="작업시작일" />
+      <Column header="계획일자">
+        <template #body="{ data }">
+          {{ convertDate(data.prdp_date) }}
+        </template>
+      </Column>
+      <!-- <Column field="prdp_date" header="계획일자" /> -->
+      <Column header="납기일자">
+        <template #body="{ data }">
+          {{ convertDate(data.due_date) }}
+        </template>
+      </Column>
+      <!-- <Column field="due_date" header="납기일자" /> -->
+        <Column header="작업시작일">
+        <template #body="{ data }">
+          {{ convertDate(data.start_date) }}
+        </template>
+      </Column>
+      <!-- <Column field="start_date" header="작업시작일" /> -->
     </DataTable>
 
     <template #footer>
