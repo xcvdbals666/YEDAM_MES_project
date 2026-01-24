@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue';
 import { useOrderStore2 } from '@/stores/order2';
-import SelectOutreqModal from '@/components/order/SelectOutreqModal.vue';
+import SelectOutReqModal from '@/components/order/SelectOutReqModal.vue';
 const user = JSON.parse(localStorage.getItem('user'));
 
 const orderStore = useOrderStore2();
@@ -176,7 +176,7 @@ const formatDate = (v) => {
   </Fluid>
 
   <!-- 출고요청 선택 모달 -->
-  <SelectOutreqModal v-model:visible="showOutReqModal" @select="selectOutReq" />
+  <SelectOutReqModal v-model:visible="showOutReqModal" @select="selectOutReq" />
 </template>
 <style scoped>
 .header-section {
