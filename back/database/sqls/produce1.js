@@ -1,8 +1,11 @@
 //라인 조회 (드롭다운용)
 const selectAllLinesDJ = `
-SELECT DISTINCT line_code
-FROM wko_tbl
-ORDER BY line_code 
+SELECT
+  line_code,
+  line_name,
+  prod_code
+FROM line_tbl
+ORDER BY line_code
 `;
 
 //생산계획 (due_date가 오늘날짜 기준 최근 60일까지만) 조회 - 모달 선택용 리스트
@@ -82,7 +85,7 @@ SET
 WHERE wko_code = ?
 `;
 
-//작업진행 단건 상세조회
+//작업진행 단건 상세조회 (wko_tbl)
 const selectWipDetail = `
 SELECT
   w.wko_code,
@@ -138,7 +141,8 @@ const selectProcessDropdownByWko = `
   `;
 
 //###############작업시작 버튼 누르면 필요한 쿼리#########################
-//prdr 테이블 번호생성
+//prdr생성, prdr_d 생성, bom_save생성
+//[1]prdr 테이블 번호생성
 const selectNextPrdrSeq = `
 SELECT IFNULL(
   MAX(CAST(SUBSTRING(prdr_code, 6) AS UNSIGNED)), 0
@@ -146,7 +150,7 @@ SELECT IFNULL(
 FROM prdr_tbl
 `;
 
-//prdr_d 테이블 번호생성
+//[2]prdr_d 테이블 번호생성
 const selectNextPrdrDSeq = `
 SELECT IFNULL(
   MAX(CAST(SUBSTRING(prdr_d_code, 8) AS UNSIGNED)), 0
@@ -154,7 +158,15 @@ SELECT IFNULL(
 FROM prdr_d_tbl;
 `;
 
-//prdr_tbl 삽입
+//[3]bom_save 테이블 번호생성
+const selectNextBomsaveSeq = `
+SELECT IFNULL(
+  MAX(CAST(SUBSTRING(bom_save_code, 8) AS UNSIGNED)), 0
+) AS maxSeq
+FROM bom_save;
+`;
+
+//[4]prdr_tbl 삽입
 const insertPrdrStart = `
 INSERT INTO prdr_tbl
   (prdr_code, prod_code, start_date, work_order_code, stat, ord_qtt, emp_code)
@@ -162,7 +174,7 @@ VALUES
   (?, ?, NOW(), ?, 'b1', ?, 'EMP-10001')
 `;
 
-//prdr_d_tbl 삽입
+//[5]prdr_d_tbl 삽입
 const insertPrdrDStart = `
 INSERT INTO prdr_d_tbl
   (prdr_d_code, prdr_code, input_qtt, start_date, line_eq_code)
@@ -170,14 +182,29 @@ VALUES
   (?, ?, ?, NOW(), ?)
 `;
 
-//bom_save 테이블 삽입 
+//[6]bom_save 테이블 삽입
 const insertBomSave = `
 INSERT INTO bom_save
   (bom_save_code, mat_type, req_qtt, unit, spec, loss_rate, copy_date, wko_code, mat_code)
-VALUES
-  (?, ?, ?, ?, NULL, NULL, ?, ?, ?)
-`
-
+SELECT 
+  CONCAT('BOM-S-', LPAD(@bs := @bs + 1, 3, '0')) AS bom_save_code,
+  bm.mat_type,
+  bm.req_qtt,
+  bm.unit,
+  bt.spec,
+  bm.loss_rate,
+  NOW(),
+  w.wko_code,
+  bm.mat_code
+FROM wko_tbl w
+JOIN bom_tbl bt ON bt.prod_code = w.prod_code
+JOIN bom_mat bm ON bm.bom_code = bt.bom_code
+CROSS JOIN (
+  SELECT @bs := IFNULL(MAX(CAST(SUBSTRING(bom_save_code, 8) AS UNSIGNED)), 0)
+  FROM bom_save
+) init
+WHERE w.wko_code = ?;
+`;
 //###############작업시작버튼 끝########################################
 
 //#####제정신아님. . .
@@ -263,8 +290,6 @@ WHERE w.wko_code = ?
 ORDER BY d.no, ld.eq_code
 `;
 
-
-
 module.exports = {
   selectAllLinesDJ,
   selectPrdpActive,
@@ -279,10 +304,11 @@ module.exports = {
   selectProcessDropdownByWko,
   selectNextPrdrSeq,
   selectNextPrdrDSeq,
+  selectNextBomsaveSeq,
   insertPrdrStart,
   insertPrdrDStart,
   insertBomSave,
   selectPrdrStatusByWko,
   selectPrdrDDetail,
-  selectWipBulletinByWko
+  selectWipBulletinByWko,
 };

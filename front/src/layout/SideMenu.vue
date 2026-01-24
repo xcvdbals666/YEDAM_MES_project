@@ -101,6 +101,11 @@ const model = ref([
             label: '생산실적조회',
             icon: 'pi pi-fw pi-lock',
             to: '/production/result'
+          },
+          {
+            label: '임시',
+            icon: 'pi pi-fw pi-lock',
+            to: '/workInProcessDetail/WKO-20260124-001/PO-002'
           }
         ]
       },
