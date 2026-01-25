@@ -5,9 +5,21 @@
 import { ref, computed, onMounted } from 'vue';
 import { useQualityStore2 } from '@/stores/quality2.js';
 import SelectQiResultModal2 from '@/components/quality/modal/SelectQiResultModal2.vue';
+import { useRouter } from 'vue-router';
 
+const router = useRouter();
 const qualityStore = useQualityStore2();
 const selectedResults = ref([]); //모달에서 선택한 결과서 목록불러오기
+
+//행 클릭하면 상세체이지로 이동
+const goDetail = (row) => {
+  router.push({
+    name: 'QiResultDetail',
+    params: {
+      qirCode: row.qir_code
+    }
+  });
+};
 
 //검색창 입력부분
 const qir_code = ref(''); //검사결과 코드
@@ -202,8 +214,14 @@ const fetchAll = async () => {
     <!--수정해야함-->
 
     <div class="flex-1 overflow-auto rounded-lg border border-gray-200">
-      <DataTable :value="filteredResults" rowHover class="hover-table" scrollable scrollHeight="400px">
-        <template #empty>
+<DataTable
+  :value="filteredResults"
+  rowHover
+  selectionMode="single"
+  @row-click="goDetail"
+  scrollable
+  scrollHeight="400px"
+>        <template #empty>
           <div class="text-center py-6 text-gray-400">데이터 없음</div>
         </template>
 

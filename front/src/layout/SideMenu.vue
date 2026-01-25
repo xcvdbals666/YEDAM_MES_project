@@ -101,11 +101,6 @@ const model = ref([
             label: '생산실적조회',
             icon: 'pi pi-fw pi-lock',
             to: '/production/result'
-          },
-          {
-            label: '임시',
-            icon: 'pi pi-fw pi-lock',
-            to: '/workInProcessDetail/WKO-20260124-001/PO-002'
           }
         ]
       },
@@ -185,6 +180,11 @@ const model = ref([
             label: '입출고내역',
             icon: 'pi pi-fw pi-sign-in',
             to: '/matInout'
+          },
+          {
+            label: '자재재고현황',
+            icon: 'pi pi-fw pi-sign-in',
+            to: '/matStock'
           }
         ]
       },

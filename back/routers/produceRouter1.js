@@ -124,22 +124,32 @@ router.get("/prdrByWko/:wko_code", async (req, res) => {
   res.json(data);
 });
 
-// 설비 단건 상세
+// 설비 단건 작업상황 조회
 router.get("/prdrDDetail/:prdr_d_code", async (req, res) => {
   const { prdr_d_code } = req.params;
   const data = await produceService.getPrdrDDetail(prdr_d_code);
   res.json(data);
 });
 
-//Bulletin 공정 조회
-router.get('/wipBulletin/:wkoCode', async (req, res) => {
+//작업종료 버튼 클릭 시
+router.post("/workEnd", async (req, res) => {
   try {
-    const { wkoCode } = req.params;
-    const data = await produceService.getWipBulletin(wkoCode);
-    res.json(data);
+    const { prdr_d_code, make_qtt, def_qtt, proc_rate, po_code, wko_code } =
+      req.body;
+
+    const result = await produceService.endWork({
+      prdr_d_code,
+      make_qtt,
+      def_qtt,
+      proc_rate,
+      po_code,
+      wko_code,
+    });
+
+    res.json(result);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'bulletin 조회 실패', error: String(err.message || err) });
+    console.error("workEnd error:", err);
+    res.status(500).json({ ok: false, message: err.message });
   }
 });
 module.exports = router;

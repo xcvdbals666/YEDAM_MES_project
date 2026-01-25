@@ -151,4 +151,32 @@ router.get("/prod-inout", async (req, res) => {
   res.send(list);
 });
 
+// 재고현황 목록 + 검색
+router.get("/material-stock", async (req, res) => {
+  const params = req.query;
+  const list = await materialService2.findMaterialStockList(params);
+  res.send(list);
+});
+
+// 재고 상세 조회 - 기본정보 + 재고정보
+router.get("/material-stock/:matCode", async (req, res) => {
+  const { matCode } = req.params;
+  const result = await materialService2.findMaterialStockDetail(matCode);
+  res.send(result);
+});
+
+// 자재 상세 - 공급업체별 재고(입고/LOT 기준)
+router.get("/material-stock/:matCode/suppliers", async (req, res) => {
+  const { matCode } = req.params;
+  const list = await materialService2.findMaterialStockSupplierList(matCode);
+  res.send(list);
+});
+
+// 자재 상세 - 최근 입출고 이력
+router.get("/material-stock/:matCode/inout", async (req, res) => {
+  const { matCode } = req.params;
+  const list = await materialService2.findMaterialStockInOutHistory(matCode);
+  res.send(list);
+});
+
 module.exports = router;

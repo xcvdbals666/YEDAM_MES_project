@@ -24,12 +24,14 @@ const fmt = (v) => {
   return String(v).replace('T', ' ').slice(0, 19);
 };
 
-// 공정명 클릭 디테일 페이지 이동
 const goDetail = (row) => {
   router.push({
     name: 'WorkInProcessDetail',
-    params: { wko_code: wkoCode.value },
-    query: { po_code: row.po_code }
+    params: {
+      wko_code: wkoCode.value,
+      po_code: row.po_code
+    },
+    query: { line_code: lineCode.value }
   });
 };
 </script>

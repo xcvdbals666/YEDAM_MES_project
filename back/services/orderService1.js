@@ -1,9 +1,9 @@
 // 순수 기능에 대한 정의 => 함수(function)
 const mysql = require("../database/mapper.js");
 
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+// const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 // 주문 전체 조회
 const findAllOrder = async () => {
   let list = await mysql.query("selectAllOrder", [], "order1");
