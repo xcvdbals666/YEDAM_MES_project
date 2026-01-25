@@ -394,7 +394,7 @@ const insertMatLot = `
 
 // LOT 등록 - 완재품
 const insertProductLot = `
-  INSERT INTO lot_tbl (lot_num, issdate, item_type_code, mat_code)
+  INSERT INTO lot_tbl (lot_num, issdate, item_type_code, prod_code)
   VALUES (?, NOW(), ?, ?)
 `;
 
@@ -432,7 +432,7 @@ INSERT INTO pinbnd_tbl (
   qtt,
   pinbnd_date,
   lot_num,
-  qio_code,
+  qir_code,
   mcode
 ) VALUES (?, ?, ?, NOW(), ?, ?, ?)
 `;
@@ -485,15 +485,16 @@ SELECT
 FROM qir_tbl qir
 JOIN qio_tbl qio 
   ON qir.qio_code = qio.qio_code
-LEFT JOIN mpo_d_tbl mpod 
+JOIN mpo_d_tbl mpod 
   ON qio.mpo_d_code = mpod.mpo_d_code
-LEFT JOIN mat_tbl m 
+JOIN mat_tbl m 
   ON mpod.mat_code = m.mat_code
 LEFT JOIN client_tbl c 
   ON mpod.client_code = c.client_code
 LEFT JOIN emp_tbl e 
   ON qio.emp_code = e.emp_code
 WHERE qir.result = 'g2'
+  AND qio.prdr_code IS NULL
   AND qio.mpo_d_code IS NOT NULL
   AND NOT EXISTS (
     SELECT 1

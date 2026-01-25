@@ -8,7 +8,7 @@ const props = defineProps({
 const emit = defineEmits(['update:visible', 'select']);
 const store = useMaterialStore();
 
-const activeTab = ref(0); //완제품/자제 구분
+const activeTab = ref('0'); //완제품/자제 구분
 const selectedItems = ref([]);
 const searchKeyword = ref('');
 
@@ -17,7 +17,7 @@ watch(
   () => props.visible,
   (val) => {
     if (val) {
-      if (activeTab.value === 0) {
+      if (activeTab.value === '0') {
         store.fetchPassedQioList();
       } else {
         store.fetchPassedProductQioList();
@@ -30,7 +30,7 @@ watch(
 // 탭 변경 시
 watch(activeTab, (newTab) => {
   if (props.visible) {
-    if (newTab === 0) {
+    if (newTab === '0') {
       store.fetchPassedQioList();
     } else {
       store.fetchPassedProductQioList();
@@ -46,26 +46,26 @@ const filteredList = ref([]);
 watch(
   () => [activeTab.value, store.passedQioList, store.passedProductQioList],
   () => {
-    currentList.value = activeTab.value === 0 ? store.passedQioList : store.passedProductQioList;
+    currentList.value = activeTab.value === '0' ? store.passedQioList : store.passedProductQioList;
     filteredList.value = currentList.value; // 필터 초기화
     searchKeyword.value = ''; // 검색어 초기화
   },
   { deep: true, immediate: true }
 );
 // 검색 (프론트 필터링)
-watch(
-  () => store.passedQioList,
-  (list) => {
-    filteredList.value = list;
-  }
-);
+// watch(
+//   () => store.passedQioList,
+//   (list) => {
+//     filteredList.value = list;
+//   }
+// );
 const handleSearch = () => {
   if (!searchKeyword.value) {
     filteredList.value = currentList.value;
   } else {
     const keyword = searchKeyword.value.toLowerCase();
 
-    if (activeTab.value === 0) {
+    if (activeTab.value === '0') {
       // 자재 검색
       filteredList.value = currentList.value.filter((item) => item.qio_code?.toLowerCase().includes(keyword) || item.mat_code?.toLowerCase().includes(keyword) || item.mat_name?.toLowerCase().includes(keyword));
     } else {
@@ -82,14 +82,14 @@ const close = () => {
 
 // 선택 확인
 const confirm = () => {
-  if (selectedItems.value.length === 0) {
+  if (selectedItems.value.length === '0') {
     alert('항목을 선택해주세요.');
     return;
   }
   // 자재/완제품 구분 정보 추가
   const itemsWithType = selectedItems.value.map((item) => ({
     ...item,
-    itemType: activeTab.value === 0 ? 'material' : 'product'
+    itemType: activeTab.value === '0' ? 'material' : 'product'
   }));
   emit('select', itemsWithType);
   close();

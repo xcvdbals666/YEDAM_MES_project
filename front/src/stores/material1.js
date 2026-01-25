@@ -167,11 +167,11 @@ export const useMaterialStore = defineStore('material', {
     },
     //입고 쪽
     // 품질검사 합격 목록 조회
-    async fetchPassedQirList() {
-      const response = await axios.get('/api/material/inbound/passed');
-      this.passedQirList = response.data;
-      return this.passedQirList;
-    },
+    // async fetchPassedQirList() {
+    //   const response = await axios.get('/api/material/inbound/passed');
+    //   this.passedQirList = response.data;
+    //   return this.passedQirList;
+    // },
 
     // 입고 등록
     async addInbound(items) {
@@ -185,7 +185,6 @@ export const useMaterialStore = defineStore('material', {
       this.passedQioList = response.data;
       return this.passedQioList;
     },
-
     async fetchPassedProductQioList() {
       const response = await axios.get('/api/material/inbound/product/passed');
       this.passedProductQioList = response.data;

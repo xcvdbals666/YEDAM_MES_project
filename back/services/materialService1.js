@@ -399,10 +399,14 @@ const addProductInbound = async (items) => {
     );
     let lotNum = lotResult[0].next_lot_num;
 
-    // 2. LOT 등록
+    // 2. LOT 등록 (파라미터 3개: lot_num, item_type_code, field)
     await mysql.query(
       "insertProductLot",
-      [lotNum, item.prod_type || "", item.prod_code || ""],
+      [
+        lotNum, // lot_num
+        item.prod_type || "", // item_type_code
+        item.prod_code || "", // field (제품코드)
+      ],
       "material1",
     );
 
@@ -414,16 +418,16 @@ const addProductInbound = async (items) => {
     );
     let pinbndCode = pinbndResult[0].next_code;
 
-    // 4. 완제품 입고 등록 (파라미터 순서 수정!)
+    // 4. 완제품 입고 등록
     await mysql.query(
       "insertPinbnd",
       [
-        pinbndCode, // pinbnd_code
-        item.prod_code || "", // prod_code
-        item.inbnd_qtt, // qtt
-        lotNum, // lot_num
-        item.qio_code || null, // qio_code
-        item.mcode, // mcode
+        pinbndCode,
+        item.prod_code || "",
+        item.inbnd_qtt,
+        lotNum,
+        item.qir_code || null,
+        item.mcode,
       ],
       "material1",
     );
