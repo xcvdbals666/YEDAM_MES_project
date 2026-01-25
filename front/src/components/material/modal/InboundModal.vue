@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { useMaterialStore } from '@/stores/material1';
 
 const props = defineProps({
@@ -8,7 +8,7 @@ const props = defineProps({
 const emit = defineEmits(['update:visible', 'select']);
 const store = useMaterialStore();
 
-const activeTab = ref('0'); //완제품/자제 구분
+const activeTab = ref('0');
 const selectedItems = ref([]);
 const searchKeyword = ref('');
 
@@ -27,6 +27,7 @@ watch(
     }
   }
 );
+
 // 탭 변경 시
 watch(activeTab, (newTab) => {
   if (props.visible) {
@@ -40,39 +41,44 @@ watch(activeTab, (newTab) => {
   }
 });
 
-// 현재 탭에 따른 리스트
-const currentList = ref([]);
-const filteredList = ref([]);
-watch(
-  () => [activeTab.value, store.passedQioList, store.passedProductQioList],
-  () => {
-    currentList.value = activeTab.value === '0' ? store.passedQioList : store.passedProductQioList;
-    filteredList.value = currentList.value; // 필터 초기화
-    searchKeyword.value = ''; // 검색어 초기화
-  },
-  { deep: true, immediate: true }
-);
-// 검색 (프론트 필터링)
-// watch(
-//   () => store.passedQioList,
-//   (list) => {
-//     filteredList.value = list;
-//   }
-// );
-const handleSearch = () => {
-  if (!searchKeyword.value) {
-    filteredList.value = currentList.value;
-  } else {
-    const keyword = searchKeyword.value.toLowerCase();
+// 현재 탭에 따른 리스트 (중복 제거 + 최신순 정렬)
+const currentList = computed(() => {
+  const rawList = activeTab.value === '0' ? store.passedQioList : store.passedProductQioList;
 
-    if (activeTab.value === '0') {
-      // 자재 검색
-      filteredList.value = currentList.value.filter((item) => item.qio_code?.toLowerCase().includes(keyword) || item.mat_code?.toLowerCase().includes(keyword) || item.mat_name?.toLowerCase().includes(keyword));
-    } else {
-      // 완제품 검색
-      filteredList.value = currentList.value.filter((item) => item.qio_code?.toLowerCase().includes(keyword) || item.prod_code?.toLowerCase().includes(keyword) || item.prod_name?.toLowerCase().includes(keyword));
+  // 중복 제거 (qio_code 기준)
+  const uniqueMap = new Map();
+  rawList.forEach((item) => {
+    if (!uniqueMap.has(item.qio_code)) {
+      uniqueMap.set(item.qio_code, item);
     }
+  });
+
+  // 최신순 정렬 (qio_code 역순)
+  return Array.from(uniqueMap.values()).sort((a, b) => {
+    return b.qio_code.localeCompare(a.qio_code);
+  });
+});
+
+// 검색 필터링
+const filteredList = computed(() => {
+  if (!searchKeyword.value) {
+    return currentList.value;
   }
+
+  const keyword = searchKeyword.value.toLowerCase();
+
+  if (activeTab.value === '0') {
+    // 자재 검색
+    return currentList.value.filter((item) => item.qio_code?.toLowerCase().includes(keyword) || item.mat_code?.toLowerCase().includes(keyword) || item.mat_name?.toLowerCase().includes(keyword));
+  } else {
+    // 완제품 검색
+    return currentList.value.filter((item) => item.qio_code?.toLowerCase().includes(keyword) || item.prod_code?.toLowerCase().includes(keyword) || item.prod_name?.toLowerCase().includes(keyword));
+  }
+});
+
+// 검색 실행
+const handleSearch = () => {
+  // computed가 자동으로 처리하므로 별도 로직 불필요
 };
 
 // 모달 닫기
@@ -82,15 +88,17 @@ const close = () => {
 
 // 선택 확인
 const confirm = () => {
-  if (selectedItems.value.length === '0') {
+  if (selectedItems.value.length === 0) {
     alert('항목을 선택해주세요.');
     return;
   }
+
   // 자재/완제품 구분 정보 추가
   const itemsWithType = selectedItems.value.map((item) => ({
     ...item,
     itemType: activeTab.value === '0' ? 'material' : 'product'
   }));
+
   emit('select', itemsWithType);
   close();
 };
@@ -129,9 +137,12 @@ const getUnitName = (code) => unitMap[code] || code;
           </div>
 
           <DataTable :value="filteredList" v-model:selection="selectedItems" selectionMode="multiple" dataKey="qio_code" scrollable scrollHeight="400px">
-            <template #empty><p class="text-center py-4 text-gray-400">검색 결과가 없습니다.</p></template>
+            <template #empty>
+              <p class="text-center py-4 text-gray-400">검색 결과가 없습니다.</p>
+            </template>
+
             <Column selectionMode="multiple" style="width: 50px" />
-            <Column field="qir_code" sortable header="지시코드" style="width: 140px" />
+            <Column field="qio_code" sortable header="검사코드" style="width: 140px" />
             <Column field="mat_code" sortable header="자재코드" style="width: 120px" />
             <Column field="mat_name" header="자재명" style="min-width: 150px" />
             <Column header="분류" style="width: 80px">
@@ -158,9 +169,12 @@ const getUnitName = (code) => unitMap[code] || code;
           </div>
 
           <DataTable :value="filteredList" v-model:selection="selectedItems" selectionMode="multiple" dataKey="qio_code" scrollable scrollHeight="400px">
-            <template #empty><p class="text-center py-4 text-gray-400">검색 결과가 없습니다.</p></template>
+            <template #empty>
+              <p class="text-center py-4 text-gray-400">검색 결과가 없습니다.</p>
+            </template>
+
             <Column selectionMode="multiple" style="width: 50px" />
-            <Column field="qio_code" sortable header="지시코드" style="width: 140px" />
+            <Column field="qio_code" sortable header="검사코드" style="width: 140px" />
             <Column field="prod_code" sortable header="제품코드" style="width: 120px" />
             <Column field="prod_name" header="제품명" style="min-width: 150px" />
             <Column header="분류" style="width: 80px">
