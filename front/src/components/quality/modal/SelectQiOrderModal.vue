@@ -1,12 +1,24 @@
 <script setup>
-import { defineProps, ref } from 'vue';
+import { defineProps, ref, watch } from 'vue';
 
 const selectedProducts = ref();
 
 const props = defineProps({
   display: { type: Boolean, required: true },
-  qiOrderList: { type: Array, required: true }
+  qiOrderList: { type: Array, required: true },
+  resetModal: { type: Boolean, required: true }
 });
+
+watch(
+  () => props.resetModal,
+  (resetModal) => {
+    if (resetModal) {
+      selectedProducts.value = [];
+    }
+
+    console.log('변화감지', resetModal);
+  }
+);
 </script>
 <template>
   <Dialog v-model:visible="props.display" @update:visible="$emit('close')" :breakpoints="{ '960px': '75vw' }" :style="{ width: '50vw' }" :modal="true">

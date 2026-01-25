@@ -125,7 +125,7 @@ const findQirProdInfo = async (id) => {
 
 // 검사결과서 정보 불러오기
 const findQirList = async (id) => {
-  let list = await mysql.query("selectQirList", [], "quality1");
+  let list = await mysql.query("selectQirList", [id], "quality1");
   return list;
 };
 
@@ -154,6 +154,12 @@ const removeqir = async (id) => {
   return list;
 };
 
+// 검사결과서 정보 불러오기
+const findAllQcrList = async () => {
+  let list = await mysql.query("selecAlltQcrList", [], "quality1");
+  return list;
+};
+
 module.exports = {
   findAllQiOrderCheckList,
   findAllQiOrderList,
@@ -169,4 +175,6 @@ module.exports = {
   modifyQirList,
   removeqir,
   findQiProdInfo,
+  // 품질기준정보관리
+  findAllQcrList,
 };

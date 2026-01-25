@@ -152,8 +152,15 @@ const updateQirList = `UPDATE qir_tbl
                        WHERE qio_code = ? AND qcr_code = ?`;
 
 // 검사결과서 삭제
-const deleteQir = `DELETE FROM qir_tbl
-                       WHERE qio_code = ?`;
+const deleteQir = `DELETE 
+                   FROM qir_tbl
+                   WHERE qio_code = ?`;
+
+// 검사결과서 삭제
+const selecAlltQcrList = `SELECT q.*, c.note, c2.note unit 
+                          FROM qcr_tbl q
+                          JOIN common_code c ON q.com_value = c.com_value
+                          JOIN common_code c2 ON q.unit = c2.com_value`;
 
 const selectAllQirOrder = (module.exports = {
   selectAllQiOrderCheckList,
@@ -174,4 +181,6 @@ const selectAllQirOrder = (module.exports = {
   updateQirList,
   deleteQir,
   selectQiProdInfo,
+  // 품질기준정보 관리
+  selecAlltQcrList,
 });

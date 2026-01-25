@@ -102,4 +102,11 @@ router.delete("/removeqir/:id", async (req, res) => {
   res.send(list);
 });
 
+// 품질기준정보 관리
+// 품질기준정보 불러오기
+router.get(`/qcrlist`, async (req, res) => {
+  let list = await qualityService.findAllQcrList();
+  res.send(list);
+});
+
 module.exports = router;

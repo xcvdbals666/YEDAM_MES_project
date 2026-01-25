@@ -129,11 +129,21 @@ const model = ref([
             icon: 'pi pi-fw pi-sign-in',
             to: '/qioresultlist'
           },
-          // { 오류 수정중
-          //   label: '(삽입페이지) 품질검사 결과 상세조회',
-          //   icon: 'pi pi-fw pi-sign-in',
-          //   to: '/qiresultdetail'
-          // }
+          {
+            label: '(삽입페이지) 품질검사 결과 상세조회',
+            icon: 'pi pi-fw pi-sign-in',
+            to: '/qiresultdetail'
+          },
+          {
+            label: '(진입금지) 품질검사기준',
+            icon: 'pi pi-fw pi-sign-in',
+            to: '/qcrinfo'
+          },
+          {
+            label: '(진입금지) 제품별 품질검사항목',
+            icon: 'pi pi-fw pi-sign-in',
+            to: '/selectqcr'
+          }
         ]
       },
       {
