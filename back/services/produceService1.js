@@ -55,7 +55,7 @@ const searchWorkOrders = async ({ from, to, stat, line, name, wko }) => {
   return await mysql.rquery(sql, params);
 };
 
-//라인 조회 (드롭다운용)
+//라인 조회
 const findAllLinesDJ = async () => {
   const list = await mysql.query("selectAllLinesDJ", [], "produce1");
   return list;
@@ -262,11 +262,7 @@ const getEquipmentsByLine = async (lineCode) => {
 
 //선택한 wko_tbl의 prod_code로 타고가서 po_tbl에서 공정명 드롭다운 뽑기
 const getProcessesByWko = async (wkoCode) => {
-  const rows = await mysql.query(
-    "selectProcessDropdownByWko",
-    [wkoCode],
-    "produce1",
-  );
+  const rows = await mysql.query("selectPoNameByWko", [wkoCode], "produce1");
   return rows;
 };
 
@@ -291,50 +287,69 @@ const getNextPrdrDCode = async () => {
   return `PRDR-D-${seq}`;
 };
 
-//[3]bom_save 번호생성
-const getNextBomSaveCode = async () => {
-  const rows = await mysql.query("selectNextBomsaveSeq", [], "produce1");
-  const maxSeq = rows?.[0]?.maxSeq ?? 0;
-  const next = Number(maxSeq) + 1;
-
-  const seq = String(next).padStart(3, "0");
-  return `BOM-S-${seq}`;
-};
-
 //작업시작 누르면 실행
 const startWork = async ({ wko_code, line_eq_code, input_qtt }) => {
   if (!wko_code || !line_eq_code) throw new Error("필수값 누락");
-  if (!input_qtt || Number(input_qtt) <= 0) throw new Error("투입량 오류");
 
-  // 작업지시서 정보조회 - wko 정보 가져오기 selectWipDetail 재사용
-  const rows = await mysql.query("selectWipDetail", [wko_code], "produce1");
-  const wko = rows?.[0];
+  const [wko] = await mysql.query("selectWipDetail", [wko_code], "produce1");
   if (!wko) throw new Error("작업지시서를 찾을 수 없음");
 
-  // wko_tbl에 prdr_code가 있으면 재사용, 아님 새로만듦
-  let prdr_code = wko.prdr_code;
-  if (!prdr_code) {
-    prdr_code = await getNextPrdrCode();
-
-    await mysql.query(
-      "insertPrdrStart",
-      [prdr_code, wko.prod_code, wko.wko_code, wko.wko_qtt],
-      "produce1",
-    );
+  // 투입량(input_qtt) 확정
+  const finalInput = await resolveInputQtt(wko_code, input_qtt);
+  if (!finalInput || finalInput <= 0) {
+    throw new Error("첫 공정 투입량이 없습니다. 1번 공정부터 시작하세요.");
   }
 
-  //prdr_d_tbl 만들기
+  // 3. 실적 마스터(prdr) 및 BOM 저장 처리
+  const prdr_code = await ensurePrdrCode(wko);
+  await ensureBomSave(wko_code);
+
+  // 4. 공정별 상세 실적 prdr_d 생성
   const prdr_d_code = await getNextPrdrDCode();
   await mysql.query(
     "insertPrdrDStart",
-    [prdr_d_code, prdr_code, Number(input_qtt), line_eq_code],
+    [prdr_d_code, prdr_code, finalInput, line_eq_code],
     "produce1",
   );
 
-  //bom_save 만들기
-  await mysql.query("insertBomSave", [wko_code], "produce1");
+  return { ok: true, prdr_code, prdr_d_code, input_qtt: finalInput };
+};
 
-  return { ok: true, prdr_code, prdr_d_code };
+// 투입량 결정 로직 분리
+const resolveInputQtt = async (wko_code, input_qtt) => {
+  if (input_qtt && Number(input_qtt) > 0) return Number(input_qtt);
+
+  const [firstInput] = await mysql.query(
+    "selectFirstInputQttByWko",
+    [wko_code],
+    "produce1",
+  );
+  return firstInput?.input_qtt ? Number(firstInput.input_qtt) : null;
+};
+
+// prdr_code 존재 확인 및 생성
+const ensurePrdrCode = async (wko) => {
+  if (wko.prdr_code) return wko.prdr_code;
+
+  const newCode = await getNextPrdrCode();
+  await mysql.query(
+    "insertPrdrStart",
+    [newCode, wko.prod_code, wko.wko_code, wko.wko_qtt],
+    "produce1",
+  );
+  return newCode;
+};
+
+// BOM 저장 여부 확인 및 실행
+const ensureBomSave = async (wko_code) => {
+  const [exists] = await mysql.query(
+    "existsBomSaveByWko",
+    [wko_code],
+    "produce1",
+  );
+  if (!exists) {
+    await mysql.query("insertBomSave", [wko_code, wko_code], "produce1");
+  }
 };
 
 //####어어어...
@@ -348,7 +363,7 @@ const getPrdrStatusByWko = async (wko_code) => {
   return rows;
 };
 
-// 설비 작업 상세
+// 설비 단건 작업상황 조회
 const getPrdrDDetail = async (prdr_d_code) => {
   const rows = await mysql.query(
     "selectPrdrDDetail",
@@ -358,64 +373,44 @@ const getPrdrDDetail = async (prdr_d_code) => {
   return rows.length ? rows[0] : null;
 };
 
-//Bulletin 공정 조회
-const getWipBulletin = async (wkoCode) => {
-  const rows = await mysql.query(
-    "selectWipBulletinByWko",
-    [wkoCode],
+const endWork = async ({
+  prdr_d_code,
+  make_qtt,
+  def_qtt,
+  proc_rate,
+  po_code,
+  wko_code,
+}) => {
+  // prdr_d 종료
+  await mysql.query(
+    "updatePrdrDEnd",
+    [Number(make_qtt), Number(def_qtt), Number(proc_rate), prdr_d_code],
     "produce1",
   );
 
-  // 공정별로 묶어서 화면에 맞게 정리
-  const map = new Map();
+  // 마지막 공정인지 확인
+  const [chk] = await mysql.query(
+    "isLastProcessByWko",
+    [po_code, wko_code],
+    "produce1",
+  );
 
-  for (const r of rows) {
-    if (!map.has(r.po_code)) {
-      map.set(r.po_code, {
-        po_code: r.po_code,
-        po_name: r.po_name,
-        no: r.no,
+  const isLast = Number(chk?.is_last) === 1;
 
-        line_eq_code: r.line_eq_code,
-        eq_code: r.eq_code,
-        eq_name: r.eq_name,
+  // 마지막 공정이면 prdr_tbl 종료, 생산수량 반영
+  if (isLast) {
+    // prdr_code 얻기 (wko_code로 prdr_code 찾는 쿼리 이미 selectWipDetail에 prdr_code 있음)
+    const [wko] = await mysql.query("selectWipDetail", [wko_code], "produce1");
+    if (!wko?.prdr_code) throw new Error("prdr_code를 찾을 수 없음");
 
-        // 최신 작업정보
-        prdr_d_code: r.prdr_d_code,
-        start_date: r.start_date,
-        end_date: r.end_date,
-        input_qtt: r.input_qtt,
-
-        equipments: [],
-      });
-    }
-
-    const item = map.get(r.po_code);
-    if (r.line_eq_code) {
-      item.equipments.push({
-        line_eq_code: r.line_eq_code,
-        eq_code: r.eq_code,
-        eq_name: r.eq_name,
-        prdr_d_code: r.prdr_d_code,
-        start_date: r.start_date,
-        end_date: r.end_date,
-        input_qtt: r.input_qtt,
-      });
-
-      // 대표 설비가 비어있으면 첫 설비를 대표로 채움
-      if (!item.eq_code) {
-        item.line_eq_code = r.line_eq_code;
-        item.eq_code = r.eq_code;
-        item.eq_name = r.eq_name;
-        item.prdr_d_code = r.prdr_d_code;
-        item.start_date = r.start_date;
-        item.end_date = r.end_date;
-        item.input_qtt = r.input_qtt;
-      }
-    }
+    await mysql.query(
+      "updatePrdrEnd",
+      [Number(make_qtt), wko.prdr_code],
+      "produce1",
+    );
   }
 
-  return Array.from(map.values()).sort((a, b) => (a.no ?? 0) - (b.no ?? 0));
+  return { ok: true, isLast };
 };
 
 module.exports = {
@@ -434,5 +429,5 @@ module.exports = {
   startWork,
   getPrdrStatusByWko,
   getPrdrDDetail,
-  getWipBulletin,
+  endWork,
 };

@@ -1,4 +1,4 @@
-//라인 조회 (드롭다운용)
+//라인 조회
 const selectAllLinesDJ = `
 SELECT
   line_code,
@@ -123,7 +123,7 @@ ORDER BY ld.eq_code
 `;
 
 //선택한 wko_tbl의 prod_code로 타고가서 po_tbl에서 공정명 뽑기
-const selectProcessDropdownByWko = `
+const selectPoNameByWko = `
     SELECT DISTINCT
       d.po_code,
       po.po_name,
@@ -158,14 +158,6 @@ SELECT IFNULL(
 FROM prdr_d_tbl;
 `;
 
-//[3]bom_save 테이블 번호생성
-const selectNextBomsaveSeq = `
-SELECT IFNULL(
-  MAX(CAST(SUBSTRING(bom_save_code, 8) AS UNSIGNED)), 0
-) AS maxSeq
-FROM bom_save;
-`;
-
 //[4]prdr_tbl 삽입
 const insertPrdrStart = `
 INSERT INTO prdr_tbl
@@ -186,29 +178,69 @@ VALUES
 const insertBomSave = `
 INSERT INTO bom_save
   (bom_save_code, mat_type, req_qtt, unit, spec, loss_rate, copy_date, wko_code, mat_code)
-SELECT 
-  CONCAT('BOM-S-', LPAD(@bs := @bs + 1, 3, '0')) AS bom_save_code,
-  bm.mat_type,
-  bm.req_qtt,
-  bm.unit,
-  bt.spec,
-  bm.loss_rate,
-  NOW(),
-  w.wko_code,
-  bm.mat_code
-FROM wko_tbl w
-JOIN bom_tbl bt ON bt.prod_code = w.prod_code
-JOIN bom_mat bm ON bm.bom_code = bt.bom_code
-CROSS JOIN (
+
+WITH RECURSIVE r AS (
+  SELECT
+    bm.mat_code,
+    bm.mat_type,
+    bm.unit,
+    bm.loss_rate,
+    (w.wko_qtt * bm.req_qtt * (1 + IFNULL(bm.loss_rate,0)/100)) AS qty
+  FROM wko_tbl w
+  JOIN bom_tbl bt ON bt.prod_code = w.prod_code
+  JOIN bom_mat bm ON bm.bom_code = bt.bom_code
+  WHERE w.wko_code = ?
+
+  UNION ALL
+
+  SELECT
+    bm2.mat_code,
+    bm2.mat_type,
+    bm2.unit,
+    bm2.loss_rate,
+    (r.qty * bm2.req_qtt * (1 + IFNULL(bm2.loss_rate,0)/100)) AS qty
+  FROM r
+  JOIN bom_tbl bt2 ON bt2.prod_code = r.mat_code
+  JOIN bom_mat bm2 ON bm2.bom_code = bt2.bom_code
+),
+
+leaf AS (
+  SELECT
+    r.mat_code,
+    MAX(r.mat_type) AS mat_type,
+    MAX(r.unit)     AS unit,
+    MAX(IFNULL(r.loss_rate,0)) AS loss_rate,
+    CEIL(SUM(r.qty)) AS total_req_qtt
+  FROM r
+  LEFT JOIN bom_tbl bx ON bx.prod_code = r.mat_code
+  WHERE bx.prod_code IS NULL   -- leaf만
+  GROUP BY r.mat_code
+),
+
+init AS (
   SELECT @bs := IFNULL(MAX(CAST(SUBSTRING(bom_save_code, 8) AS UNSIGNED)), 0)
   FROM bom_save
-) init
-WHERE w.wko_code = ?;
+)
+
+SELECT
+  CONCAT('BOM-S-', LPAD(@bs := @bs + 1, 3, '0')) AS bom_save_code,
+  l.mat_type,
+  l.total_req_qtt AS req_qtt,
+  l.unit,
+  bt.spec,
+  l.loss_rate,
+  NOW(),
+  w.wko_code,
+  l.mat_code
+FROM wko_tbl w
+JOIN bom_tbl bt ON bt.prod_code = w.prod_code
+JOIN leaf l
+CROSS JOIN init
+WHERE w.wko_code = ?
 `;
 //###############작업시작버튼 끝########################################
 
-//#####제정신아님. . .
-// 특정 작업지시서의 설비별 생산실적 조회 (wko_tbl의 code기준으로)
+// 특정 작업지시서의 설비목록과 그 작업진행(생산실적) 조회 (wko_tbl의 code기준으로)
 const selectPrdrStatusByWko = `
 SELECT
   ld.line_eq_code,
@@ -229,65 +261,78 @@ WHERE w.wko_code = ?
 ORDER BY ld.line_eq_code
 `;
 
-// 특정 prdr_d 상세 조회
+// 설비 단건 작업상황 조회
 const selectPrdrDDetail = `
 SELECT
   pd.prdr_d_code,
   pd.prdr_code,
-  pd.input_qtt      AS input_qtt,
+  pd.input_qtt,
   pd.start_date,
   pd.end_date,
-  pd.line_eq_code
+  pd.line_eq_code,
+  pd.make_qtt,
+  pd.def_qtt,
+  pd.proc_rate,
+  pd.total_time
 FROM prdr_d_tbl pd
 WHERE pd.prdr_d_code = ?
 `;
 
-// 공정 전체 bulletin (wko_code 기준)
-const selectWipBulletinByWko = `
-SELECT
-  d.po_code,
-  po.po_name,
-  d.no,
+//작업종료 버튼 클릭 시
+const updatePrdrDEnd = `
+UPDATE prdr_d_tbl
+SET
+  end_date   = NOW(),
+  make_qtt   = ?,
+  def_qtt    = ?,
+  proc_rate  = ?,
+  total_time = SEC_TO_TIME(TIMESTAMPDIFF(SECOND, start_date, NOW()))
+WHERE prdr_d_code = ?
+  AND end_date IS NULL
+`;
 
-  ld.line_eq_code,
-  ld.eq_code,
-  e.eq_name,
-  e.eq_type,
+//bom_save 있는지 체크 (최초공정no1 에서만 삽입하도록 하기 위해서.)
+const existsBomSaveByWko = `
+SELECT 1
+FROM bom_save
+WHERE wko_code = ?
+LIMIT 1
+`;
 
-  pd.prdr_d_code,
-  pd.start_date,
-  pd.end_date,
-  pd.input_qtt
+const selectFirstInputQttByWko = `
+SELECT pd.input_qtt
+FROM prdr_tbl r
+JOIN prdr_d_tbl pd ON pd.prdr_code = r.prdr_code
+WHERE r.work_order_code = ?
+  AND pd.input_qtt IS NOT NULL
+ORDER BY pd.start_date ASC
+LIMIT 1
+`;
 
+const updatePrdrEnd = `
+UPDATE prdr_tbl
+SET
+  end_date = NOW(),
+  production_qtt = ?,
+  total_time = SEC_TO_TIME(TIMESTAMPDIFF(SECOND, start_date, NOW()))
+WHERE prdr_code = ?
+  AND end_date IS NULL
+`;
+
+const isLastProcessByWko = `
+SELECT 
+  IF(cur.no >= MAX(all_proc.no), 1, 0) AS is_last,
+  cur.no AS cur_no
 FROM wko_tbl w
-JOIN prod_proc_tbl pp
+JOIN prod_proc_tbl pp 
   ON pp.prod_code = w.prod_code
-JOIN prod_proc_d_tbl d
-  ON d.prod_proc_code = pp.prod_proc_code
-JOIN po_tbl po
-  ON po.po_code = d.po_code
-
-LEFT JOIN line_d_tbl ld
-  ON ld.line_code = w.line_code
-LEFT JOIN eq_tbl e
-  ON e.eq_code = ld.eq_code
-  AND e.eq_type = d.eq_type
-
-LEFT JOIN (
-  SELECT x.*
-  FROM prdr_d_tbl x
-  JOIN (
-    SELECT line_eq_code, MAX(start_date) AS max_start
-    FROM prdr_d_tbl
-    GROUP BY line_eq_code
-  ) y
-    ON y.line_eq_code = x.line_eq_code
-   AND y.max_start = x.start_date
-) pd
-  ON pd.line_eq_code = ld.line_eq_code
-
+JOIN prod_proc_d_tbl cur 
+  ON cur.prod_proc_code = pp.prod_proc_code 
+ AND cur.po_code = ?
+JOIN prod_proc_d_tbl all_proc 
+  ON all_proc.prod_proc_code = pp.prod_proc_code
 WHERE w.wko_code = ?
-ORDER BY d.no, ld.eq_code
+GROUP BY cur.no
 `;
 
 module.exports = {
@@ -301,14 +346,17 @@ module.exports = {
   updateWorkOrder,
   selectWipDetail,
   selectEqnameByLine,
-  selectProcessDropdownByWko,
+  selectPoNameByWko,
   selectNextPrdrSeq,
   selectNextPrdrDSeq,
-  selectNextBomsaveSeq,
   insertPrdrStart,
   insertPrdrDStart,
   insertBomSave,
   selectPrdrStatusByWko,
   selectPrdrDDetail,
-  selectWipBulletinByWko,
+  updatePrdrDEnd,
+  existsBomSaveByWko,
+  selectFirstInputQttByWko,
+  updatePrdrEnd,
+  isLastProcessByWko,
 };

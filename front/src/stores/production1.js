@@ -7,7 +7,7 @@ export const useProductionsStore = defineStore('productions', () => {
   const wkoList = ref([]);
   const loading = ref(false);
   const error = ref(null);
-  const lines = ref([]); //라인 드롭다운으로 받음
+  const lines = ref([]);
 
   //라인목록 조회
   const fetchLines = async () => {
@@ -15,7 +15,7 @@ export const useProductionsStore = defineStore('productions', () => {
     lines.value = res.data;
   };
 
-  // 검색조건
+  // 작업지시서 검색조건
   const from = ref('');
   const to = ref('');
   const stat = ref('');
@@ -23,7 +23,7 @@ export const useProductionsStore = defineStore('productions', () => {
   const name = ref('');
   const wko = ref('');
 
-  // 목록 조회(검색 포함)
+  // 작업지시서 목록 조회(검색 포함)
   const fetchWorkOrders = async (overrideParams = null) => {
     loading.value = true;
     error.value = null;
@@ -48,12 +48,12 @@ export const useProductionsStore = defineStore('productions', () => {
     }
   };
 
-  //검색 버튼
+  //작업지시서 검색 버튼
   const search = async () => {
     await fetchWorkOrders();
   };
 
-  //초기화 버튼
+  //작업지시서 초기화 버튼
   const reset = async () => {
     from.value = '';
     to.value = '';
@@ -92,32 +92,17 @@ export const useProductionsStore = defineStore('productions', () => {
     const res = await axios.get('/api/produce/allProductsList');
     allProducts.value = res.data;
   };
-
   //###################################
   //생산계획서 리스트 모달 끝
   //###################################
 
   //생산계획서에 딸린 계획서 디테일 테이블에서 데이터 가져오기
   const prdpItems = ref([]);
-  const prdpItemsLoading = ref(false);
-  const prdpItemsError = ref(null);
 
   const fetchPrdpItems = async (prdpCode) => {
-    prdpItemsLoading.value = true;
-    prdpItemsError.value = null;
-
-    try {
-      const res = await axios.get(`/api/produce/prdpDetail/${prdpCode}`);
-      prdpItems.value = res.data;
-      return res.data;
-    } catch (e) {
-      console.error(e);
-      prdpItemsError.value = e;
-      prdpItems.value = [];
-      throw e;
-    } finally {
-      prdpItemsLoading.value = false;
-    }
+    const res = await axios.get(`/api/produce/prdpDetail/${prdpCode}`);
+    prdpItems.value = res.data;
+    return res.data;
   };
 
   // 작업지시서 저장수정
@@ -137,7 +122,7 @@ export const useProductionsStore = defineStore('productions', () => {
     return res.data;
   };
 
-  //(동적)작업진행조회 페이지에서 작업지시서, 생산실적 테이블로 검색조회
+  //(동적)작업진행목록 페이지에서 작업지시서, 생산실적 테이블로 검색조회
   const wipList = ref([]);
   const wipLoading = ref(false);
   const wipError = ref(null);
@@ -186,26 +171,12 @@ export const useProductionsStore = defineStore('productions', () => {
   };
 
   const wipDetail = ref(null);
-  const wipDetailLoading = ref(false);
-  const wipDetailError = ref(null);
 
   // 작업진행 상세 조회
   const fetchWorkInProcessDetail = async (wkoCode) => {
     if (!wkoCode) return;
-
-    wipDetailLoading.value = true;
-    wipDetailError.value = null;
-
-    try {
-      const res = await axios.get(`/api/produce/workInProcessDetail/${wkoCode}`);
-      wipDetail.value = res.data;
-    } catch (e) {
-      console.error(e);
-      wipDetailError.value = e;
-      wipDetail.value = null;
-    } finally {
-      wipDetailLoading.value = false;
-    }
+    const res = await axios.get(`/api/produce/workInProcessDetail/${wkoCode}`);
+    wipDetail.value = res.data;
   };
 
   //라인별 설비목록 불러오기 (하단 부분에)
@@ -255,18 +226,10 @@ export const useProductionsStore = defineStore('productions', () => {
     prdrDDetail.value = res.data;
   };
 
-
-  const wipBulletin = ref([]);
-
-  const fetchWipBulletin = async (wkoCode) => {
-    if (!wkoCode) return;
-
-    const res = await axios.get(`/api/produce/wipBulletin/${wkoCode}`);
-    wipBulletin.value = Array.isArray(res.data) ? res.data : [];
-    return wipBulletin.value;
-
+  const endWork = async (payload) => {
+    const res = await axios.post('/api/produce/workEnd', payload);
+    return res.data;
   };
-
 
   return {
     wkoList,
@@ -290,8 +253,6 @@ export const useProductionsStore = defineStore('productions', () => {
     allProducts,
     fetchAllPrdDistinct,
     prdpItems,
-    prdpItemsLoading,
-    prdpItemsError,
     fetchPrdpItems,
     saveWorkOrder,
     deleteWorkOrderByWkoCode,
@@ -303,8 +264,6 @@ export const useProductionsStore = defineStore('productions', () => {
     searchWip,
     resetWip,
     wipDetail,
-    wipDetailLoading,
-    wipDetailError,
     fetchWorkInProcessDetail,
     lineEquipments,
     fetchEquipmentsByLine,
@@ -316,6 +275,6 @@ export const useProductionsStore = defineStore('productions', () => {
     fetchPrdrStatusByWko,
     prdrDDetail,
     fetchPrdrDDetail,
-    fetchWipBulletin
+    endWork
   };
 });
