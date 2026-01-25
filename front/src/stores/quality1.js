@@ -14,7 +14,10 @@ export const useQuality1Store = defineStore('quality', {
     qirProdInfo: [], // 검사지시서 불러오기(생산일경우)
     qirList: [], // 검사결과서서 불러오기
     realQirList: [], // 검사결과서 원본 목록
-    state: 0 // 상태 판별
+    state: 0, // 상태 판별
+
+    // 검사항목 관리
+    qcrList: [] // 품질기준정보 전체 불러오기
   }),
   actions: {
     //  qcr_tbl 검사 종류(전체)
@@ -150,6 +153,15 @@ export const useQuality1Store = defineStore('quality', {
       if ((response.data.affectedRows = 1)) {
         alert('삭제완료');
       }
+    },
+
+    // 품질기준정보관리
+    // 품질기준 정보 불러오기
+    async fetchQcrList() {
+      const response = await axios.get('/api/quality/qcrlist');
+      this.qcrList = response.data;
+      console.log('품질기준정보: ', this.qcrList);
+      return this.qcrList;
     }
   }
 });

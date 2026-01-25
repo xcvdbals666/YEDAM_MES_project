@@ -10,7 +10,7 @@ const props = defineProps({
 <template>
   <Fluid class="card mt-8">
     <div class="font-semibold text-xl pb-4">검사 항목</div>
-    <DataTable showGridlines ref="dt" :value="props.allQiList" dataKey="qcr_code">
+    <DataTable ref="dt" :value="props.allQiList" dataKey="qcr_code" showGridlines scrollable scroll-height="380px">
       <template #empty>
         <div class="text-center py-6 text-gray-400">데이터 없음</div>
       </template>

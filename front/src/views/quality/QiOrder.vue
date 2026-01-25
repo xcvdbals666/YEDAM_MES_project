@@ -47,6 +47,8 @@ const selectComp = (data) => {
     alert('값을 선택해주세요');
     return;
   }
+  resetModal.value = false;
+
   quality1.state = 1;
   callQiOrder.value = true;
   callQiProd.value = true;
@@ -91,6 +93,7 @@ let orderInput = ref({ qio_code: '', qio_date: '', emp_name: '' }); // 검사지
 const selectedOrder = async (data) => {
   callQiMinbnd.value = true;
   callQiProd.value = true;
+  resetModal.value = false;
 
   if (data != undefined) {
     quality1.state = 1;
@@ -138,6 +141,7 @@ const selectedOrder = async (data) => {
 // 초기화버튼 누를 경우
 const resetQiOrder = async () => {
   console.log('adsfasd');
+  resetModal.value = true;
   await quality1.fetchQiMpoList();
   await quality1.fetchQiProduceList();
   await quality1.fetchQiMpoList();
@@ -163,10 +167,12 @@ const searchProduceList = async () => {
 // 생산실적 선택값 가져오기
 let realSelectedProdInfo = ref([]);
 const selectProd = (data) => {
-  if (data == undefined || data == null) {
-    alert('값을 선택해주세요.');
+  if (data == null || data == undefined) {
+    alert('값을 선택해주세요');
     return;
   }
+  resetModal.value = false;
+
   quality1.state = 1;
 
   callQiOrder.value = true;
@@ -194,7 +200,7 @@ const submitQiOrder = async () => {
           insp_vol: seletedMinbnd.value.req_qtt,
           mpo_d_code: seletedMinbnd.value.mpo_d_code
         });
-      } else if (seletedMinbnd.value.mat_type == 'i1' || seletedMinbnd.value.mat_type == 'i1') {
+      } else if (seletedMinbnd.value.mat_type == 'i1' || seletedMinbnd.value.mat_type == 'i2') {
         let data = {
           insp_date: realSelectedProdInfo.value.end_date,
           insp_vol: realSelectedProdInfo.value.production_qtt,
@@ -210,6 +216,7 @@ const submitQiOrder = async () => {
       selectedQcrList.value = [];
       orderInput.value = { qio_code: '', qio_date: '', emp_name: '' };
       quality1.state = 0;
+      resetModal.value = true;
       await quality1.fetchQiMpoList();
       await quality1.fetchQiProduceList();
       await quality1.fetchQiMpoList();
@@ -235,6 +242,7 @@ const delQiOrder = async (data) => {
       callQiMinbnd.value = false;
       callQiProd.value = false;
       callQiOrder.value = false;
+      resetModal.value = true;
     });
   await quality1.fetchQiMpoList();
   await quality1.fetchQiProduceList();
@@ -245,6 +253,9 @@ const delQiOrder = async (data) => {
 let callQiOrder = ref(false);
 let callQiMinbnd = ref(false);
 let callQiProd = ref(false);
+
+// 모달창 선택값 리셋
+let resetModal = ref(false);
 </script>
 
 <template>
@@ -260,7 +271,7 @@ let callQiProd = ref(false);
   ></QiOrderHeader>
   <QiOrderItem :selected-minbnd="seletedMinbnd" :key="seletedMinbnd" :call-qi-minbnd="callQiMinbnd" :call-qi-prod="callQiProd" @search-list="searchMinbndList" @search-produce-list="searchProduceList"></QiOrderItem>
   <QiOrderMain :all-qi-list="allQiList" :selected-qcr-list="selectedQcrList" :key="selectedQcrList"></QiOrderMain>
-  <SelectQiOrderModal :display="orderDisplay" :qi-order-list="quality1.qiOrderList" @close="closeMOdal" @selected-order="selectedOrder"></SelectQiOrderModal>
-  <SelectMinbndModal :display="display" :minbnd="minbndList" @close="closeMOdal" @select-comp="selectComp"></SelectMinbndModal>
-  <SelectQiProduceModal :display="produceDisplay" :produce-list="produceList" :key="produceList" @select-prod="selectProd" @close="closeMOdal"></SelectQiProduceModal>
+  <SelectQiOrderModal :display="orderDisplay" :reset-modal="resetModal" :qi-order-list="quality1.qiOrderList" @close="closeMOdal" @selected-order="selectedOrder"></SelectQiOrderModal>
+  <SelectMinbndModal :display="display" :minbnd="minbndList" :reset-modal="resetModal" @close="closeMOdal" @select-comp="selectComp"></SelectMinbndModal>
+  <SelectQiProduceModal :display="produceDisplay" :reset-modal="resetModal" :produce-list="produceList" :key="produceList" @select-prod="selectProd" @close="closeMOdal"></SelectQiProduceModal>
 </template>

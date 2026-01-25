@@ -1,11 +1,23 @@
 <!-- 검사 결과서 - 관리 결과서 불러오기 모달창-->
 <script setup>
-import { defineProps } from 'vue';
+import { defineProps, watch } from 'vue';
 
 const props = defineProps({
   display: { type: Boolean, required: true },
-  qiOrderList: { type: Array, required: true }
+  qiOrderList: { type: Array, required: true },
+  resetModal: { type: Boolean, required: true }
 });
+
+watch(
+  () => props.resetModal,
+  (resetModal) => {
+    if (resetModal) {
+      selectedProducts.value = [];
+    }
+
+    console.log('변화감지', resetModal);
+  }
+);
 </script>
 <template>
   <Dialog v-model:visible="props.display" @update:visible="$emit('close')" :breakpoints="{ '960px': '75vw' }" :style="{ width: '50vw' }" :modal="true">
