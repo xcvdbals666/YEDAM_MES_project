@@ -18,8 +18,8 @@ const data = computed({
     <div class="flex justify-between items-center pb-4">
       <h4 class="m-0">요청 검색</h4>
       <div class="flex items-center gap-3">
-        <Button label="초기화" severity="contrast" class="whitespace-nowrap" @click="emit('reset')" />
-        <Button label="조회" @click="emit('search')" />
+        <Button icon="pi pi-undo" label="초기화" severity="secondary" class="whitespace-nowrap" @click="emit('reset')" />
+        <Button icon="pi pi-search" label="조회" @click="emit('search')" />
       </div>
     </div>
 
