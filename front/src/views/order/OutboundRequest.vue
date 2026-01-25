@@ -10,13 +10,13 @@ const productList = ref([]); // 제품 목록
 
 // 초기 상태 정의
 const getInitialOutInfo = () => ({
-  out_code: '',
-  out_req_date: new Date().toISOString().split('T')[0],
-  ord_code: '',
-  ord_date: '',
-  client_name: '',
-  emp_name: user.emp_name,
-  note: ''
+  out_req_code: '', // 출고요청코드
+  out_req_date: new Date().toISOString().split('T')[0], // 출고요청일
+  ord_code: '', // 주문코드
+  ord_date: '', // 주문일
+  client_name: '', // 거래처명
+  emp_name: user.emp_name, // 담당자명
+  note: '' // 비고
 });
 
 const outInfo = ref(getInitialOutInfo()); // 출고 요청 정보
@@ -37,7 +37,7 @@ const selectOrder = async (selectedOrder) => {
   await orderStore.fetchOrderDetailByProdCode(selectedOrder.ord_code);
 
   // 3. 출고 정보 복사
-  outInfo.value.out_code = orderStore.outReqCode;
+  outInfo.value.out_req_code = orderStore.outReqCode;
   outInfo.value.out_req_date = new Date().toISOString().split('T')[0];
   outInfo.value.ord_code = selectedOrder.ord_code;
   outInfo.value.ord_date = formatDate(selectedOrder.ord_date);
@@ -45,7 +45,7 @@ const selectOrder = async (selectedOrder) => {
   outInfo.value.emp_name = user.emp_name;
 
   // 4. 제품 목록 복사
-  productList.value = orderStore.products.map((product) => ({
+  productList.value = orderStore.orderProducts.map((product) => ({
     ...product,
     out_amount: 0 // 출고 요청 수량(사용자 입력값)
   }));
@@ -92,7 +92,7 @@ const requestOutbound = async () => {
     // 4. 백엔드로 보낼 데이터 구성
     const requestData = {
       outReqInfo: {
-        out_req_code: outInfo.value.out_code,
+        out_req_code: outInfo.value.out_req_code,
         out_req_date: outInfo.value.out_req_date,
         ord_predict_date: outInfo.value.ord_date,
         note: outInfo.value.note || '',
@@ -170,7 +170,7 @@ const formatDate = (v) => {
       <tbody>
         <tr>
           <th>출고코드</th>
-          <td><InputText class="w-full" v-model="outInfo.out_code" disabled /></td>
+          <td><InputText class="w-full" v-model="outInfo.out_req_code" disabled /></td>
 
           <th>주문코드</th>
           <td><InputText class="w-full" disabled v-model="outInfo.ord_code" /></td>
@@ -224,7 +224,7 @@ const formatDate = (v) => {
       <Column header="미출고 수량" field="pending_amount" headerStyle="width: 100px;" />
       <Column header="출고 요청 수량" headerStyle="width: 100px;">
         <template #body="{ data }">
-          <InputNumber v-model="data.out_amount" :min="0" :max="data.pending_amount" @input="(e) => handleOutAmountInput(data, e)" />
+          <InputNumber v-model="data.out_req_amount" :min="0" :max="data.pending_amount" @input="(e) => handleOutAmountInput(data, e)" />
         </template>
       </Column>
       <Column header="남은 재고" field="current_stock" headerStyle="width: 100px;" />

@@ -292,6 +292,12 @@ const findOutReqDetailForOutbound = async (out_req_code) => {
   };
 };
 
+// 제품별 로트 재고 조회
+const findLotsByProdCode = async (prod_code) => {
+  let list = await mysql.query("selectLotsByProdCode", [prod_code, prod_code], "order2");
+  return list;
+};
+
 module.exports = {
   findAllOutreqtbl,
   findByOrderOrdTbl,
@@ -305,5 +311,6 @@ module.exports = {
   findOrderDetailForOutbound,
   createOutboundRequest,
   findAllOutReq,
-  findOutReqDetailForOutbound
+  findOutReqDetailForOutbound,
+  findLotsByProdCode
 };

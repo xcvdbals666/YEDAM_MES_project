@@ -132,4 +132,16 @@ router.get("/request-detail/:out_req_code", async (req, res) => {
   }
 });
 
+// 제품별 로트 재고 조회
+router.get("/lots/:prod_code", async (req, res) => {
+  try {
+    const { prod_code } = req.params;
+    const list = await orderService.findLotsByProdCode(prod_code);
+    res.send(list);
+  } catch (error) {
+    console.error("로트 조회 오류:", error);
+    res.status(500).send({ error: "로트 정보를 불러오는데 실패했습니다." });
+  }
+});
+
 module.exports = router;
