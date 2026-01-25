@@ -20,8 +20,16 @@ const findAllResultList = async () => {
   return list;
 };
 
+//품질 검사 결과 목록 상세
+const findResultDetail = async () => {
+  let list = await mysql.query("selectResultDetail", [], "quality2");
+  return list;
+};
+
+
 module.exports = {
   findQiOrderList,
   findAllQiOrderList,
   findAllResultList,
+  findResultDetail,
 };

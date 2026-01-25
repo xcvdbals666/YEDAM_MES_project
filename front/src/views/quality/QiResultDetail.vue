@@ -1,65 +1,24 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted, computed } from 'vue';
+import { useRoute } from 'vue-router';
+import { useQualityStore2 } from '@/stores/quality2';
 
-/* =====================
-   더미 데이터 (화면 확인용)
-===================== */
-const orderInput = ref({
-  qio_code: 'QIO-20260123-001',
-  qio_date: '2026-01-23',
-  emp_name: '홍길동'
+const route = useRoute();
+const qualityStore = useQualityStore2();
+
+const qirCode = route.params.qirCode;
+
+onMounted(async () => {
+  await qualityStore.fetchQiResultDetail(qirCode);
 });
 
-const QiOrderItemInput = ref({
-  note: '완제품',
-  mat_code: 'MAT-001',
-  mat_name: '제품A',
-  req_qtt: 100
-});
+/* 상단 + 하단 (단건) */
+const header = computed(() => qualityStore.qiResultDetail?.[0] || {});
 
-const allQiList = ref([
-  {
-    qcr_code: 'QCR-001',
-    inspection_item: '외관검사',
-    range_top: 10,
-    range_bot: 5,
-    note: 'EA'
-  },
-  {
-    qcr_code: 'QCR-002',
-    inspection_item: '치수검사',
-    range_top: 20,
-    range_bot: 10,
-    note: 'mm'
-  },
-  {
-    qcr_code: 'QCR-003',
-    inspection_item: '기능검사',
-    range_top: 1,
-    range_bot: 0,
-    note: 'PASS/FAIL'
-  }
-]);
-
-/* =====================
-   버튼 disabled 상태
-===================== */
-const callQiOrder = ref(false);
-const callQiMinbnd = ref(false);
-const callQiProd = ref(false);
-
-/* =====================
-   DataTable 선택
-===================== */
-const selectedProducts = ref([]);
-
-/* =====================
-   PrimeVue filters
-===================== */
-const filters = ref({
-  global: { value: null, matchMode: 'contains' }
-});
+/* 중단 (검사기준 여러 건) */
+const criteriaList = computed(() => qualityStore.qiResultDetail || []);
 </script>
+
 
 <template>
   <!-- 기본 정보 -->
@@ -67,13 +26,6 @@ const filters = ref({
     <div class="card flex flex-col gap-4 w-full">
       <div class="font-semibold text-xl flex justify-between">
         <div>검사 기본 정보</div>
-        <div class="flex flex-row gap-2">
-          <!--버튼 영역-->
-          <Button label="임시버튼" severity="danger" />
-          <Button label="임시버튼" severity="secondary" />
-          <Button label="임시버튼" severity="success" />
-          <Button label="임시버튼" :disabled="callQiOrder" />
-        </div>
       </div>
 
       <!-- 1줄 -->
@@ -81,14 +33,14 @@ const filters = ref({
         <div class="col-span-2">
           <div class="grid grid-cols-3 items-center gap-2">
             <label class="col-span-1 font-semibold text-blue-600 whitespace-nowrap"> 검사 결과 코드 </label>
-            <InputText class="col-span-2" :value="orderInput.qio_code" readonly />
+            <InputText class="col-span-2" :value="header.qir_code" readonly />
           </div>
         </div>
 
         <div class="col-span-2">
           <div class="grid grid-cols-3">
             <label class="col-span-1">검사 지시일</label>
-            <InputText class="col-span-2" :value="orderInput.qio_date" readonly />
+            <InputText class="col-span-2" :value="header.qio_date" readonly />
           </div>
         </div>
       </div>
@@ -98,31 +50,32 @@ const filters = ref({
         <div class="col-span-2">
           <div class="grid grid-cols-3">
             <label class="col-span-1">검사 요청량</label>
-            <InputText class="col-span-2" :value="orderInput.emp_name" readonly />
+            <InputText class="col-span-2" :value="header.insp_vol" readonly />
           </div>
         </div>
 
         <div class="col-span-2">
           <div class="grid grid-cols-3">
             <label class="col-span-1">품목명</label>
-            <InputText class="col-span-2" :value="orderInput.inspect_type" readonly />
+            <InputText class="col-span-2" :value="header.item_name" readonly />
           </div>
         </div>
       </div>
 
       <!-- 3줄 -->
       <div class="grid grid-cols-4 gap-4">
-        <div class="col-span-2">
-          <div class="grid grid-cols-3">
-            <label class="col-span-1">검사유형</label>
-            <InputText class="col-span-2" :value="orderInput.qio_date" readonly />
-          </div>
-        </div>
 
         <div class="col-span-2">
           <div class="grid grid-cols-3">
             <label class="col-span-1">검사일시</label>
-            <InputText class="col-span-2" :value="orderInput.complete_date" readonly />
+            <InputText class="col-span-2" :value="header.inspect_datetime" readonly />
+          </div>
+        </div>
+
+          <div class="col-span-2">
+          <div class="grid grid-cols-3">
+            <label class="col-span-1">검사유형</label>
+            <InputText class="col-span-2" :value="header.inspect_type" readonly />
           </div>
         </div>
       </div>
@@ -155,14 +108,22 @@ const filters = ref({
       <div class="grid grid-cols-4 gap-4">
         <div class="col-span-2">
           <div class="grid grid-cols-3">
-            <label class="col-span-1">품질 규격</label>
+            <label class="col-span-1">상한 값</label>
             <InputText class="col-span-2" v-model="QiOrderItemInput.mat_name" readonly />
           </div>
         </div>
 
+                <div class="col-span-2">
+          <div class="grid grid-cols-3">
+            <label class="col-span-1">하한 값</label>
+            <InputText class="col-span-2" v-model="QiOrderItemInput.mat_name" readonly />
+          </div>
+        </div>
+
+
         <div class="col-span-2">
           <div class="grid grid-cols-3">
-            <label class="col-span-1">값</label>
+            <label class="col-span-1">단위</label>
             <InputText class="col-span-2" v-model="QiOrderItemInput.req_qtt" />
           </div>
         </div>
@@ -181,14 +142,14 @@ const filters = ref({
       <div class="grid grid-cols-4 gap-4">
         <div class="col-span-2">
           <div class="grid grid-cols-3">
-            <label class="col-span-1">검사기간</label>
+            <label class="col-span-1">검사 시작일</label>
             <InputText class="col-span-2" v-model="QiOrderItemInput.note" readonly />
           </div>
         </div>
 
         <div class="col-span-2">
           <div class="grid grid-cols-3">
-            <label class="col-span-1">합/불</label>
+            <label class="col-span-1">검사 종료일</label>
             <InputText class="col-span-2" v-model="QiOrderItemInput.mat_code" readonly />
           </div>
         </div>
@@ -197,14 +158,28 @@ const filters = ref({
       <div class="grid grid-cols-4 gap-4">
         <div class="col-span-2">
           <div class="grid grid-cols-3">
-            <label class="col-span-1">불량률</label>
+            <label class="col-span-1">합격수량</label>
             <InputText class="col-span-2" v-model="QiOrderItemInput.mat_name" readonly />
           </div>
         </div>
 
         <div class="col-span-2">
           <div class="grid grid-cols-3">
-            <label class="col-span-1">최종판정</label>
+            <label class="col-span-1">불합격수량</label>
+            <InputText class="col-span-2" v-model="QiOrderItemInput.req_qtt" />
+          </div>
+        </div>
+
+        <div class="col-span-2">
+          <div class="grid grid-cols-3">
+            <label class="col-span-1">불량률</label>
+            <InputText class="col-span-2" v-model="QiOrderItemInput.req_qtt" />
+          </div>
+        </div>
+
+        <div class="col-span-2">
+          <div class="grid grid-cols-3">
+            <label class="col-span-1">최종결과</label>
             <InputText class="col-span-2" v-model="QiOrderItemInput.req_qtt" />
           </div>
         </div>

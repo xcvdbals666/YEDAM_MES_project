@@ -47,7 +47,15 @@ export const useQualityStore2 = defineStore('quality2', {
         params: { keyword }
       });
       this.qiResultList = res.data;
-    }
+    },
+
+    //품질 검사 결과 목록 상세
+async fetchQiResultDetail(qirCode) {
+  const res = await axios.get('/api/quality/qi-result/detail', {
+    params: { qirCode }
+  });
+  this.qiResultDetail = res.data;
+},
   },
   persist: true
 });
