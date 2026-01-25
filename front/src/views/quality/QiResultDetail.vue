@@ -26,8 +26,8 @@ const criteriaInput = ref({
 const resultInput = ref({
   start_date: '',
   end_date: '',
-  pass_qty: '',
-  fail_qty: '',
+  pass_qtt: '',
+  unpass_qtt: '',
   defect_rate: '',
   final_result: '',
   inspector: '',
@@ -40,12 +40,12 @@ onMounted(async () => {
   if (criteriaList.value.length > 0) {
     const first = criteriaList.value[0];
 
-    // 검사 기준 매핑 (API 컬럼명을 확인하세요)
+    // 검사 기준 매핑 (API 컬럼명을 확인)
     criteriaInput.value = {
       inspection_item: first.inspection_item || '',           // 검사 항목명
       mat_code: first.mat_code || '',   // 검사 방법
-      range_top: first.upper_limit || '', // 상한값 (예시 컬럼명)
-      range_bot: first.lower_limit || '', // 하한값 (예시 컬럼명)
+      range_top: first.range_top || '', // 상한값 (예시 컬럼명)
+      range_bot: first.range_bot || '', // 하한값 (예시 컬럼명)
       unit: first.unit || ''            // 단위 (예시 컬럼명)
     };
 
@@ -80,7 +80,7 @@ const formatDate = (date) => {
       <div class="grid grid-cols-4 gap-4">
         <div class="col-span-2">
           <div class="grid grid-cols-3 items-center gap-2">
-            <label class="col-span-1 font-semibold text-blue-600 whitespace-nowrap">검사 결과 코드</label>
+            <label class="col-span-1 text-600 whitespace-nowrap">검사 결과 코드</label>
             <InputText class="col-span-2" :value="header.qir_code" readonly />
           </div>
         </div>
@@ -151,19 +151,19 @@ const formatDate = (date) => {
         <div class="col-span-2">
           <div class="grid grid-cols-3">
             <label class="col-span-1">상한 값</label>
-            <InputText class="col-span-2" v-model="criteriaInput.mat_name" readonly />
+            <InputText class="col-span-2" v-model="criteriaInput.range_top" readonly />
           </div>
         </div>
         <div class="col-span-2">
           <div class="grid grid-cols-3">
             <label class="col-span-1">하한 값</label>
-            <InputText class="col-span-2" v-model="criteriaInput.mat_name" readonly />
+            <InputText class="col-span-2" v-model="criteriaInput.range_bot" readonly />
           </div>
         </div>
         <div class="col-span-2">
           <div class="grid grid-cols-3">
             <label class="col-span-1">단위</label>
-            <InputText class="col-span-2" v-model="criteriaInput.req_qtt" readonly />
+            <InputText class="col-span-2" v-model="criteriaInput.unit" readonly />
           </div>
         </div>
       </div>

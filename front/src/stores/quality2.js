@@ -59,7 +59,6 @@ async fetchQiResultDetail(qir_code) {
     const res = await axios.get(`/api/quality/qioresultdetail/${qir_code}`);
     // qir_code 기준으로 가져온 데이터만 저장
     this.qiResultDetail = res.data || [];
-    console.log('qiResultDetail:', this.qiResultDetail);
   } catch (err) {
     console.error('fetchQiResultDetail error:', err);
     this.qiResultDetail = [];
