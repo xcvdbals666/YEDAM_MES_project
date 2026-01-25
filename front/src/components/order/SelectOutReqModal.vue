@@ -69,7 +69,7 @@ const close = () => {
 const confirm = () => {
   if (!selectedOutReq.value) return;
   emit('select', selectedOutReq.value);
-  console.log(selectedOutReq.value);
+  // console.log(selectedOutReq.value);
   close();
 };
 

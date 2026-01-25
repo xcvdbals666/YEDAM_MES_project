@@ -30,27 +30,29 @@ const openOutReqModal = () => {
 
 // 모달에서 선택 시
 const selectOutReq = async (selectedOutReq) => {
-  console.log('선택된 출고 요청:', selectedOutReq);
+  // console.log('선택된 출고 요청:', selectedOutReq);
 
-  // 1. 스토어에 선택된 주문 정보 저장
+  // 1. 스토어에 선택된 출고요청 정보 저장
   orderStore.setSelectedOutReq(selectedOutReq);
 
-  // 2. ord_code로 상세 정보 조회
-  await orderStore.fetchOrderDetailByProdCode(selectedOutReq.ord_code);
+  // 2. out_req_code로 상세 정보 조회
+  await orderStore.fetchOutReqDetailByCode(selectedOutReq.out_req_code);
 
-  // 3. 출고 정보 복사
-  outReqInfo.value.out_req_code = orderStore.requestCode;
-  outReqInfo.value.out_req_date = new Date().toISOString().split('T')[0];
-  outReqInfo.value.ord_code = selectedOutReq.ord_code;
-  outReqInfo.value.ord_date = formatDate(selectedOutReq.ord_date);
-  outReqInfo.value.client_name = orderStore.orderDetail?.client_name || '';
-  outReqInfo.value.emp_name = user.emp_name;
+  // 3. 출고 정보 복사 (스토어의 outReqDetail에서 가져오기)
+  outReqInfo.value.out_req_code = orderStore.outReqDetail.out_req_code;
+  outReqInfo.value.out_req_date = formatDate(orderStore.outReqDetail.out_req_date);
+  outReqInfo.value.ord_code = orderStore.outReqDetail.ord_code;
+  outReqInfo.value.ord_date = formatDate(orderStore.outReqDetail.ord_date);
+  outReqInfo.value.client_name = orderStore.outReqDetail.client_name;
+  outReqInfo.value.out_req_emp = orderStore.outReqDetail.emp_name; // 출고요청 담당자
+  outReqInfo.value.out_date = new Date().toISOString().split('T')[0]; // 출고일 (오늘)
+  outReqInfo.value.out_emp = user.emp_name; // 출고 담당자 (현재 로그인 유저)
+  outReqInfo.value.note = orderStore.outReqDetail.note;
 
   // 4. 제품 목록 복사
-  productList.value = orderStore.products.map((product) => ({
-    ...product,
-    out_amount: 0, // 출고수량
-    pending_amount: product.ord_amount // 미출고수량(초기값은 주문수량)
+  productList.value = orderStore.outReqProducts.map((product) => ({
+    ...product, // 백엔드 데이터 전체 복사 (out_req_amount, already_outbnd_qtt, not_outbnd_qtt, current_stock 등)
+    out_amount: 0 // 실제 출고할 수량 (사용자 입력값)
   }));
 
   // 5. 모달 닫기
@@ -65,9 +67,19 @@ const resetFrom = () => {
       return;
     }
   }
-  outReqInfo.value = getInitialOutInfo(); // 출고 정보 초기화
+  outReqInfo.value = getInitialOutReqInfo(); // 출고 정보 초기화
   productList.value = []; // 제품 목록 초기화
-  orderStore.resetOutboundRequest(); // 스토어 초기화
+  orderStore.resetOutbound(); // 스토어 초기화 (출고 관련)
+};
+
+// 수량 검사
+const handleOutAmountInput = (data, value) => {
+  const maxAmount = Math.min(data.not_outbnd_qtt, data.current_stock);
+  if (value > maxAmount) {
+    data.out_amount = maxAmount;
+  } else if (value < 0) {
+    data.out_amount = 0;
+  }
 };
 
 // 날짜 포맷
@@ -87,7 +99,7 @@ const formatDate = (v) => {
     <div class="header-section">
       <div class="text-2xl font-semibold">출고 관리</div>
       <div class="button-group">
-        <Button label="초기화" severity="contrast" />
+        <Button label="초기화" severity="contrast" @click="resetFrom" />
         <Button label="출고요청 불러오기" @click="openOutReqModal" />
       </div>
     </div>
@@ -102,37 +114,37 @@ const formatDate = (v) => {
       </colgroup>
       <tbody>
         <tr>
-          <th>출고코드</th>
-          <td><InputText class="w-full" disabled /></td>
+          <th>출고요청 코드</th>
+          <td><InputText v-model="outReqInfo.out_req_code" class="w-full" disabled /></td>
 
           <th>주문코드</th>
-          <td><InputText class="w-full" disabled /></td>
+          <td><InputText v-model="outReqInfo.ord_code" class="w-full" disabled /></td>
         </tr>
         <tr>
           <th>출고요청일</th>
-          <td><InputText class="w-full" disabled /></td>
+          <td><InputText v-model="outReqInfo.out_req_date" class="w-full" disabled /></td>
 
           <th>주문일자</th>
-          <td><InputText class="w-full" disabled /></td>
+          <td><InputText v-model="outReqInfo.ord_date" class="w-full" disabled /></td>
         </tr>
         <tr>
           <th>거래처</th>
-          <td><InputText class="w-full" disabled /></td>
+          <td><InputText v-model="outReqInfo.client_name" class="w-full" disabled /></td>
 
           <th>출고 요청 담당자</th>
-          <td><InputText class="w-full" disabled /></td>
+          <td><InputText v-model="outReqInfo.out_req_emp" class="w-full" disabled /></td>
         </tr>
         <tr>
           <th>출고일</th>
-          <td><InputText class="w-full" disabled /></td>
+          <td><InputText v-model="outReqInfo.out_date" class="w-full" disabled /></td>
 
           <th>출고 담당자</th>
-          <td><InputText class="w-full" disabled /></td>
+          <td><InputText v-model="outReqInfo.out_emp" class="w-full" disabled /></td>
         </tr>
         <tr>
           <th>비고</th>
           <td colspan="3">
-            <Textarea class="w-full" rows="3" disabled />
+            <Textarea v-model="outReqInfo.note" class="w-full" rows="3" disabled />
           </td>
         </tr>
       </tbody>
@@ -149,30 +161,36 @@ const formatDate = (v) => {
       <h4 class="font-semibold">제품</h4>
     </div>
 
-    <DataTable :value="ex" showGridlines class="p-datatable-sm" tableStyle="table-layout: fixed; width: 100%;" :paginator="true" :rows="10">
-      <template #empty>
-        <div class="text-center py-6 text-gray-400">데이터 없음</div>
+   <DataTable :value="productList" showGridlines class="p-datatable-sm" tableStyle="table-layout: fixed; width: 100%;" :paginator="true" :rows="10">
+    <template #empty>
+      <div class="text-center py-6 text-gray-400">데이터 없음</div>
+    </template>
+    <Column header="제품명" field="prod_name" headerStyle="width: 200px; padding: 8px 20px;" bodyStyle="padding: 8px 20px;" />
+    <Column header="유형" field="prod_type" headerStyle="width: 100px;" bodyStyle="white-space: nowrap;" />
+    <Column header="규격" field="spec" headerStyle="width: 100px" />
+    <Column header="단위" field="unit" headerStyle="width: 100px" />
+    <Column header="출고요청수량" field="out_req_amount" headerStyle="width: 120px;" />
+    <Column header="기출고수량" field="already_outbnd_qtt" headerStyle="width: 120px;" />
+    
+    <!-- 출고수량 입력 -->
+    <Column header="출고수량" headerStyle="width: 120px;">
+      <template #body="{ data }">
+        <InputNumber 
+          v-model="data.out_amount" 
+          :min="0" 
+          :max="Math.min(data.not_outbnd_qtt, data.current_stock)" 
+          @update:modelValue="handleOutAmountInput(data, $event)" 
+        />
       </template>
-      <Column header="제품명" field="prod_name" headerStyle="width: 200px; padding: 8px 20px;" bodyStyle="padding: 8px 20px;" />
-      <Column header="유형" field="prod_type" headerStyle="width: 100px;" bodyStyle="white-space: nowrap;" />
-      <Column header="규격" field="spec" headerStyle="width: 100px" />
-      <Column header="단위" field="unit" headerStyle="width: 100px" />
-      <Column header="주문 수량" field="ord_amount" headerStyle="width: 100px;" />
-
-      <!-- 출고수량 입력 시 미출고수량 자동 계산 -->
-      <Column header="출고 수량" headerStyle="width: 100px;">
-        <template #body="{ data }">
-          <InputNumber v-model="data.out_amount" :min="0" :max="Math.min(data.ord_amount, data.current_stock)" @update:modelValue="updatePendingAmount(data)" />
-        </template>
-      </Column>
-      <Column header="미출고 수량" field="pending_amount" headerStyle="width: 100px;" />
-      <Column header="현재 재고" field="current_stock" headerStyle="width: 100px;" />
-      <Column header="납기일" headerStyle="width: 100px;">
-        <template #body="{ data }">
-          {{ formatDate(data.delivery_date) }}
-        </template>
-      </Column>
-    </DataTable>
+    </Column>
+    
+    <Column header="현재재고" field="current_stock" headerStyle="width: 100px;" />
+    <Column header="납기일" headerStyle="width: 100px;">
+      <template #body="{ data }">
+        {{ formatDate(data.delivery_date) }}
+      </template>
+    </Column>
+  </DataTable>
   </Fluid>
 
   <!-- 출고요청 선택 모달 -->
