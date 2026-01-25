@@ -28,4 +28,9 @@ router.get(`/qioresultlist`, async (req, res) => {
   res.send(list);
 });
 
+// 품질 검사 결과 목록 디테일
+router.get(`/qioresultdetail`, async (req, res) => {
+  let list = await qualityService2.findResultDetail();
+  res.send(list);
+});
 module.exports = router;
