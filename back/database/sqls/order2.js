@@ -253,6 +253,26 @@ LEFT JOIN (
 WHERE outreq.out_req_code = ?
 `;
 
+// 제품별 로트 재고 조회
+const selectLotsByProdCode = `
+SELECT 
+  p.lot_num,
+  p.pinbnd_date,
+  (p.qtt - COALESCE(out_sum.total_out, 0)) AS lot_stock
+FROM pinbnd_tbl p
+LEFT JOIN (
+  SELECT 
+    lot_num,
+    SUM(outbnd_qtt) AS total_out
+  FROM poutbnd_tbl
+  WHERE prod_code = ?
+  GROUP BY lot_num
+) out_sum ON out_sum.lot_num = p.lot_num
+WHERE p.prod_code = ?
+  AND (p.qtt - COALESCE(out_sum.total_out, 0)) > 0
+ORDER BY p.pinbnd_date ASC
+`;
+
 module.exports = {
   selectAllOutreqtbl,
   searchOutreqtbl,
@@ -263,5 +283,6 @@ module.exports = {
   insertOutReqDetail,
   updateOrdStat,
   selectByOutReqCode,
-  selectProdListByOutreq
+  selectProdListByOutreq,
+  selectLotsByProdCode
 };

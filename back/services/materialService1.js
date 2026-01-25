@@ -391,7 +391,7 @@ const addProductInbound = async (items) => {
   const results = [];
 
   for (let item of items) {
-    // 1. 완제품 LOT번호 생성 (LOT-200)
+    // 1. 완제품 LOT번호 생성 (LOT-400)
     let lotResult = await mysql.query(
       "selectNextProductLotNum",
       [],
@@ -399,10 +399,14 @@ const addProductInbound = async (items) => {
     );
     let lotNum = lotResult[0].next_lot_num;
 
-    // 2. LOT 등록
+    // 2. LOT 등록 (파라미터 3개: lot_num, item_type_code, field)
     await mysql.query(
       "insertProductLot",
-      [lotNum, item.prod_type, item.prod_code],
+      [
+        lotNum, // lot_num
+        item.prod_type || "", // item_type_code
+        item.prod_code || "", // field (제품코드)
+      ],
       "material1",
     );
 
@@ -419,13 +423,10 @@ const addProductInbound = async (items) => {
       "insertPinbnd",
       [
         pinbndCode,
-        item.prod_code,
-        item.prod_type,
-        item.unit,
+        item.prod_code || "",
         item.inbnd_qtt,
-        formatDate(item.inbnd_date),
         lotNum,
-        item.qio_code || null,
+        item.qir_code || null,
         item.mcode,
       ],
       "material1",
@@ -439,7 +440,6 @@ const addProductInbound = async (items) => {
 
   return { status: "success", results };
 };
-
 module.exports = {
   // 발주서 (MPO)
   findAllMpoTbl,

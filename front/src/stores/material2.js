@@ -16,7 +16,11 @@ export const useMaterialStore = defineStore('material2', {
     requestHeader: null, // MPR 불러오기용 조회 - 헤더 정보
     mrpList: [], //MRP 기준 정보 불러오기
     matInOutList: [], // 자재 입출고 내역 정보
-    prodInOutList: [] // 완제품 입출고 내역 정보
+    prodInOutList: [], // 완제품 입출고 내역 정보
+    materialStockList: [], // 재고현황 목록
+    materialStockDetail: null, // 재고 상세 기본정보
+    materialStockSuppliers: [], // 공급업체별 재고
+    materialStockInOutHistory: [] // 최근 입출고 이력
   }),
   // getters
   // actions
@@ -120,6 +124,39 @@ export const useMaterialStore = defineStore('material2', {
     async fetchProductInOutList(params) {
       const res = await axios.get('/api/material/prod-inout', { params });
       this.prodInOutList = res.data;
+    },
+
+    // 재고현황 목록 + 검색
+    async fetchMaterialStockList(params) {
+      const response = await axios.get('/api/material/material-stock', {
+        params
+      });
+      this.materialStockList = response.data;
+      return this.materialStockList;
+    },
+
+    // 재고 상세 - 기본정보
+    async fetchMaterialStockDetail(matCode) {
+      if (!matCode) return null;
+      const response = await axios.get(`/api/material/material-stock/${matCode}`);
+      this.materialStockDetail = response.data;
+      return this.materialStockDetail;
+    },
+
+    // 재고 상세 - 공급업체별 재고
+    async fetchMaterialStockSuppliers(matCode) {
+      if (!matCode) return [];
+      const response = await axios.get(`/api/material/material-stock/${matCode}/suppliers`);
+      this.materialStockSuppliers = response.data;
+      return this.materialStockSuppliers;
+    },
+
+    // 재고 상세 - 최근 입출고 이력
+    async fetchMaterialStockInOutHistory(matCode) {
+      if (!matCode) return [];
+      const response = await axios.get(`/api/material/material-stock/${matCode}/inout`);
+      this.materialStockInOutHistory = response.data;
+      return this.materialStockInOutHistory;
     }
   },
   persist: true

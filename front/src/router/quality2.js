@@ -10,10 +10,11 @@ const qualityRouter2 = [
     component: () => import('../views/quality/QiResultList.vue')
   },
   {
-    path: '/qiresultdetail',
+    path: '/qiresultdetail/:qir_code',
     name: 'QiResultDetail',
     component: () => import('../views/quality/QiResultDetail.vue')
-  }
+  },
+  
 ];
 
 export default qualityRouter2;

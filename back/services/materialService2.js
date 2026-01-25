@@ -408,6 +408,45 @@ const findProductInOutList = async (params) => {
   return list;
 };
 
+// 재고현황 목록 + 검색
+const findMaterialStockList = async (params) => {
+  const { keyword = "", matType = "ALL", stockStatus = "ALL" } = params;
+
+  return await mysql.query(
+    "selectMaterialStockList",
+    [keyword, keyword, keyword, matType, matType, stockStatus, stockStatus],
+    "material2",
+  );
+};
+
+// 재고 상세 조회 - 기본정보 + 재고정보
+const findMaterialStockDetail = async (matCode) => {
+  const list = await mysql.query(
+    "selectMaterialStockDetail",
+    [matCode],
+    "material2",
+  );
+  return list[0] || null;
+};
+
+// 자재 상세 - 공급업체별 재고(입고/LOT 기준)
+const findMaterialStockSupplierList = async (matCode) => {
+  return await mysql.query(
+    "selectMaterialStockSupplierList",
+    [matCode],
+    "material2",
+  );
+};
+
+// 자재 상세 - 최근 입출고 이력
+const findMaterialStockInOutHistory = async (matCode) => {
+  return await mysql.query(
+    "selectMaterialStockInOutHistory",
+    [matCode, matCode],
+    "material2",
+  );
+};
+
 module.exports = {
   findByEmpcodeEmpTbl,
   findByMatCodeMatTbl,
@@ -426,4 +465,8 @@ module.exports = {
   removeMpr,
   findMaterialInOutList,
   findProductInOutList,
+  findMaterialStockList,
+  findMaterialStockDetail,
+  findMaterialStockSupplierList,
+  findMaterialStockInOutHistory,
 };

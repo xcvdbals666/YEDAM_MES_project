@@ -56,11 +56,11 @@ router.get(`/orderStats`, async (req, res) => {
   res.send(result);
 });
 // ai활용 물어보기
-router.get(`/ai/:code/:qty`, async (req, res) => {
-  let prodCode = req.params.code;
-  let orderQty = req.params.qty;
-  console.log(prodCode);
-  let result = await orderService.askAI(prodCode, orderQty);
-  res.send(result);
-});
+// router.get(`/ai/:code/:qty`, async (req, res) => {
+//   let prodCode = req.params.code;
+//   let orderQty = req.params.qty;
+//   console.log(prodCode);
+//   let result = await orderService.askAI(prodCode, orderQty);
+//   res.send(result);
+// });
 module.exports = router;
