@@ -23,25 +23,22 @@ if (qcrInfo.value.qcr_code != '') {
       <div class="font-semibold text-xl" v-else>품질기준정보 등록</div>
       <div v-if="insertform" class="flex flex gap-1">
         <Button label="초기화" @click="$emit('resetQcrForm')" severity="contrast" />
-        <Button label="수정" @click="$emit('updateQcrForm', qcrInfo)" severity="success" />
-        <Button label="삭제" @click="$emit('delQcrForm', qcrInfo.qcr_code)" severity="danger" />
+        <Button label="저장" @click="$emit('delQcrForm', qcrInfo.qcr_code)" severity="danger" />
       </div>
-
-      <Button label="등록" severity="success" v-else @click="$emit('insertQcrForm', qcrInfo)" />
     </div>
     <div class="flex flex-wrap gap-4 mt-6">
       <div class="flex flex-col grow basis-0 gap-2">
-        <label for="name2">품질기준코드</label>
+        <label for="name2">제품코드</label>
         <InputText id="name2" type="text" v-model="qcrInfo.qcr_code" disabled />
       </div>
       <div class="flex flex-col grow basis-0 gap-2">
-        <label for="inspection_item">검사항목</label>
+        <label for="inspection_item">제품명</label>
         <InputText id="email2" type="text" v-model="qcrInfo.inspection_item" />
       </div>
     </div>
     <div class="flex flex-wrap gap-4 mt-6">
       <div class="flex flex-col grow basis-0 gap-2">
-        <label for="name2">기준(상한)</label>
+        <label for="name2">제품유형</label>
         <InputText id="name2" type="text" v-model="qcrInfo.range_top" />
       </div>
       <div class="flex flex-col grow basis-0 gap-2">

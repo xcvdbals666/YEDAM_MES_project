@@ -154,12 +154,186 @@ const removeqir = async (id) => {
   return list;
 };
 
-// 검사결과서 정보 불러오기
+// 품질기준정보 관리
+// 품질기준정보 정보 불러오기
 const findAllQcrList = async () => {
   let list = await mysql.query("selecAlltQcrList", [], "quality1");
   return list;
 };
 
+// 품질기준정보 등록
+const addQcrForm = async (data) => {
+  try {
+    if (data.com_value == "i3" || data.com_value == "i4") {
+      const [rows] = await mysql.query("createBomQcrCode", [], "quality1");
+      let qcr_code = rows.newQcr;
+      console.log("newQcr_code: :", qcr_code);
+      const {
+        inspection_item,
+        range_top,
+        range_bot,
+        com_value,
+        unit,
+        regdate,
+        check_method,
+      } = data;
+      console.log("전송 데이터:", [
+        inspection_item,
+        range_top,
+        range_bot,
+        com_value,
+        unit,
+        regdate,
+        check_method,
+      ]);
+
+      let list = await mysql.query(
+        "insertQcr_tbl",
+        [
+          qcr_code,
+          inspection_item,
+          range_top,
+          range_bot,
+          com_value,
+          unit,
+          regdate,
+          check_method,
+        ],
+        "quality1",
+      );
+      return list;
+    } else {
+      const [rows] = await mysql.query("createProdQcrCode", [], "quality1");
+      let qcr_code = rows.newQcr;
+      console.log("newQcr_code: :", qcr_code);
+
+      const {
+        inspection_item,
+        range_top,
+        range_bot,
+        com_value,
+        unit,
+        regdate,
+        check_method,
+      } = data;
+
+      console.log("전송 데이터:", [
+        qcr_code,
+        inspection_item,
+        range_top,
+        range_bot,
+        com_value,
+        unit,
+        regdate,
+        check_method,
+      ]);
+      let list = await mysql.query(
+        "insertQcr_tbl",
+        [
+          qcr_code,
+          inspection_item,
+          range_top,
+          range_bot,
+          com_value,
+          unit,
+          regdate,
+          check_method,
+        ],
+        "quality1",
+      );
+      return list;
+    }
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+// 기준정보 등록 단위 공통코드 변환
+const findComValue = async (id) => {
+  let list = await mysql.query("selectCommonCode", [id], "quality1");
+  return list;
+};
+
+// 품질기준정보 수정
+const modifyQcrInfo = async (data) => {
+  const {
+    qcr_code,
+    inspection_item,
+    range_top,
+    range_bot,
+    unit,
+    com_value,
+    regdate,
+    check_method,
+  } = data;
+  let list = await mysql.query(
+    "updateQcr_tbl",
+    [
+      inspection_item,
+      range_top,
+      range_bot,
+      com_value,
+      unit,
+      regdate,
+      check_method,
+      qcr_code,
+    ],
+    "quality1",
+  );
+  return list;
+};
+
+// 기준정보 삭제
+const removeQcrInfo = async (id) => {
+  let list = await mysql.query("deleteQcr", [id], "quality1");
+  return list;
+};
+
+// 제품별 품질검사항목 선택
+//생산품 정보 불러오기
+const findAllProd = async () => {
+  let list = await mysql.query("selectAllProd", [], "quality1");
+  return list;
+};
+
+//자재 정보 불러오기
+const findAllBom = async () => {
+  let list = await mysql.query("selectAllBom", [], "quality1");
+  return list;
+};
+
+// 제품별 검사항목 불러오기
+const findAllQiList = async (id) => {
+  let list = await mysql.query("selectAllQiList", [id], "quality1");
+  return list;
+};
+
+// 제품별 검사항목 등록
+const addQiInfo = async (data) => {
+  console.log("data: ", data);
+  try {
+    const [rows] = await mysql.query("createNewQi", [], "quality1");
+    let qi_code = rows.newQi;
+    console.log("newQi: :", qi_code);
+    const { prod_code, qcr_code } = data;
+    console.log("전송 데이터:", [qi_code, prod_code, qcr_code]);
+
+    let list = await mysql.query(
+      "insertQi_tbl",
+      [qi_code, prod_code, qcr_code],
+      "quality1",
+    );
+    return list;
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+// 제품별 검사항목 삭제
+const removeQi = async (id) => {
+  let list = await mysql.query("deleteQi", [id], "quality1");
+  return list;
+};
 module.exports = {
   findAllQiOrderCheckList,
   findAllQiOrderList,
@@ -177,4 +351,15 @@ module.exports = {
   findQiProdInfo,
   // 품질기준정보관리
   findAllQcrList,
+  addQcrForm,
+  findComValue,
+  modifyQcrInfo,
+  removeQcrInfo,
+  // 제품별 품질검사항목 선택
+  findAllProd,
+  findAllBom,
+  findAllQiList,
+  findAllQiList,
+  addQiInfo,
+  removeQi,
 };

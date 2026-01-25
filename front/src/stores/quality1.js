@@ -17,7 +17,12 @@ export const useQuality1Store = defineStore('quality', {
     state: 0, // 상태 판별
 
     // 검사항목 관리
-    qcrList: [] // 품질기준정보 전체 불러오기
+    qcrList: [], // 품질기준정보 전체 불러오기
+
+    // 제품별 검사항목선택
+    qiProdInfo: [], // 생산품 목록
+    qiBomInfo: [], // 자재 목록
+    qiList: [] // 제품별 검사항목 목록
   }),
   actions: {
     //  qcr_tbl 검사 종류(전체)
@@ -150,7 +155,7 @@ export const useQuality1Store = defineStore('quality', {
     async fetchRemoveQir(data) {
       console.log(data);
       const response = await axios.delete('/api/quality/removeqir/' + data);
-      if ((response.data.affectedRows = 1)) {
+      if (response.data.affectedRows == 1) {
         alert('삭제완료');
       }
     },
@@ -162,6 +167,29 @@ export const useQuality1Store = defineStore('quality', {
       this.qcrList = response.data;
       console.log('품질기준정보: ', this.qcrList);
       return this.qcrList;
+    },
+
+    // 제품별 품질검사항목 선택
+    // 생산품 목록
+    async fetchQiProdList() {
+      const response = await axios.get('/api/quality/qiprodinfo');
+      this.qiProdInfo = response.data;
+      console.log('생산품 목록: ', this.qiProdInfo);
+      return this.qiProdInfo;
+    },
+    // 자재 목록
+    async fetchQiBomList() {
+      const response = await axios.get('/api/quality/qibominfo');
+      this.qiBomInfo = response.data;
+      console.log('자재 목록: ', this.qiBomInfo);
+      return this.qiBomInfo;
+    },
+    // 제품별 검사항목 목록
+    async fetchQiList(id) {
+      const response = await axios.get('/api/quality/qilist/' + id);
+      this.qiList = response.data;
+      console.log('제품별 검사항목 목록: ', this.qiList);
+      return this.qiList;
     }
   }
 });
