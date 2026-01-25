@@ -222,7 +222,7 @@ const selectProductInOutList = `SELECT *
 
                                 UNION ALL
 
-                                SELECT 'OUT' AS io_type, po.poutbnd_code AS io_code,
+                                SELECT 'OUT' AS io_type, CONCAT(po.poutbnd_code, '-', po.prod_code, '-', po.lot_num) AS io_code,
                                        po.deadline AS process_date, po.prod_code, p.prod_name,
                                        po.req_qtt AS req_qtt, po.outbnd_qtt AS proc_qtt,
                                        'c4' AS status_code, cc.note AS status_name,
@@ -247,6 +247,108 @@ const selectMprDExists = `SELECT 1
                           FROM mpr_d_tbl
                           WHERE mpr_code = ? AND mat_code = ? AND source_type = ?
                           LIMIT 1`;
+
+// 재고현황 목록 + 검색
+const selectMaterialStockList = `SELECT m.mat_code, m.mat_name, bm.mat_type, cc_i.note AS mat_type_name,
+                                        IFNULL(s.current_qty, 0) AS current_qty, IFNULL(m.save_inven, 0) AS save_inven,
+
+                                        CASE WHEN IFNULL(m.save_inven, 0) = 0 THEN 'd2'
+                                             WHEN IFNULL(s.current_qty, 0) < IFNULL(m.save_inven, 0) THEN 'd4'
+                                             WHEN IFNULL(s.current_qty, 0) < IFNULL(m.save_inven, 0) * 1.2 THEN 'd1'
+                                             WHEN IFNULL(s.current_qty, 0) <= IFNULL(m.save_inven, 0) * 2 THEN 'd2'
+                                             ELSE 'd3'
+                                        END AS stock_status_code, cc_d.note AS stock_status_name
+
+                                 FROM mat_tbl m
+                                 LEFT JOIN bom_mat bm ON bm.mat_code = m.mat_code
+                                 LEFT JOIN common_code cc_i ON cc_i.group_value = '0I'
+                                 AND cc_i.com_value = bm.mat_type
+                                 LEFT JOIN (SELECT mat_code, SUM(inbnd_qtt) - SUM(outbnd_qtt) AS current_qty
+                                 FROM (SELECT mat_code, IFNULL(inbnd_qtt, 0) AS inbnd_qtt, 0 AS outbnd_qtt
+                                       FROM minbnd_tbl
+                                       UNION ALL
+                                       SELECT mat_code, 0 AS inbnd_qtt, IFNULL(outbnd_qtt, 0) AS outbnd_qtt
+                                       FROM moutbnd_tbl) x
+                                       GROUP BY mat_code) s ON s.mat_code = m.mat_code
+                                 LEFT JOIN common_code cc_d ON cc_d.group_value = '0D'
+                                                               AND cc_d.com_value = (CASE WHEN IFNULL(m.save_inven, 0) = 0 THEN 'd2'
+                                                                                          WHEN IFNULL(s.current_qty, 0) < IFNULL(m.save_inven, 0) THEN 'd4'
+                                                                                          WHEN IFNULL(s.current_qty, 0) < IFNULL(m.save_inven, 0) * 1.2 THEN 'd1'
+                                                                                          WHEN IFNULL(s.current_qty, 0) <= IFNULL(m.save_inven, 0) * 2 THEN 'd2'
+                                                                                          ELSE 'd3'
+                                                                                          END)
+                                 WHERE m.is_used = 'f2'
+                                       AND (? = '' OR m.mat_code LIKE CONCAT('%', ?, '%') OR m.mat_name LIKE CONCAT('%', ?, '%'))
+                                       AND (? = 'ALL' OR bm.mat_type = ?)
+                                       AND (? = 'ALL' OR (CASE
+                                                            WHEN IFNULL(m.save_inven, 0) = 0 THEN 'd2'
+                                                            WHEN IFNULL(s.current_qty, 0) < IFNULL(m.save_inven, 0) THEN 'd4'
+                                                            WHEN IFNULL(s.current_qty, 0) < IFNULL(m.save_inven, 0) * 1.2 THEN 'd1'
+                                                            WHEN IFNULL(s.current_qty, 0) <= IFNULL(m.save_inven, 0) * 2 THEN 'd2'
+                                                            ELSE 'd3'
+                                                          END) = ?)
+                                 ORDER BY m.mat_code`;
+
+// 재고 상세 조회 - 기본정보 + 재고정보
+const selectMaterialStockDetail = `SELECT m.mat_code, m.mat_name, bm.mat_type,
+                                          cc_i.note AS mat_type_name, m.spec,
+                                          m.unit, cc_u.note AS unit_label,
+                                          IFNULL(s.current_qty, 0) AS current_qty,
+                                          IFNULL(m.save_inven, 0) AS save_inven,
+                                          CASE WHEN IFNULL(m.save_inven, 0) = 0 THEN 'd2'
+                                               WHEN IFNULL(s.current_qty, 0) < IFNULL(m.save_inven, 0) THEN 'd4'
+                                               WHEN IFNULL(s.current_qty, 0) < IFNULL(m.save_inven, 0) * 1.2 THEN 'd1'
+                                               WHEN IFNULL(s.current_qty, 0) <= IFNULL(m.save_inven, 0) * 2 THEN 'd2'
+                                               ELSE 'd3'
+                                          END AS stock_status_code, cc_d.note AS stock_status_name
+                                   FROM mat_tbl m
+                                   LEFT JOIN bom_mat bm ON bm.mat_code = m.mat_code
+                                   LEFT JOIN common_code cc_i ON cc_i.group_value = '0I' AND cc_i.com_value = bm.mat_type
+                                   LEFT JOIN common_code cc_u ON cc_u.com_value = m.unit
+                                   LEFT JOIN (SELECT mat_code, SUM(inbnd_qtt) - SUM(outbnd_qtt) AS current_qty
+                                              FROM (SELECT mat_code, IFNULL(inbnd_qtt, 0) AS inbnd_qtt, 0 AS outbnd_qtt
+                                                    FROM minbnd_tbl
+                                                    UNION ALL
+                                                    SELECT mat_code, 0 AS inbnd_qtt, IFNULL(outbnd_qtt, 0) AS outbnd_qtt
+                                                    FROM moutbnd_tbl) x
+                                                    GROUP BY mat_code) s ON s.mat_code = m.mat_code 
+                                   LEFT JOIN common_code cc_d ON cc_d.group_value = '0D'
+                                                                 AND cc_d.com_value = (CASE
+                                                                                          WHEN IFNULL(m.save_inven, 0) = 0 THEN 'd2'
+                                                                                          WHEN IFNULL(s.current_qty, 0) < IFNULL(m.save_inven, 0) THEN 'd4'
+                                                                                          WHEN IFNULL(s.current_qty, 0) < IFNULL(m.save_inven, 0) * 1.2 THEN 'd1'
+                                                                                          WHEN IFNULL(s.current_qty, 0) <= IFNULL(m.save_inven, 0) * 2 THEN 'd2'
+                                                                                          ELSE 'd3'
+                                                                                       END )
+
+                                   WHERE m.mat_code = ? AND m.is_used = 'f2'`;
+
+// 자재 상세 - 공급업체별 재고(입고/LOT 기준)
+const selectMaterialStockSupplierList = `SELECT mi.mat_code, mi.lot_num, mi.inbnd_date,
+                                                mi.inbnd_qtt, c.client_code, c.client_name
+                                         FROM minbnd_tbl mi
+                                         LEFT JOIN client_tbl c ON c.client_code = mi.mat_sup
+                                         WHERE mi.mat_code = ?
+                                         ORDER BY mi.inbnd_date DESC`;
+
+// 자재 상세 - 최근 입출고 이력
+const selectMaterialStockInOutHistory = `SELECT *
+                                         FROM (SELECT mi.inbnd_date AS process_date, 'IN' AS io_type,
+                                                      mi.inbnd_qtt AS qty, c.client_name, e.emp_name
+                                               FROM minbnd_tbl mi
+                                               LEFT JOIN client_tbl c ON c.client_code = mi.mat_sup
+                                               LEFT JOIN emp_tbl e ON e.emp_code = mi.mcode
+                                               WHERE mi.mat_code = ?
+
+                                         UNION ALL
+                                         SELECT mo.moutbnd_date AS process_date, 'OUT' AS io_type,
+                                                mo.outbnd_qtt AS qty, c.client_name, e.emp_name
+                                         FROM moutbnd_tbl mo
+                                         LEFT JOIN client_tbl c ON c.client_code = mo.mat_sup
+                                         LEFT JOIN emp_tbl e ON e.emp_code = mo.emp_code
+                                         WHERE mo.mat_code = ?) t
+                                         ORDER BY process_date DESC
+                                         LIMIT 10`;
 
 module.exports = {
   selectByMatCodeMatTbl,
@@ -273,4 +375,8 @@ module.exports = {
   selectMaterialInOutList,
   selectProductInOutList,
   selectMprDExists,
+  selectMaterialStockList,
+  selectMaterialStockDetail,
+  selectMaterialStockSupplierList,
+  selectMaterialStockInOutHistory,
 };

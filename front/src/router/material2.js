@@ -26,6 +26,11 @@ const materialRoutes2 = [
     path: '/prodInout',
     name: 'productInOut',
     component: () => import('@/views/material/ProductInOut.vue')
+  },
+  {
+    path: '/matStock',
+    name: 'materialStock',
+    component: () => import('@/views/material/MaterialStock.vue')
   }
 ];
 

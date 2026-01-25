@@ -175,6 +175,11 @@ const model = ref([
             label: '입출고내역',
             icon: 'pi pi-fw pi-sign-in',
             to: '/matInout'
+          },
+          {
+            label: '자재재고현황',
+            icon: 'pi pi-fw pi-sign-in',
+            to: '/matStock'
           }
         ]
       },
