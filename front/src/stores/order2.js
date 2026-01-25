@@ -174,8 +174,8 @@ state: () => ({
           this.outReqDetail = response.data.outReqInfo;
           this.outReqProducts = response.data.products;
 
-          console.log('출고요청 상세:', this.outReqDetail);
-          console.log('제품 목록:', this.outReqProducts);
+          // console.log('출고요청 상세:', this.outReqDetail);
+          // console.log('제품 목록:', this.outReqProducts);
 
           return response.data;
         } catch (error) {
@@ -200,7 +200,19 @@ state: () => ({
           console.error('로트 조회 실패:', error);
           throw error;
         }
+      },
+
+      // 출고 등록
+      async createOutbound(outboundData) {
+        try {
+          const response = await axios.post(`/api/order/outbound`, outboundData);
+          return response.data;
+        } catch (error) {
+          console.error('출고 등록 실패:', error);
+          throw error;
+        }
       }
+
     },
   persist: true
 });

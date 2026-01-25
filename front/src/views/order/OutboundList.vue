@@ -179,9 +179,10 @@ const selectedRows = ref([]);
 
 // 출고 상태 변환
 const statusMap = {
-  q1: { label: '출고 대기', severity: 'danger' },
-  q2: { label: '부분 출고', severity: 'warn' },
-  q3: { label: '출고 완료', severity: 'success' }
+  r1: { label: '출고 대기', severity: 'danger' },
+  r2: { label: '부분 출고', severity: 'warn' },
+  r3: { label: '출고 완료', severity: 'success' },
+  r4: { label: '요청 취소', severity: 'secondary'}
 };
 
 // 날짜 포맷
@@ -291,7 +292,7 @@ const handleExcelDownload = () => {
 
         <Column selectionMode="multiple" headerStyle="width:28px" />
 
-        <Column header="출고 번호" headerClass="table-header" bodyClass="table-body" style="width: 150px">
+        <Column header="출고요청 코드" headerClass="table-header" bodyClass="table-body" style="width: 150px">
           <template #body="{ data }">
             {{ data.out_req_code }}
           </template>
@@ -305,7 +306,7 @@ const handleExcelDownload = () => {
 
         <Column header="요청 수량" headerClass="table-header" bodyClass="table-body" style="width: 100px">
           <template #body="{ data }">
-            {{ data.req_qtt }}
+            {{ data.out_req_d_amount }}
           </template>
         </Column>
 
@@ -339,9 +340,9 @@ const handleExcelDownload = () => {
           </template>
         </Column>
 
-        <Column header="상태" headerClass="table-header" bodyClass="table-body" style="width: 100px">
+        <Column header="상태" headerClass="table-header" bodyClass="table-body" style="width: 80px">
           <template #body="{ data }">
-            <Tag :value="statusMap[data.stat]?.label || '알수없음'" :severity="statusMap[data.stat]?.severity || 'info'" rounded />
+            <Tag :value="statusMap[data.out_req_stat]?.label || '알수없음'" :severity="statusMap[data.out_req_stat]?.severity || 'info'" rounded />
           </template>
         </Column>
       </DataTable>
