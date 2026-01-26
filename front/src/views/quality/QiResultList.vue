@@ -146,6 +146,21 @@ const fetchAll = async () => {
   modalKey.value++; //모달 강제 리셋
   await qualityStore.fetchQiResultList(); // 전체 조회
 };
+
+const resultMap = {
+  합격: {
+    label: '합격',
+    severity: 'success'
+  },
+  불합격: {
+    label: '불합격',
+    severity: 'danger'
+  },
+  미지시: {
+    label: '미지시',
+    severity: 'info'
+  }
+};
 </script>
 
 <!---->
@@ -237,17 +252,9 @@ const fetchAll = async () => {
         <Column header="품질 상한값" field="range_top" headerClass="table-header" bodyClass="table-body" sortable style="min-width: 1rem" />
         <Column header="품질 하한값" field="range_bot" headerClass="table-header" bodyClass="table-body" sortable style="min-width: 1rem" />
         <Column header="단위" field="unit" headerClass="table-header" bodyClass="table-body" sortable style="min-width: 1rem" />
-        <Column header="품질결과" field="result" headerClass="table-header" sortable style="min-width: 1rem">
-          <template #body="slotProps">
-            <span
-              :class="{
-                'text-green-600 font-semibold': slotProps.data.result === '합격',
-                'text-red-600 font-semibold': slotProps.data.result === '불합격',
-                'text-blue-500 font-semibold': slotProps.data.result !== '미지시' && slotProps.data.result !== '불합격'
-              }"
-            >
-              {{ slotProps.data.result }}
-            </span>
+        <Column header="품질결과" field="result" headerClass="table-header" sortable style="width: 100px">
+          <template #body="{ data }">
+            <Tag :value="resultMap[data.result]?.label || '미지시'" :severity="resultMap[data.result]?.severity || 'info'" rounded />
           </template>
         </Column>
         <Column header="검사일자" field="end_date" headerClass="table-header" bodyClass="table-body text-center" sortable style="min-width: 1rem">
