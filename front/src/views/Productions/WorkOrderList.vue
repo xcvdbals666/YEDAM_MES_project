@@ -43,8 +43,13 @@ onMounted(() => {
         <div class="field-row">
           <label>기간</label>
           <div class="date-wrap">
-            <input type="date" v-model="from" class="p-inputtext p-component" />
-            <input type="date" v-model="to" class="p-inputtext p-component" />
+            <div class="flex-1">
+              <DatePicker :showIcon="true" :showButtonBar="true" v-model="from" dateFormat="yy-mm-dd" class="w-full"></DatePicker>
+            </div>
+              <span>-</span>
+            <div class="flex-1">
+              <DatePicker :showIcon="true" :showButtonBar="true" v-model="to" dateFormat="yy-mm-dd" class="w-full"></DatePicker>
+            </div>
           </div>
         </div>
 
@@ -85,6 +90,7 @@ onMounted(() => {
     <DataTable :value="wkoList" :loading="loading" paginator :rows="10" showGridlines>
       <Column field="wko_code" header="지시서번호" />
       <Column field="prod_name" header="제품명" />
+      <Column field="wko_name" header="작업명" />
       <Column field="line_code" header="라인코드" />
       <Column header="시작시간">
         <template #body="{ data }">
@@ -109,6 +115,10 @@ onMounted(() => {
 </template>
 
 <style scoped lang="scss">
+:deep(.p-datepicker-input) {
+  width: 100%;
+}
+
 :deep(.p-datatable-frozen-tbody) {
   font-weight: bold;
 }

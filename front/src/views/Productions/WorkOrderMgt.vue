@@ -250,14 +250,16 @@ const filteredLines = computed(() => {
         <input type="text" class="p-inputtext w-full" v-model="form.wko_code" readonly />
       </div>
 
-      <div class="col-span-12 lg:col-span-5 flex items-center gap-3">
+      <div class="col-span-12 lg:col-span-6 flex items-center gap-3">
         <label class="w-28 shrink-0 text-lg font-semibold">생산계획번호</label>
-        <input type="text" class="p-inputtext w-full" v-model="form.prdp_code" readonly />
+          <div class="flex w-full items-center gap-2">
+            <input type="text" class="p-inputtext w-full" v-model="form.prdp_code" readonly />
+            <Button icon="pi pi-search" class="p-button-success custom-btn" @click="openPrdpModal" />
+          </div>
       </div>
 
-      <div class="col-span-12 lg:col-span-1 flex items-center gap-3">
-        <Button icon="pi pi-search" class="p-button-success custom-btn" @click="openPrdpModal" />
-      </div>
+      <!-- <div class="col-span-12 lg:col-span-1 flex items-center justify-end">
+      </div> -->
 
       <div class="col-span-12 lg:col-span-6 flex items-center gap-3">
         <label class="w-28 shrink-0 text-lg font-semibold">계획일자</label>

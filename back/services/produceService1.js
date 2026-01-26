@@ -207,6 +207,7 @@ const getWorkInProcessList = async (q = {}) => {
     ON p.prod_code = w.prod_code
   LEFT JOIN prdr_tbl r
     ON r.work_order_code = w.wko_code
+  WHERE 1=1
   `;
 
   const params = [];
