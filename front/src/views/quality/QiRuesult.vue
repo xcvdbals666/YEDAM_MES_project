@@ -202,12 +202,13 @@ const updateQiResult = async () => {
       if (data.result == '합격') {
         console.log("data.result == '합격'", info.value);
 
-        info.value = { result: 'g2', end_date: dDay, unpass_qtt: 0, pass_qtt: seletedMinbnd.value.req_qtt, unpass_rate: countRate(), qio_code: seletedMinbnd.value.qio_code, qcr_code: data.qcr_code };
+        info.value = { result: 'g2', end_date: dDay, unpass_qtt: 0, pass_qtt: orderInput.value.insp_vol, unpass_rate: countRate(), qio_code: seletedMinbnd.value.qio_code, qcr_code: data.qcr_code };
       } else if (data.result == '불합격') {
         console.log('불합격');
 
-        info.value = { result: 'g1', end_date: dDay, unpass_qtt: seletedMinbnd.value.req_qtt, pass_qtt: 0, unpass_rate: countRate(), qio_code: seletedMinbnd.value.qio_code, qcr_code: data.qcr_code };
+        info.value = { result: 'g1', end_date: dDay, unpass_qtt: orderInput.value.insp_vol, pass_qtt: 0, unpass_rate: countRate(), qio_code: seletedMinbnd.value.qio_code, qcr_code: data.qcr_code };
       }
+      console.log('생산품 전송데이터: ', info.value);
       await quality1.fetchModifyQirList(info.value);
     }
 
@@ -223,6 +224,8 @@ const updateQiResult = async () => {
 
         info.value = { result: 'g1', end_date: dDay, unpass_qtt: seletedMinbnd.value.req_qtt, pass_qtt: 0, unpass_rate: countRate(), qio_code: seletedMinbnd.value.qio_code, qcr_code: data.qcr_code };
       }
+
+      console.log('자재 전송데이터: ', info.value);
       await quality1.fetchModifyQirList(info.value);
     }
   }
