@@ -110,6 +110,16 @@ const model = ref([
         path: '/quality',
         items: [
           {
+            label: '품질검사기준',
+            icon: 'pi pi-fw pi-sign-in',
+            to: '/qcrinfo'
+          },
+          {
+            label: '제품별 품질검사항목',
+            icon: 'pi pi-fw pi-sign-in',
+            to: '/selectqcr'
+          },
+          {
             label: '품질검사 지시관리',
             icon: 'pi pi-fw pi-sign-in',
             to: '/qiorder'
@@ -133,16 +143,6 @@ const model = ref([
             label: '(삽입페이지) 품질검사 결과 상세조회',
             icon: 'pi pi-fw pi-sign-in',
             to: '/qiresultdetail'
-          },
-          {
-            label: '(진입금지) 품질검사기준',
-            icon: 'pi pi-fw pi-sign-in',
-            to: '/qcrinfo'
-          },
-          {
-            label: '(진입금지) 제품별 품질검사항목',
-            icon: 'pi pi-fw pi-sign-in',
-            to: '/selectqcr'
           }
         ]
       },
