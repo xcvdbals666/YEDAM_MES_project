@@ -266,13 +266,34 @@ const updateMpoTbl = async (statCode, purchaseCode, mpoData) => {
 
 // 발주서 삭제
 const deleteMpoTbl = async (purchaseCode) => {
-  // 1. MPR 매핑 테이블 먼저 삭제
+  // 1. 검사결과(qir_tbl) 삭제 - mpo_d_tbl 경유
+  await mysql.rquery(
+    `
+    DELETE qir FROM qir_tbl qir
+    INNER JOIN qio_tbl qio ON qir.qio_code = qio.qio_code
+    INNER JOIN mpo_d_tbl mpod ON qio.mpo_d_code = mpod.mpo_d_code
+    WHERE mpod.purchase_code = ?
+  `,
+    [purchaseCode],
+  );
+
+  // 2. 입고검사(qio_tbl) 삭제 - mpo_d_tbl 경유
+  await mysql.rquery(
+    `
+    DELETE qio FROM qio_tbl qio
+    INNER JOIN mpo_d_tbl mpod ON qio.mpo_d_code = mpod.mpo_d_code
+    WHERE mpod.purchase_code = ?
+  `,
+    [purchaseCode],
+  );
+
+  // 3. MPR 매핑 테이블 삭제
   await mysql.query("deleteMprMappByPurchaseCode", [purchaseCode], "material1");
 
-  // 2. 자재 상세 삭제
+  // 4. 자재 상세 삭제
   await mysql.query("deleteMpoDetailTbl", [purchaseCode], "material1");
 
-  // 3. 발주서 기본정보 삭제
+  // 5. 발주서 기본정보 삭제
   const result = await mysql.query("deleteMpoTbl", [purchaseCode], "material1");
 
   if (result.affectedRows > 0) {
@@ -281,7 +302,6 @@ const deleteMpoTbl = async (purchaseCode) => {
     return { status: "fail" };
   }
 };
-
 // 자재구매요청서 (MPR) 관련
 // 자재구매요청서 목록 조회
 const findAllMprTbl = async () => {
