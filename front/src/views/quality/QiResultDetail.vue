@@ -1,22 +1,36 @@
 <!-- QiResultDetail.vue -->
 <script setup>
-import { ref, onMounted, computed } from 'vue';
-import { useRoute } from 'vue-router';
+import { ref, onMounted, computed, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { useQualityStore2 } from '@/stores/quality2';
 
 // 라우터 & 스토어
 const route = useRoute();
+const router = useRouter();
 const qualityStore = useQualityStore2();
 const qirCode = route.params.qir_code;
+
+const goToQiResultList = () => {
+  router.push({ name: 'QiResultList' }); // 라우터 이름 기반
+};
 
 // 상단 + 하단 (단건)
 // 선택한 qir_code 한 건만 가져오기
 const header = computed(() => {
-  return qualityStore.qiResultDetail?.[0] || {};
+  return qualityStore.qiResultDetail.find((item) => item.qir_code === qirCode) || {};
 });
-// 중단 (검사 기준 여러 건)
-const criteriaList = computed(() => qualityStore.qiResultDetail || []);
 
+const criteriaList = computed(() => {
+  return qualityStore.qiResultDetail.filter((item) => item.qir_code === qirCode) || [];
+});
+
+watch(
+  () => route.params.qir_code,
+  async (newCode) => {
+    if (!newCode) return;
+    await qualityStore.fetchQiResultDetail(newCode);
+  }
+);
 // 화면 표시용 ref
 const criteriaInput = ref({
   inspection_item: '',
@@ -101,6 +115,9 @@ const formatDate = (date) => {
     <div class="card flex flex-col gap-4 w-full">
       <div class="font-semibold text-xl flex justify-between">
         <div>검사 기본 정보</div>
+        <div class="flex gap-4 pb-2">
+          <Button label="목록으로" severity="" @click="goToQiResultList" />
+        </div>
       </div>
 
       <div class="grid grid-cols-4 gap-4">
@@ -225,7 +242,7 @@ const formatDate = (date) => {
         <div class="col-span-2">
           <div class="grid grid-cols-3">
             <label class="col-span-1">합격수량</label>
-            <InputText class="col-span-2" v-model="resultInput.pass_qtt" readonly />
+            <InputText class="col-span-2" :value="resultInput.pass_qtt || '합격수량 없음'" readonly />
           </div>
         </div>
         <div class="col-span-2">
@@ -237,9 +254,18 @@ const formatDate = (date) => {
         <div class="col-span-2">
           <div class="grid grid-cols-3">
             <label class="col-span-1">최종결과</label>
-            <InputText class="col-span-2" :value="resultInput.result === 'g1' ? '불합격' : resultInput.result === 'g2' ? '합격' : '미검사'" readonly />
+            <InputText
+              class="col-span-2 font-semibold"
+              :class="{
+                'text-green-600 !important': resultInput.result === 'g2',
+                'text-red-600 !important': resultInput.result === 'g1'
+              }"
+              :value="resultInput.result === 'g1' ? '불합격' : resultInput.result === 'g2' ? '합격' : '미검사'"
+              readonly
+            />
           </div>
         </div>
+
         <div class="col-span-2">
           <div class="grid grid-cols-3">
             <label class="col-span-1">검사자 코드</label>
@@ -252,61 +278,94 @@ const formatDate = (date) => {
 </template>
 
 <style scoped>
+/* 테이블 row hover 고급스러움 */
 .hover-table :deep(.p-datatable-tbody > tr:hover td) {
-  font-weight: 500;
+  background-color: #f9fafb; /* 연한 회색 배경 */
+  font-weight: 600;
+  color: #1f2937;
+  transition:
+    background-color 0.3s,
+    color 0.3s,
+    font-weight 0.3s;
 }
 
-/* 카드 스타일 개선 */
+/* 카드 스타일 */
 .card {
-  background-color: #ffffff; /* 밝은 배경 유지 */
-  border-radius: 12px; /* 둥근 모서리 */
-  padding: 1.5rem; /* 여백 조금 더 여유롭게 */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* 부드러운 그림자 */
+  background: #ffffff;
+  border-radius: 16px; /* 조금 더 둥글게 */
+  padding: 1.8rem;
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.08),
+    0 4px 12px rgba(0, 0, 0, 0.04); /* 두 겹 그림자 */
   transition:
-    transform 0.2s,
-    box-shadow 0.2s;
+    transform 0.3s,
+    box-shadow 0.3s,
+    background 0.3s;
 }
 
 .card:hover {
-  transform: translateY(-2px); /* 살짝 띄워지는 느낌 */
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+  transform: translateY(-4px);
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.12),
+    0 6px 16px rgba(0, 0, 0, 0.06);
+  background: #fefefe;
 }
 
-/* 제목 강조 */
+/* 카드 제목 */
 .card > .font-semibold.text-xl {
-  border-bottom: 1px solid #e5e7eb; /* 살짝 구분선 */
-  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 0.6rem;
   margin-bottom: 1rem;
-  color: #1f2937; /* 진한 회색 */
+  color: #111827; /* 더 진한 색 */
+  font-size: 1.25rem;
+  letter-spacing: 0.5px;
 }
 
-/* InputText readonly 스타일 */
+/* InputText readonly 고급화 */
 .InputText[readonly] {
-  background-color: #f9fafb; /* 연한 회색 배경 */
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  padding: 0.4rem 0.6rem;
-  color: #374151; /* 진한 회색 */
+  background: linear-gradient(135deg, #fefefe, #f4f5f7);
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 0.45rem 0.65rem;
+  /* color: #1f2937; */
   font-weight: 500;
+  transition:
+    border 0.2s,
+    background 0.2s,
+    box-shadow 0.2s;
+}
+
+.InputText[readonly]:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.2);
 }
 
 /* 그리드 간격 */
 .grid > div {
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.6rem;
 }
 
-/* 테이블 row hover 고급스러움 */
-.hover-table :deep(.p-datatable-tbody > tr:hover td) {
-  background-color: #f3f4f6; /* 연한 회색 배경 */
-  font-weight: 600;
-  transition:
-    background-color 0.2s,
-    font-weight 0.2s;
-}
-
-/* 레이블 스타일 */
+/* 레이블 스타일 고급화 */
 label {
   font-weight: 600;
-  color: #4b5563; /* 중간 회색 */
+  color: #4b5563;
+  letter-spacing: 0.3px;
+}
+
+/* 버튼 스타일 개선 (Optional) */
+button {
+  transition: all 0.2s ease-in-out;
+}
+
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* 반응형 마진/패딩 부드럽게 */
+@media (max-width: 1024px) {
+  .card {
+    padding: 1.2rem;
+  }
 }
 </style>
