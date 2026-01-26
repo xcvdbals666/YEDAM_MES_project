@@ -1,6 +1,6 @@
 <!-- src/components/order/SelectOutModal.vue -->
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { useOrderStore2 } from '@/stores/order2';
 
 const store = useOrderStore2();
@@ -16,7 +16,7 @@ const statusMap = {
   r1: { label: '출고 대기', severity: 'danger' },
   r2: { label: '부분 출고', severity: 'warn' },
   r3: { label: '출고 완료', severity: 'success' },
-  r4: { label: '요청 취소', severity: 'secondary'}
+  r4: { label: '요청 취소', severity: 'secondary' }
 };
 
 // 모달 열렸을 때
@@ -34,6 +34,26 @@ watch(
 // 검색어 변경될 때
 watch(keyword, (val) => {
   store.fetctOutCode({ keyword: val });
+});
+
+// 그룹화
+const groupedOutboundCode = computed(() => {
+  const grouped = {};
+
+  store.outboundCode.forEach((item) => {
+    if (!grouped[item.out_req_code]) {
+      grouped[item.out_req_code] = {
+        out_req_code: item.out_req_code,
+        out_req_date: item.out_req_date,
+        ord_code: item.ord_code,
+        client_name: item.client_name,
+        ord_amount: item.ord_amount,
+        out_req_stat: item.out_req_stat
+      };
+    }
+  });
+
+  return Object.values(grouped);
 });
 
 // 모달 닫기
@@ -67,7 +87,7 @@ const formatDate = (v) => {
       <InputText v-model="keyword" placeholder="출고요청코드 / 주문코드 / 거래처를 입력해주세요" class="w-full" />
     </div>
 
-    <DataTable :value="store.outboundCode" v-model:selection="selectedOutCode" selectionMode="single" dataKey="out_req_code" scrollable scrollHeight="400px">
+    <DataTable :value="groupedOutboundCode" v-model:selection="selectedOutCode" selectionMode="single" dataKey="out_req_code" scrollable scrollHeight="400px">
       <Column selectionMode="single" style="width: 3rem" />
       <Column field="out_req_code" header="출고요청 코드" />
       <Column header="출고요청 일자">
@@ -86,15 +106,13 @@ const formatDate = (v) => {
     </DataTable>
 
     <template #footer>
-      <div class="button-group">
-        <Button label="취소" severity="contrast" @click="close" />
-        <Button label="확인" severity="warn" @click="confirm" />
-      </div>
+      <Button label="취소" severity="secondary" @click="close" />
+      <Button label="확인" severity="" @click="confirm" />
     </template>
   </Dialog>
 </template>
 <style scoped>
-.button-group {
+/* .button-group {
   display: flex;
   justify-content: center;
   gap: 12px;
@@ -105,5 +123,5 @@ const formatDate = (v) => {
   width: auto;
   min-width: auto;
   padding: 10px 35px;
-}
+} */
 </style>

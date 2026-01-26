@@ -154,11 +154,12 @@ const formatDate = (v) => {
 <template>
   <Fluid class="card">
     <!-- 헤더 -->
-    <div class="header-section">
-      <div class="text-2xl font-semibold">출고 관리</div>
+    <div class="pb-4 flex justify-between">
+      <div class="font-semibold text-xl">출고 관리</div>
       <div class="button-group">
-        <Button label="초기화" severity="contrast" @click="resetFrom" />
-        <Button label="출고요청 불러오기" @click="openOutReqModal" />
+        <Button icon="pi pi-undo" label="초기화" severity="secondary" @click="resetFrom"></Button>
+        <Button icon="pi pi-save" label="저장" @click="createOutbound"></Button>
+        <Button icon="pi pi-plus" label="출고요청 불러오기" severity="info" @click="openOutReqModal"></Button>
       </div>
     </div>
 
@@ -207,10 +208,6 @@ const formatDate = (v) => {
         </tr>
       </tbody>
     </table>
-
-    <div class="button-group2">
-      <Button label="출고 등록" @click="createOutbound" severity="info" />
-    </div>
   </Fluid>
 
   <!-- 제품 목록 -->

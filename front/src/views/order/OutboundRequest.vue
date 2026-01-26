@@ -261,12 +261,14 @@ const formatDate = (v) => {
 <template>
   <Fluid class="card">
     <!-- 헤더 -->
-    <div class="header-section">
-      <div class="text-2xl font-semibold">출고 요청</div>
+    <div class="pb-4 flex justify-between">
+      <div class="font-semibold text-xl">출고 요청</div>
       <div class="button-group">
-        <Button label="초기화" severity="contrast" @click="resetFrom" />
-        <Button label="주문정보 불러오기" @click="openOrderModal" />
-        <Button label="출고요청 불러오기" @click="openOutReqModal" />
+        <Button icon="pi pi-undo" label="초기화" severity="secondary" @click="resetFrom"></Button>
+        <Button icon="pi pi-save" label="저장" @click="requestOutbound"></Button>
+        <Button icon="pi pi-trash" label="삭제" severity="danger" @click="cancelOutboundReq"></Button>
+        <Button icon="pi pi-plus" label="주문정보 불러오기" severity="info" @click="openOrderModal"></Button>
+        <Button icon="pi pi-plus" label="출고요청 불러오기" severity="info" @click="openOutReqModal"></Button>
       </div>
     </div>
 
@@ -308,11 +310,6 @@ const formatDate = (v) => {
         </tr>
       </tbody>
     </table>
-
-    <div class="button-group2">
-      <Button label="출고 요청하기" severity="info" @click="requestOutbound" />
-      <Button label="삭제" severity="danger" @click="cancelOutboundReq" />
-    </div>
   </Fluid>
 
   <!-- 제품 목록 -->
@@ -354,12 +351,12 @@ const formatDate = (v) => {
   <SelectOutReqModal v-model:visible="showOutReqModal" :exclude-statuses="['r2', 'r3', 'r4']" @select="selectOutReq" />
 </template>
 <style scoped>
-.header-section {
+/* .header-section {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 10px;
-}
+} */
 
 th,
 td {
@@ -376,18 +373,5 @@ td {
   width: auto;
   min-width: auto;
   padding: 7px 15px;
-}
-
-.button-group2 {
-  display: flex;
-  justify-content: center;
-  gap: 15px;
-  margin-top: 10px;
-}
-
-.button-group2 :deep(.p-button) {
-  width: auto;
-  min-width: auto;
-  padding: 10px 20px;
 }
 </style>

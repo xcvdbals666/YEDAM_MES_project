@@ -20,7 +20,6 @@ FROM out_req_tbl r
 JOIN out_req_d_tbl d ON r.out_req_code = d.out_req_code
 JOIN prod_tbl pr ON pr.prod_code = d.prod_code
 
--- 이미 출고된 수량 집계 (제품별로)
 LEFT JOIN (
   SELECT 
     outbound_request_code,
@@ -34,30 +33,41 @@ LEFT JOIN (
 JOIN emp_tbl e ON e.emp_code = r.mcode
 JOIN client_tbl c ON c.client_code = r.client_code
 
-ORDER BY r.out_req_date DESC
+ORDER BY r.out_req_code DESC
 `;
 
 // 출고 조회 검색
 const searchOutreqtbl = `
-SELECT r.out_req_code, 
-       r.out_req_date, 
-
-       pr.prod_name, 
-       
-       po.req_qtt, 
-       po.outbnd_qtt,
-       (po.req_qtt - po.outbnd_qtt) as un_qtt, 
-       po.stat,
-       
-       e.emp_name, 
-       
-       c.client_name
+SELECT 
+  r.out_req_code, 
+  r.out_req_date, 
+  d.ord_amount,
+  
+  pr.prod_name,
+  d.prod_code,
+  
+  d.out_req_d_amount,
+  CAST(COALESCE(already_out.total_outbnd_qtt, 0) AS UNSIGNED) as outbnd_qtt,
+  
+  r.out_req_stat,
+  e.emp_name,
+  c.client_name
 
 FROM out_req_tbl r
 
 JOIN out_req_d_tbl d ON r.out_req_code = d.out_req_code
 JOIN prod_tbl pr ON pr.prod_code = d.prod_code
-JOIN poutbnd_tbl po ON po.outbound_request_code = r.out_req_code
+
+LEFT JOIN (
+  SELECT 
+    outbound_request_code,
+    prod_code,
+    CAST(SUM(outbnd_qtt) AS UNSIGNED) AS total_outbnd_qtt
+  FROM poutbnd_tbl
+  GROUP BY outbound_request_code, prod_code
+) already_out ON already_out.outbound_request_code = r.out_req_code 
+              AND already_out.prod_code = d.prod_code
+
 JOIN emp_tbl e ON e.emp_code = r.mcode
 JOIN client_tbl c ON c.client_code = r.client_code
 
@@ -65,11 +75,11 @@ WHERE (? IS NULL OR r.out_req_code = ?)
   AND (? IS NULL OR pr.prod_code = ?)
   AND (? IS NULL OR e.emp_code = ?)
   AND (? IS NULL OR c.client_code = ?)
-  AND (? IS NULL OR po.req_qtt >= ?)
-  AND (? IS NULL OR po.req_qtt <= ?)
+  AND (? IS NULL OR d.out_req_d_amount >= ?)
+  AND (? IS NULL OR d.out_req_d_amount <= ?)
   AND (? IS NULL OR r.out_req_date >= ?)
   AND (? IS NULL OR r.out_req_date <= ?)
-ORDER BY r.out_req_date DESC
+ORDER BY r.out_req_code DESC
 `;
 
 // 출고 상세페이지(주문정보)
