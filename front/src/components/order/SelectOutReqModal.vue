@@ -13,16 +13,22 @@ const keyword = ref(''); // 검색 입력값
 
 // 출고 상태 변환
 const statusMap = {
-  q1: { label: '출고 대기', severity: 'danger' },
-  q2: { label: '부분 출고', severity: 'warn' },
-  q3: { label: '출고 완료', severity: 'success' }
+  r1: { label: '출고 대기', severity: 'danger' },
+  r2: { label: '부분 출고', severity: 'warn' },
+  r3: { label: '출고 완료', severity: 'success' },
+  r4: { label: '요청 취소', severity: 'secondary'}
 };
 
 // 출고요청 단위로 그룹화
 const groupedOutReq = computed(() => {
   const grouped = {};
 
+  
   store.requestCode.forEach((outReq) => {
+    // q3(출고 완료) 상태인 주문은 제외
+    if (outReq.out_req_stat === 'r3') {
+      return;
+    }
     // 새로운 출고요청 객체 생성
     if (!grouped[outReq.out_req_code]) {
       grouped[outReq.out_req_code] = {
@@ -30,7 +36,7 @@ const groupedOutReq = computed(() => {
         prod_name: outReq.prod_name,
         ord_name: outReq.ord_name,
         out_req_date: outReq.out_req_date,
-        ord_stat: outReq.ord_stat,
+        out_req_stat: outReq.out_req_stat,
         products: []
       };
     }
@@ -103,7 +109,7 @@ const formatDate = (v) => {
       </Column>
       <Column header="상태">
         <template #body="{ data }">
-          <Tag :value="statusMap[data.ord_stat]?.label || '알수없음'" :severity="statusMap[data.ord_stat]?.severity || 'info'" rounded />
+          <Tag :value="statusMap[data.out_req_stat]?.label || '알수없음'" :severity="statusMap[data.out_req_stat]?.severity || 'info'" rounded />
         </template>
       </Column>
     </DataTable>

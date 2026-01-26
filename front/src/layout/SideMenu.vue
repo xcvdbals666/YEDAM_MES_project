@@ -9,23 +9,6 @@ const model = ref([
     path: '/pages',
     items: [
       {
-        label: '테스트화면(후에 대시보드 메인화면으로 교체)',
-        icon: 'pi pi-fw pi-user',
-        path: '/test'
-      },
-      {
-        label: '기준정보',
-        icon: 'pi pi-fw pi-user',
-        path: '/info',
-        items: [
-          {
-            label: '예시 메뉴',
-            icon: 'pi pi-fw pi-sign-in',
-            to: ''
-          }
-        ]
-      },
-      {
         label: '주문',
         icon: 'pi pi-fw pi-user',
         path: '/order',
@@ -130,11 +113,6 @@ const model = ref([
             to: '/qioresultlist'
           },
           {
-            label: '(삽입페이지) 품질검사 결과 상세조회',
-            icon: 'pi pi-fw pi-sign-in',
-            to: '/qiresultdetail'
-          },
-          {
             label: '(진입금지) 품질검사기준',
             icon: 'pi pi-fw pi-sign-in',
             to: '/qcrinfo'
@@ -185,18 +163,6 @@ const model = ref([
             label: '자재재고현황',
             icon: 'pi pi-fw pi-sign-in',
             to: '/matStock'
-          }
-        ]
-      },
-      {
-        label: '설비',
-        icon: 'pi pi-fw pi-user',
-        path: '/facility',
-        items: [
-          {
-            label: '예시 메뉴',
-            icon: 'pi pi-fw pi-sign-in',
-            to: ''
           }
         ]
       }

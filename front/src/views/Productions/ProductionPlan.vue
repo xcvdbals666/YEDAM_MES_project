@@ -188,6 +188,8 @@ const selectOrder = () => {
     return;
   }
   planInfo.ordCode = selectedOrder.value.ord_code;
+  planInfo.dueDate = selectedOrder.value.delivery_date.slice(0, 10);
+  planProdList.value = [];
   const row = {
     prdp_d_code: `TEMP-${rownum}`, // 임시 code 부여 백에서 실제 코드 처리
     prod_code: selectedOrder.value.prod_code,
@@ -256,9 +258,9 @@ const deleteList = () => {
 };
 
 // 라인 검색 모달 열기
-const openLineModal = async (index) => {
+const openLineModal = async (prodCode, index) => {
   idx.value = index;
-  searchLine();
+  searchLine(prodCode);
   displayLineModal.value = true;
 };
 
@@ -281,8 +283,8 @@ const selectLine = () => {
 };
 
 // 라인 검색
-const searchLine = async () => {
-  const list = await store.fetchLines({ q: searchKeyword.value });
+const searchLine = async (prodCode) => {
+  const list = await store.fetchLines({ q: searchKeyword.value, prod: prodCode });
   lineList.value = list.map((item, idx) => ({
     idx: idx,
     ...item
@@ -500,7 +502,7 @@ const searchProd = async () => {
         </Column>
         <Column field="line_code" header="생산라인" headerClass="table-header truncate" bodyClass="table-body truncate" style="width: 120px">
           <template #body="{ data, index }">
-            <IconField iconPosition="left" class="w-50" @click="openLineModal(index)">
+            <IconField iconPosition="left" class="w-50" @click="openLineModal(data.prod_code, index)">
               <InputText type="text" v-model="data.line_code" class="w-50" readonly />
               <InputIcon class="pi pi-search" />
             </IconField>

@@ -11,7 +11,7 @@ const findAllOutreqtbl = async () => {
 const findByOutcodeOutTbl = async (keyword) => {
   let sql = `
     SELECT r.out_req_code, r.out_req_date, r.ord_code, c.client_name, 
-           d.ord_amount, d.out_req_d_amount, o.ord_stat
+           d.ord_amount, d.out_req_d_amount, r.out_req_stat
     FROM out_req_tbl r
     JOIN client_tbl c ON c.client_code = r.client_code
     JOIN out_req_d_tbl d ON d.out_req_code = r.out_req_code
@@ -40,7 +40,7 @@ const findByCodeProdTbl = async (keyword) => {
   let sql = `
     SELECT prod_code, prod_name, com_value
     FROM prod_tbl
-    WHERE 1=1
+    WHERE prod_type = 'i1'
   `;
   const params = [];
 
@@ -63,7 +63,7 @@ const findByCodeClientTbl = async (keyword) => {
   let sql = `
     SELECT client_code, client_name
     FROM client_tbl
-    WHERE 1=1
+    WHERE client_type = 'l1'
   `;
   const params = [];
 
@@ -86,7 +86,7 @@ const findByEmpcodeEmpTbl = async (keyword) => {
   let sql = `
     SELECT emp_code, emp_name
     FROM emp_tbl
-    WHERE 1=1
+    WHERE dept_code = 'DEPT-1'
   `;
   const params = [];
 
@@ -132,7 +132,7 @@ const findSearchOutreqtbl = async (params) => {
 // 주문 선택 모달
 const findByOrderOrdTbl = async (keyword) => {
   let sql = `
-    SELECT o.ord_code, od.prod_code, p.prod_name, od.ord_amount, o.ord_name, o.ord_date
+    SELECT o.ord_code, od.prod_code, p.prod_name, od.ord_amount, o.ord_name, o.ord_date, o.ord_stat
     FROM ord_tbl o
     JOIN ord_d_tbl od ON o.ord_code = od.ord_code
     JOIN prod_tbl p ON od.prod_code = p.prod_code
@@ -172,7 +172,7 @@ const findOrderDetailForOutbound = async (ord_code) => {
   const [orderInfo, products, outCode] = await Promise.all([
     mysql.query("selectByOrdcode", [ord_code], "order2"),
     mysql.query("selectProdList", [ord_code], "order2"),
-    mysql.query("generateOutCode", [], "order2"),
+    mysql.query("generateOutReqCode", [], "order2"),
   ]);
 
   // 제품 목록의 숫자 필드들을 Number로 변환
@@ -246,7 +246,7 @@ const createOutboundRequest = async (requestData) => {
 // 출고요청 선택 모달
 const findAllOutReq = async (keyword) => {
   let sql = `
-    SELECT o.out_req_code, p.prod_name, ord.ord_name, o.out_req_date, ord.ord_stat
+    SELECT o.out_req_code, p.prod_name, ord.ord_name, o.out_req_date, o.out_req_stat
     FROM out_req_tbl o
     JOIN out_req_d_tbl od ON od.out_req_code = o.out_req_code
     JOIN prod_tbl p ON od.prod_code = p.prod_code
@@ -298,6 +298,53 @@ const findLotsByProdCode = async (prod_code) => {
   return list;
 };
 
+// 출고 등록
+const createOutbound = async (outboundData) => {
+  const { outInfo, products } = outboundData;
+  
+  try {
+    // 1. 출고코드 생성 (출고요청코드 기준)
+    const [codeResult] = await mysql.query(
+      'generateOutCode', 
+      [outInfo.out_req_code, outInfo.out_req_code], 
+      'order2'
+    );
+    const out_code = codeResult.new_out_code;
+    
+    // 2. 각 제품의 각 로트별로 INSERT
+    for (const product of products) {
+      for (const lot of product.selectedLots) {
+        await mysql.query('insertOutbound', [
+          out_code,              // 출고코드
+          lot.out_qtt,           // req_qtt
+          lot.out_qtt,           // outbnd_qtt
+          outInfo.out_date,      // deadline (출고일)
+          outInfo.out_req_code,  // outbound_request_code
+          lot.lot_num,           // lot_num
+          product.prod_code,     // prod_code
+          outInfo.client_code,   // client_code
+          outInfo.mcode          // mcode
+        ], 'order2');
+      }
+    }
+    
+    // 3. 출고요청 상태 업데이트
+    await mysql.query('updateOutReqStat', [outInfo.out_req_code], 'order2');
+    
+    // 4. 주문 상태 업데이트
+    await mysql.query('updateOrdStat', [outInfo.ord_code], 'order2');
+    
+    return {
+      success: true,
+      message: '출고 등록이 완료되었습니다.',
+      out_code: out_code
+    };
+  } catch (error) {
+    console.error('출고 등록 오류:', error);
+    throw error;
+  }
+};
+
 module.exports = {
   findAllOutreqtbl,
   findByOrderOrdTbl,
@@ -312,5 +359,6 @@ module.exports = {
   createOutboundRequest,
   findAllOutReq,
   findOutReqDetailForOutbound,
-  findLotsByProdCode
+  findLotsByProdCode,
+  createOutbound
 };

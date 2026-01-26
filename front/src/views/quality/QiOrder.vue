@@ -42,7 +42,7 @@ const closeMOdal = () => {
 };
 
 // 선택된 값 불러오기
-const selectComp = (data) => {
+const selectComp = async (data) => {
   if (data == null || data == undefined) {
     alert('값을 선택해주세요');
     return;
@@ -62,13 +62,21 @@ const selectComp = (data) => {
   console.log('seletedMinbnd: ', seletedMinbnd.value);
   display.value = false;
 
+  await quality1.fetchQiList(data.mat_code);
+
   allQiList.value.forEach((value) => {
-    console.log(data);
-    if (value.com_value == seletedMinbnd.value.mat_type) {
-      selectedQcrList.value.push(value);
-    }
-    console.log(selectedQcrList.value);
+    quality1.qiList.forEach((code) => {
+      if (value.qcr_code == code.qcr_code) {
+        selectedQcrList.value.push(value);
+      }
+    });
   });
+
+  if (selectedQcrList.value.length == 0) {
+    alert('등록된 검사항목이 없습니다. 등록을 해주세요.');
+    resetQiOrder();
+    return;
+  }
 };
 
 // QiOrderItem의 항목 채우기(검사지 불러오기 모달창 선택값)
@@ -102,15 +110,17 @@ const selectedOrder = async (data) => {
     orderInput.value = data;
     if (data.mpo_d_code != null) {
       await quality1.fetchOrderItemInfo(data.qio_code);
-
       if (quality1.qiOrderThing.length > 0) {
         seletedMinbnd.value = quality1.qiOrderThing[0];
 
+        await quality1.fetchQiList(quality1.qiOrderThing[0].mat_code);
+
         allQiList.value.forEach((value) => {
-          if (value.com_value == quality1.qiOrderThing[0].mat_type) {
-            selectedQcrList.value.push(value);
-          }
-          console.log('selectedQcrList: ', selectedQcrList.value);
+          quality1.qiList.forEach((code) => {
+            if (value.qcr_code == code.qcr_code) {
+              selectedQcrList.value.push(value);
+            }
+          });
         });
       }
     } else if (data.prdr_code != null) {
@@ -126,11 +136,14 @@ const selectedOrder = async (data) => {
         note: realSelectedProdInfo.value.note,
         mat_type: realSelectedProdInfo.value.prod_type
       };
+      await quality1.fetchQiList(quality1.qiProdInfo.prod_code);
+
       allQiList.value.forEach((value) => {
-        if (value.com_value == seletedMinbnd.value.mat_type) {
-          selectedQcrList.value.push(value);
-        }
-        console.log('selectedQcrList: ', selectedQcrList.value);
+        quality1.qiList.forEach((code) => {
+          if (value.qcr_code == code.qcr_code) {
+            selectedQcrList.value.push(value);
+          }
+        });
       });
     }
   } else {
@@ -166,7 +179,7 @@ const searchProduceList = async () => {
 
 // 생산실적 선택값 가져오기
 let realSelectedProdInfo = ref([]);
-const selectProd = (data) => {
+const selectProd = async (data) => {
   if (data == null || data == undefined) {
     alert('값을 선택해주세요');
     return;
@@ -182,12 +195,22 @@ const selectProd = (data) => {
   realSelectedProdInfo.value = data;
   produceDisplay.value = false;
   seletedMinbnd.value = { mpo_d_code: data.prdp_code, mat_code: data.prdp_code, mat_name: data.prod_name, req_qtt: data.production_qtt, note: data.note, mat_type: data.prod_type };
+
+  await quality1.fetchQiList(data.prod_code);
+
   allQiList.value.forEach((value) => {
-    if (value.com_value == seletedMinbnd.value.mat_type) {
-      selectedQcrList.value.push(value);
-    }
-    console.log('selectedQcrList: ', selectedQcrList.value);
+    quality1.qiList.forEach((code) => {
+      if (value.qcr_code == code.qcr_code) {
+        selectedQcrList.value.push(value);
+      }
+    });
   });
+
+  if (selectedQcrList.value.length == 0) {
+    alert('등록된 검사항목이 없습니다. 등록을 해주세요.');
+    resetQiOrder();
+    return;
+  }
 };
 
 // 검사지시서 등록

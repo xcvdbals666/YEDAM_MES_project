@@ -23,7 +23,7 @@ WHERE d.prdp_code = ?`;
 
 // 주문 검색
 const selectByCodeOrNameOrd = `
-SELECT o.ord_code, d.prod_code, p.prod_name, d.ord_amount, o.ord_name, o.ord_date, cc.note AS com_value, cu.note AS unit, cs.note AS spec
+SELECT o.ord_code, d.prod_code, p.prod_name, d.ord_amount, o.ord_name, o.ord_date, cc.note AS com_value, cu.note AS unit, cs.note AS spec, d.delivery_date
 FROM ord_tbl o 
 JOIN ord_d_tbl d ON o.ord_code = d.ord_code
 JOIN prod_tbl p ON d.prod_code = p.prod_code
@@ -47,7 +47,7 @@ SELECT l.line_code, l.line_name, ct.note AS line_type, l.note, ci.note AS is_use
 FROM line_tbl l
 JOIN common_code ct ON ct.com_value = l.line_type
 JOIN common_code ci ON ci.com_value = l.is_used
-WHERE line_code LIKE ? OR line_name LIKE ?`;
+WHERE (line_code LIKE ? OR line_name LIKE ?) AND prod_code = ?`;
 
 // 생산계획 번호 최대값
 const selectMaxCodePrdp = `
@@ -121,7 +121,7 @@ WITH RECURSIVE bom_tree AS (
   JOIN bom_mat bm2 ON bm2.bom_code = bt2.bom_code
   WHERE btree.mat_code LIKE 'PROD-%'
 )
-SELECT b.mat_code, b.mat_name, b.req_qtt, (i.inbnd - o.outbnd + m.save_inven) AS inven, c.note AS unit_note, b.unit
+SELECT b.mat_code, b.mat_name, ((SELECT planned_qtt FROM prdp_d_tbl WHERE prdp_code = ?) * b.req_qtt) AS req_qtt, (i.inbnd - o.outbnd + m.save_inven) AS inven, c.note AS unit_note, b.unit
 FROM bom_tree b
 JOIN (SELECT mat_code, SUM(inbnd_qtt) AS inbnd FROM minbnd_tbl GROUP BY mat_code) i ON i.mat_code = b.mat_code
 JOIN (SELECT mat_code, SUM(outbnd_qtt) AS outbnd FROM moutbnd_tbl GROUP BY mat_code) o ON o.mat_code = b.mat_code

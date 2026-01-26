@@ -32,6 +32,7 @@ watch(
       <Column field="qio_code" header="품질검사지시코드" sortable style="min-width: 12rem"></Column>
       <Column field="qio_date" header="지시일자" sortable style="min-width: 12rem"></Column>
       <Column field="emp_name" header="지시자" sortable style="min-width: 12rem"></Column>
+      <Column field="mat_name" header="제품정보" sortable style="min-width: 12rem"></Column>
     </DataTable>
     <p v-else class="leading-normal m-0">현재 죄회할 내용이 없습니다.</p>
 

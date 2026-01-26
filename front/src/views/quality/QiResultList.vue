@@ -12,15 +12,17 @@ const qualityStore = useQualityStore2();
 const selectedResults = ref([]); //모달에서 선택한 결과서 목록불러오기
 
 //행 클릭하면 상세체이지로 이동
-const goDetail = (row) => {
+const goDetail = (event) => {
+  const row = event.data; // event.data 안에 실제 row가 있음
+  if (!row || !row.qir_code) return;
+
   router.push({
     name: 'QiResultDetail',
     params: {
-      qirCode: row.qir_code
+      qir_code: row.qir_code
     }
   });
 };
-
 //검색창 입력부분
 const qir_code = ref(''); //검사결과 코드
 const qcr_code = ref(''); //검사지시 항목 코드
@@ -143,8 +145,11 @@ const fetchAll = async () => {
 <template>
   <div class="card border border-gray-200 flex flex-col gap-6 p-fluid">
     <!--모달창-->
-    <SelectQiResultModal2 :key="modalKey" :display="orderDisplay" :qiResultList="qualityStore.qiResultList" @close="closeModal" @selected-result="selectedResult" />
-    <!------------------------------------------------------------------------------------------------->
+<SelectQiResultModal2
+  v-model:visible="orderDisplay"
+  :qiResultList="qualityStore.qiResultList"
+  @selected-result="selectedResult"
+/>    <!------------------------------------------------------------------------------------------------->
     <!-- 검색이 되어야 하는 창-->
     <div class="text-2xl font-bold text-center">품질 검사 결과 목록 조회</div>
 
@@ -194,11 +199,10 @@ const fetchAll = async () => {
     <div class="flex items-center justify-between mt-2">
       <!-- 왼쪽 영역 -->
       <div class="flex gap-4">
-        <Button label="전체조회" severity="contrast" @click="fetchAll" />
+        <Button label="전체조회" severity="" @click="fetchAll" />
         <!--전체를 누르면 전체의 지시코드가 생김-->
-        <Button label="검색조회" severity="warn" @click="search" />
       </div>
-      <Button label="검사결과 선택" severity="" @click="openModal" />
+      <Button label="검사결과 선택" severity="info" @click="openModal" />
     </div>
   </div>
 
@@ -225,7 +229,7 @@ const fetchAll = async () => {
           <div class="text-center py-6 text-gray-400">데이터 없음</div>
         </template>
 
-        <Column selectionMode="multiple" headerStyle="width:48px" />
+        <!-- <Column selectionMode="multiple" headerStyle="width:48px" /> -->
         <Column header="검사결과 코드" field="qir_code" headerClass="table-header" bodyClass="table-body" sortable style="min-width: 1rem" />
         <Column header="품질기준 정보 코드" field="qcr_code" headerClass="table-header" bodyClass="table-body" sortable style="min-width: 1rem" />
         <Column header="품목명(공통코드)" field="com_value" headerClass="table-header" bodyClass="table-body" sortable style="min-width: 1rem" />

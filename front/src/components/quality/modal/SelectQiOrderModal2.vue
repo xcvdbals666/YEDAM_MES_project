@@ -1,11 +1,18 @@
 <script setup>
-import { defineProps, ref } from 'vue';
+import { ref, computed, defineProps, defineEmits } from 'vue';
 
-const selectedProducts = ref([]); // 복수 선택 배열
+const emit = defineEmits(['update:visible', 'selected-order']);
 
 const props = defineProps({
-  display: { type: Boolean, required: true },
+  visible: { type: Boolean, required: true },
   qiOrderList: { type: Array, required: true }
+});
+
+const selectedOrders = ref([]);
+
+const visibleProxy = computed({
+  get: () => props.visible,
+  set: (val) => emit('update:visible', val)
 });
 
 const formatDate = (date) => {
@@ -15,35 +22,43 @@ const formatDate = (date) => {
 </script>
 
 <template>
-  <Dialog :visible="props.display" :breakpoints="{ '960px': '90vw' }" :style="{ width: '30vw' }" modal @hide="$emit('close')">
-    <DataTable ref="dt" v-model:selection="selectedProducts" :value="props.qiOrderList" dataKey="qio_code" selectionMode="multiple" v-if="props.qiOrderList.length > 0">
-      <template #header>
-        <div class="flex flex-wrap gap-2 items-center justify-between">
-          <h4 class="m-0">지시서 불러오기</h4>
-        </div>
-      </template>
-
-      <Column selectionMode="multiple" style="width: 3rem" />
-      <Column field="qio_code" header="품질검사지시코드" headerClass="header-large" />
-      <Column header="완료일자" headerClass="header-large">
-        <template #body="slotProps">
-          {{ formatDate(slotProps.data.insp_date) }}
+  <Dialog
+    v-model:visible="visibleProxy"
+    modal
+    closable
+    header="지시서 불러오기"
+    :style="{ width: '60vw' }"
+  >
+    <DataTable
+      v-if="props.qiOrderList.length"
+      v-model:selection="selectedOrders"
+      :value="props.qiOrderList"
+      dataKey="qio_code"
+      selectionMode="multiple"
+    >
+      <Column selectionMode="multiple" style="width:3rem" />
+      <Column field="qio_code" header="품질검사지시코드" />
+      <Column field="inspect_type" header="검사유형" />
+      <Column field="qio_status" header="제품명"" />
+      <Column header="완료일자">
+        <template #body="{ data }">
+          {{ formatDate(data.insp_date) }}
         </template>
       </Column>
     </DataTable>
 
-    <p v-else class="leading-normal m-0">조회할 지시코드 내용이 없습니다</p>
+    <p v-else>조회할 지시코드 내용이 없습니다</p>
 
     <template #footer>
-      <Button label="확인" @click="$emit('selectedOrder', selectedProducts)" />
-      <Button label="취소" severity="secondary" @click="$emit('close')" />
+      <Button
+        label="확인"
+        @click="emit('selected-order', selectedOrders)"
+      />
+      <Button
+        label="취소"
+        severity="secondary"
+        @click="visibleProxy = false"
+      />
     </template>
   </Dialog>
 </template>
-
-<style>
-.header-large {
-  font-size: 1.2rem; /* 헤더만 커짐 */
-  font-weight: 600; /* optional: 글씨 두껍게 */
-}
-</style>

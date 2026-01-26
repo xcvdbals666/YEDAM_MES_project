@@ -2,11 +2,14 @@
 import { ref } from 'vue';
 import { useOrderStore2 } from '@/stores/order2';
 import SelectOutReqModal from '@/components/order/SelectOutReqModal.vue';
+import SelectLotModal from '@/components/order/SelectLotModal.vue';
 const user = JSON.parse(localStorage.getItem('user'));
 
 const orderStore = useOrderStore2();
-const showOutReqModal = ref(false); // 모달 표시 여부
+const showOutReqModal = ref(false); // 출고 요청 모달 표시 여부
 const productList = ref([]); // 제품 목록
+const showLotModal = ref(false); // 출고 모달 표시 여부
+const selectedProduct = ref(null); // 현재 선택한 제품 정보
 
 // 초기 상태 정의
 const getInitialOutReqInfo = () => ({
@@ -30,7 +33,7 @@ const openOutReqModal = () => {
 
 // 모달에서 선택 시
 const selectOutReq = async (selectedOutReq) => {
-  // console.log('선택된 출고 요청:', selectedOutReq);
+  console.log('선택된 출고 요청:', selectedOutReq);
 
   // 1. 스토어에 선택된 출고요청 정보 저장
   orderStore.setSelectedOutReq(selectedOutReq);
@@ -79,6 +82,63 @@ const handleOutAmountInput = (data, value) => {
     data.out_amount = maxAmount;
   } else if (value < 0) {
     data.out_amount = 0;
+  }
+};
+
+// 로트 모달 열기
+const openLotModal = (product) => {
+  selectedProduct.value = {
+    prod_code: product.prod_code,
+    prod_name: product.prod_name,
+    max_amount: Math.min(product.not_outbnd_qtt, product.current_stock) // 출고 가능 수량
+  };
+  showLotModal.value = true;
+};
+
+// 로트 선택 확인
+const handleLotConfirm = (lotData) => {
+  // productList에서 해당 제품 찾기
+  const product = productList.value.find(
+    p => p.prod_code === selectedProduct.value.prod_code
+  );
+  
+  if (product) {
+    // 1. 총 출고수량 업데이트
+    product.out_amount = lotData.total_amount;
+    
+    // 2. 선택한 로트 정보 저장
+    product.selectedLots = lotData.lots;
+  }
+};
+
+// 출고 등록
+const createOutbound = async () => {
+  try {
+    const requestData = {
+      outInfo: {
+        out_req_code: outReqInfo.value.out_req_code,
+        out_date: outReqInfo.value.out_date,
+        ord_code: outReqInfo.value.ord_code,
+        client_code: orderStore.outReqDetail.client_code,
+        mcode: user.emp_code
+      },
+      products: productList.value
+        .filter(p => p.out_amount > 0)
+        .map(p => ({
+          prod_code: p.prod_code,
+          selectedLots: p.selectedLots || []
+        }))
+    };
+    
+    const result = await orderStore.createOutbound(requestData);
+    
+    if (result.success) {
+      alert(result.message || '출고 등록이 완료되었습니다.');
+      // 초기화 등...
+    }
+  } catch (error) {
+    console.error('출고 등록 실패:', error);
+    alert('출고 등록에 실패했습니다.');
   }
 };
 
@@ -151,7 +211,7 @@ const formatDate = (v) => {
     </table>
 
     <div class="button-group2">
-      <Button label="출고" severity="info" />
+      <Button label="출고 등록" @click="createOutbound" severity="info" />
     </div>
   </Fluid>
 
@@ -173,13 +233,16 @@ const formatDate = (v) => {
     <Column header="기출고수량" field="already_outbnd_qtt" headerStyle="width: 120px;" />
     
     <!-- 출고수량 입력 -->
-    <Column header="출고수량" headerStyle="width: 120px;">
+    <Column header="출고수량" style="width: 120px;">
       <template #body="{ data }">
         <InputNumber 
           v-model="data.out_amount" 
-          :min="0" 
-          :max="Math.min(data.not_outbnd_qtt, data.current_stock)" 
-          @update:modelValue="handleOutAmountInput(data, $event)" 
+          :min="0"
+          readonly
+          @click="openLotModal(data)"
+          class="cursor-pointer"
+          style="cursor: pointer;"
+          placeholder="선택"
         />
       </template>
     </Column>
@@ -195,6 +258,9 @@ const formatDate = (v) => {
 
   <!-- 출고요청 선택 모달 -->
   <SelectOutReqModal v-model:visible="showOutReqModal" @select="selectOutReq" />
+
+  <!-- 로트 선택 모달 -->
+  <SelectLotModal v-model:visible="showLotModal" :productInfo="selectedProduct" @confirm="handleLotConfirm" />
 </template>
 <style scoped>
 .header-section {
