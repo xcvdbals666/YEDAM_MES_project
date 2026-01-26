@@ -227,19 +227,22 @@ const currentAiReason = ref({}); // 현재 클릭한 행의 AI 분석 결과 담
 
 // AI 분석 실행 함수
 const runAiCheck = async (product, event) => {
+  const isEditable = orderInfo.value.ord_stat === 'a1' || orderInfo.value.ord_stat === null;
+  if (!isEditable) {
+    return;
+  }
   if (!product.prod_code || !product.ord_amount) return;
 
-  product.isLoading = true; // 로딩 시작 (행별로 관리 필요)
+  product.isLoading = true;
 
-  // 스토어 액션 호출 (구현하신 것)
   const result = await order.expectDateByAI(product.prod_code, product.ord_amount);
 
   if (result) {
-    product.delivery_date = result.estimated_date; // 날짜 자동 입력
-    product.ai_data = result; // 결과 저장 (risk_level, reason 등)
+    product.delivery_date = result.estimated_date;
+    product.ai_data = result;
   }
 
-  product.isLoading = false; // 로딩 끝
+  product.isLoading = false;
 };
 
 // 말풍선 보여주기 함수
@@ -353,7 +356,15 @@ const toggleReason = (event, product) => {
                 <tr>
                   <th class="min-w-[150px] bg-gray-100 border border-gray-200 p-3 text-center font-bold text-gray-700">거래처담당자</th>
                   <td class="min-w-[275px] border border-gray-200 p-2">
-                    <Select v-model="orderInfo.mcode" :options="order.employees" option-label="emp_name" option-value="emp_code" class="w-full" :disabled="orderInfo.ord_stat !== 'a1' && orderInfo.ord_stat != null">
+                    <Select
+                      v-model="orderInfo.mcode"
+                      :options="order.employees"
+                      option-label="emp_name"
+                      option-value="emp_code"
+                      class="w-full"
+                      :disabled="orderInfo.ord_stat !== 'a1' && orderInfo.ord_stat != null"
+                      placeholder="담당자를 선택해주세요."
+                    >
                       <template #option="slotProps">
                         <div class="flex items-center">
                           <span>{{ `${slotProps.option.emp_name} (${slotProps.option.emp_code})` }}</span>
@@ -396,7 +407,7 @@ const toggleReason = (event, product) => {
     <div class="flex mt-8">
       <div class="card flex flex-col gap-4 w-full">
         <div class="font-semibold text-xl flex justify-between items-center">
-          <div>제품</div>
+          <div>주문 상세</div>
           <div class="flex items-center gap-2">
             <Button label="제품삭제" severity="danger" class="min-w-[100px]" @click="deleteProduct" :disabled="orderInfo.ord_stat !== 'a1' && orderInfo.ord_stat != null" />
             <Button label="제품추가" severity="success" class="min-w-[100px]" @click="addProduct" :disabled="orderInfo.ord_stat !== 'a1' && orderInfo.ord_stat != null" />
