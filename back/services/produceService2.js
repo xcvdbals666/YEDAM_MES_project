@@ -71,7 +71,6 @@ const findByCodeOrNameLine = async (data) => {
     [query, query, prodCode],
     "produce2",
   );
-  console.log(query, prodCode, list);
   return list;
 };
 
