@@ -100,13 +100,13 @@ const save = async () => {
     return;
   }
   for (const prod of planProdList.value) {
-    if (!prod.prod_code) {
+    if (!prod.is_delete && !prod.prod_code) {
       alert('제품이 선택되지 않은 행이 존재합니다.');
       return;
-    } else if (!prod.line_code) {
+    } else if (!prod.is_delete && !prod.line_code) {
       alert('생산라인이 선택되지 않은 행이 존재합니다.');
       return;
-    } else if (prod.planned_qtt == 0) {
+    } else if (!prod.is_delete && prod.planned_qtt == 0) {
       alert('목표수량은 0으로 설정할 수 없습니다.');
       return;
     }
