@@ -21,6 +21,9 @@ const props = defineProps({
       <Column field="result" header="결과" sortable style="min-width: 10rem" v-if="qualityState == 1">
         <template #body="slotProps"> <Dropdown v-model="slotProps.data.result" :options="['합격', '불합격']" placeholder="선택" /> </template
       ></Column>
+      <Column field="amount" header="수량" sortable style="min-width: 5rem" v-if="qualityState == 1">
+        <template #body="slotProps"> <InputText v-model="slotProps.data.amount" /> </template
+      ></Column>
     </DataTable>
   </Fluid>
 </template>

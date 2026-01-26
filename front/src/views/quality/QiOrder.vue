@@ -90,6 +90,15 @@ let orderDisplay = ref(false);
 const searchOrderList = async () => {
   if (quality1.state != 1) {
     await quality1.fetchOrderList();
+    quality1.qiOrderList.forEach(async (data) => {
+      if (data.mpo_d_code != null) {
+        await quality1.fetchOrderItemInfo(data.qio_code);
+        data.mat_name = quality1.qiOrderThing[0].mat_name;
+      } else if (data.prdr_code != null) {
+        await quality1.fetchOrderProdInfo(data.qio_code);
+        data.mat_name = quality1.qiProdInfo.prod_name;
+      }
+    });
     orderDisplay.value = true;
   } else {
     alert('저장을 먼저 진행해주세요.');

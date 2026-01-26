@@ -43,7 +43,7 @@ const selectQiProduceList = `SELECT p.prdr_code, w.prdp_code, p6.prod_code, p6.p
                              LEFT JOIN qio_tbl q ON q.prdr_code = p.prdr_code
                              LEFT JOIN prod_tbl p6 ON p.prod_code = p6.prod_code 
                              LEFT JOIN common_code c ON p6.prod_type = c.com_value 
-                             WHERE q.qio_code IS NULL
+                             WHERE q.qio_code IS NULL AND p.stat = 'b3'
                              ORDER BY prdp_code DESC`;
 
 // 발주서상세 불러오기

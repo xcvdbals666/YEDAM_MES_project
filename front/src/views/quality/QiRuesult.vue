@@ -181,12 +181,11 @@ const updateQiResult = async () => {
   let date = new Date();
   let dDay = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
 
-  if (quality1.qiOrderThing.length > 0) {
-    if (seletedMinbnd.value.req_qtt > quality1.qiOrderThing[0].req_qtt) {
-      alert('수량이 초과했습니다. 다시 지정해주세요.');
-      return;
-    }
+  if (seletedMinbnd.value.insp_vol < orderInput.insp_vol) {
+    alert('수량이 초과했습니다. 다시 지정해주세요.');
+    return;
   }
+
   for (let data of allQiList.value) {
     if (data.result == null || data.result == '') {
       alert('합격, 불합격이 선택되지 않았습니다.');
@@ -196,7 +195,7 @@ const updateQiResult = async () => {
 
   console.log('??');
   // i1 or i2일경우(생산)
-  if (quality1.qirProdInfo.length > 0) {
+  if (selectedMinbnd.value.mat_type == 'i1' || selectedMinbnd.value.mat_type == 'i2') {
     console.log('첫번째 검사 생산 전체 갯수');
     for (let data of allQiList.value) {
       if (data.result == '합격') {
@@ -213,7 +212,7 @@ const updateQiResult = async () => {
     }
 
     // i3 or i4일 경우(자재)
-  } else if (quality1.qiOrderThing.length > 0) {
+  } else if (selectedMinbnd.value.mat_type == 'i3' || selectedMinbnd.value.mat_type == 'i4') {
     console.log('첫번째 검사 자재 전체 갯수');
     for (let data of allQiList.value) {
       if (data.result == '합격') {
