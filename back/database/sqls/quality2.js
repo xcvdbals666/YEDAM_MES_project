@@ -20,6 +20,7 @@ SELECT
 
     bm.mat_name
 FROM qio_tbl q
+
 LEFT JOIN mpo_d_tbl md ON q.mpo_d_code = md.mpo_d_code
 LEFT JOIN bom_mat bm ON md.mat_code = bm.mat_code
 WHERE q.qio_code LIKE CONCAT('%', ?, '%')
@@ -56,8 +57,8 @@ SELECT
     qcr.range_top,
     qcr.range_bot,
     qir.qir_emp_code,
+    bm.mat_name, -- 자재명
 
-    -- 단위
     CASE c1.com_value
         WHEN 'h1' THEN 'kg'
         WHEN 'h2' THEN 't'
@@ -93,12 +94,20 @@ SELECT
     END AS result,
 
     qir.end_date
-
+    
 FROM qcr_tbl qcr
 
 /* 검사 결과 */
 LEFT JOIN qir_tbl qir
        ON qir.qcr_code = qcr.qcr_code
+
+/* 작업지시 상세 */
+LEFT JOIN mpo_d_tbl md
+       ON qir.mpo_d_code = md.mpo_d_code
+
+/* 자재 */
+LEFT JOIN bom_mat bm
+       ON md.mat_code = bm.mat_code
 
 /* 단위 공통코드 */
 LEFT JOIN common_code c1
@@ -112,8 +121,7 @@ LEFT JOIN common_code c2
 LEFT JOIN common_code c3
        ON c3.com_value = qir.result
 
-WHERE qir.qir_code IS NOT NULL
-`;
+WHERE qir.qir_code IS NOT NULL;`;
 
 //품질결과 디테일 조회
 const selectResultDetail = `
@@ -122,10 +130,11 @@ SELECT
        상단 - 검사 기본 정보
        =============================== */
     qir.qir_code            AS qir_code,          -- 검사결과코드
+    qio.qio_code			AS qio_code,
     qio.qio_date            AS qio_date,          -- 검사지시일
     qio.insp_vol            AS insp_vol,          -- 검사요청량
     qir.end_date            AS inspect_datetime,  -- 검사일시
-
+	
     /* 품목명 */
     CASE c2.com_value
         WHEN 'i1' THEN '완제품'
@@ -150,7 +159,7 @@ SELECT
     qcr.range_top           AS range_top,         -- 상한값
     qcr.range_bot           AS range_bot,         -- 하한값
     c1.com_value            AS unit,              -- 단위
-
+	bm.mat_name				AS mat_name,		  -- 자재명
     /* ===============================
        하단 - 검사 결과
        =============================== */
@@ -173,6 +182,9 @@ LEFT JOIN qir_tbl qir
 LEFT JOIN qio_tbl qio
        ON qir.qio_code = qio.qio_code
 
+LEFT JOIN mpo_d_tbl md ON qir.mpo_d_code = md.mpo_d_code
+LEFT JOIN bom_mat bm ON md.mat_code = bm.mat_code
+
 /* 단위 공통코드 */
 LEFT JOIN common_code c1
        ON c1.com_value = qcr.unit
@@ -185,7 +197,7 @@ LEFT JOIN common_code c2
 LEFT JOIN common_code c3
        ON c3.com_value = qir.result
 
-WHERE qir.qir_code IS NOT NULL;`
+WHERE qir.qir_code IS NOT NULL`;
 
 module.exports = {
   selectQiOrderList,

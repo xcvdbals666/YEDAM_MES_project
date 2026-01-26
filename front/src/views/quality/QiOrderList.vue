@@ -165,7 +165,7 @@ const fetchAll = async () => {
     <div class="flex items-center justify-between mt-2">
       <!-- 왼쪽 영역 -->
       <div class="flex gap-4">
-        <Button label="전체조회" severity="" @click="fetchAll" />
+        <Button icon="pi pi-undo" label="전체조회" severity="" @click="fetchAll" />
         <!--전체를 누르면 전체의 지시코드가 생김-->
       </div>
       <Button label="지시서 선택" severity="info" @click="openModal" />
