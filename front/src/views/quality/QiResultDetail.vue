@@ -1,22 +1,36 @@
 <!-- QiResultDetail.vue -->
 <script setup>
-import { ref, onMounted, computed } from 'vue';
-import { useRoute } from 'vue-router';
+import { ref, onMounted, computed, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { useQualityStore2 } from '@/stores/quality2';
 
 // 라우터 & 스토어
 const route = useRoute();
+const router = useRouter();
 const qualityStore = useQualityStore2();
 const qirCode = route.params.qir_code;
+
+const goToQiResultList = () => {
+  router.push({ name: 'QiResultList' }); // 라우터 이름 기반
+};
 
 // 상단 + 하단 (단건)
 // 선택한 qir_code 한 건만 가져오기
 const header = computed(() => {
-  return qualityStore.qiResultDetail?.[0] || {};
+  return qualityStore.qiResultDetail.find((item) => item.qir_code === qirCode) || {};
 });
-// 중단 (검사 기준 여러 건)
-const criteriaList = computed(() => qualityStore.qiResultDetail || []);
 
+const criteriaList = computed(() => {
+  return qualityStore.qiResultDetail.filter((item) => item.qir_code === qirCode) || [];
+});
+
+watch(
+  () => route.params.qir_code,
+  async (newCode) => {
+    if (!newCode) return;
+    await qualityStore.fetchQiResultDetail(newCode);
+  }
+);
 // 화면 표시용 ref
 const criteriaInput = ref({
   inspection_item: '',
@@ -101,6 +115,9 @@ const formatDate = (date) => {
     <div class="card flex flex-col gap-4 w-full">
       <div class="font-semibold text-xl flex justify-between">
         <div>검사 기본 정보</div>
+        <div class="flex gap-4 pb-2">
+          <Button label="목록으로" severity="" @click="goToQiResultList" />
+        </div>
       </div>
 
       <div class="grid grid-cols-4 gap-4">
