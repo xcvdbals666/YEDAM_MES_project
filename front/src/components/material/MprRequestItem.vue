@@ -110,8 +110,8 @@ const lackQtyTooltip = computed(() => {
       <h4 class="m-0">요청 자재</h4>
 
       <div class="flex gap-2">
-        <Button label="자재추가" @click="addRow" class="px-3 py-1 h-[35px] text-sm gap-2" :disabled="!isEditable" />
-        <Button label="자재삭제" severity="danger" class="px-3 py-1 h-[35px] text-sm gap-2" @click="removeRow" :disabled="!selectedRows.length || !isEditable" />
+        <Button icon="pi pi-plus" label="자재추가" @click="addRow" class="px-3 py-1 h-[35px] text-sm gap-2" :disabled="!isEditable" />
+        <Button icon="pi pi-trash" label="자재삭제" severity="danger" class="px-3 py-1 h-[35px] text-sm gap-2" @click="removeRow" :disabled="!selectedRows.length || !isEditable" />
       </div>
     </div>
 

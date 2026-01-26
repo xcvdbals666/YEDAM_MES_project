@@ -6,7 +6,6 @@ const props = defineProps({
 
 let qcrInfo = ref({ qcr_code: '', inspection_item: '', range_top: '', range_bot: '', note: '', unit: '', regdate: '', check_method: '' });
 qcrInfo.value = props.selectedQcr;
-qcrInfo.value.note = props.selectedQcr.type;
 
 // 선택감지
 let insertform = ref(false);
@@ -22,8 +21,8 @@ if (qcrInfo.value.qcr_code != '') {
       <div class="font-semibold text-xl" v-if="insertform != ''">품질기준정보 수정</div>
       <div class="font-semibold text-xl" v-else>품질기준정보 등록</div>
       <div v-if="insertform" class="flex flex gap-1">
-        <Button label="초기화" @click="$emit('resetQcrForm')" severity="contrast" />
-        <Button label="수정" @click="$emit('updateQcrForm', qcrInfo)" severity="success" />
+        <Button label="초기화" @click="$emit('resetQcrForm')" severity="secondary" />
+        <Button label="수정" @click="$emit('updateQcrForm', qcrInfo)" />
         <Button label="삭제" @click="$emit('delQcrForm', qcrInfo.qcr_code)" severity="danger" />
       </div>
 
@@ -52,7 +51,7 @@ if (qcrInfo.value.qcr_code != '') {
     <div class="flex flex-wrap gap-4 mt-6">
       <div class="flex flex-col grow basis-0 gap-2">
         <label for="name2">품목유형</label>
-        <Dropdown v-model="qcrInfo.note" :options="['i1', 'i2', 'i3', 'i4']" placeholder="선택" />
+        <Dropdown v-model="qcrInfo.note" :options="['완제품', '반제품', '부자재', '원자재']" placeholder="선택" />
       </div>
       <div class="flex flex-col grow basis-0 gap-2">
         <label for="email2">단위</label>

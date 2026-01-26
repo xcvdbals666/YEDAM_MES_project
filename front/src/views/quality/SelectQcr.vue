@@ -94,6 +94,10 @@ const sleep = (ms) => {
 };
 
 const addQiInfo = async (data) => {
+  if (data.length == 0) {
+    alert('검사항목을 선택해주세요');
+    return;
+  }
   let submitInfo = {};
   let count = ref(0);
   for (let info of data) {
@@ -146,10 +150,9 @@ const updateQcrForm = async (data) => {
   }
   if (count.value == submitInfo.length) {
     alert(`총${count.value}건 등록 완료`);
+    resetQcrForm();
     return;
   }
-
-  await resetQcrForm();
 };
 
 // qi삭제
@@ -207,11 +210,11 @@ const delQiInfo = async () => {
     <section class="col-span-7 flex-1 bg-white px-6 pt-5 pb-6 rounded-xl shadow-sm border border-gray-200 flex flex-col">
       <div class="flex items-center justify-end mb-2">
         <div class="flex flex gap-1">
-          <Button label="초기화" @click="resetQcrForm" severity="contrast" />
-          <Button label="저장" @click="updateQcrForm(selectedProducts)" severity="success" v-if="qualityStore.qiList.length > 0" />
+          <Button label="초기화" @click="resetQcrForm" severity="secondary" />
+          <Button label="저장" @click="updateQcrForm(selectedProducts)" v-if="qualityStore.qiList.length > 0" />
           <Button label="삭제" @click="delQiInfo" severity="danger" v-if="qualityStore.qiList.length > 0" />
 
-          <Button label="등록" @click="addQiInfo(selectedProducts)" severity="success" v-else />
+          <Button label="등록" @click="addQiInfo(selectedProducts)" v-else />
         </div>
       </div>
       <!------------------------------------------------------------------------------------------------->

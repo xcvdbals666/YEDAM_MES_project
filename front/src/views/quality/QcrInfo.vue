@@ -57,10 +57,6 @@ const selectedOrder = (orders) => {
 
   orderDisplay.value = false;
 };
-//코드로 찾기
-const search = () => {
-  qualityStore.fetchQcrList(qcr_code.value);
-};
 
 const formatDate = (date) => {
   if (!date) return '';
@@ -113,6 +109,7 @@ const fetchAll = async () => {
 
 // 상세정보보기
 const qcrDetail = (data) => {
+  console.log(data.data);
   data.data.regdate = formatDate(data.data.regdate);
   selectedQcr.value = data.data;
 
@@ -138,6 +135,16 @@ const insertQcrForm = async (data) => {
   console.log(data);
 
   data = { inspection_item: data.inspection_item, range_top: data.range_top, range_bot: data.range_bot, unit: data.unit, com_value: data.note, regdate: data.regdate, check_method: data.check_method };
+
+  if (data.com_value == '완제품') {
+    data.com_value = 'i1';
+  } else if (data.com_value == '반제품') {
+    data.com_value = 'i2';
+  } else if (data.com_value == '부자재') {
+    data.com_value = 'i3';
+  } else if (data.com_value == '원자재') {
+    data.com_value = 'i4';
+  }
 
   await axios //
     .get('api/quality/qcrcomvalue/' + data.unit)
@@ -167,6 +174,17 @@ const updateQcrForm = async (data) => {
   }
   data.regdate = `${new Date().getFullYear()}-${new Date().getMonth() + 1}-${new Date().getDate()}`;
   data = { qcr_code: data.qcr_code, inspection_item: data.inspection_item, range_top: data.range_top, range_bot: data.range_bot, unit: data.unit_type, com_value: data.note, regdate: data.regdate, check_method: data.check_method };
+
+  if (data.com_value == '완제품') {
+    data.com_value = 'i1';
+  } else if (data.com_value == '반제품') {
+    data.com_value = 'i2';
+  } else if (data.com_value == '부자재') {
+    data.com_value = 'i3';
+  } else if (data.com_value == '원자재') {
+    data.com_value = 'i4';
+  }
+
   console.log('수정정보: ', data);
 
   await axios //
@@ -235,7 +253,7 @@ const delQcrForm = async (data) => {
     <div class="flex items-center justify-between mt-2">
       <!-- 왼쪽 영역 -->
       <div class="flex gap-4">
-        <Button label="전체조회" severity="contrast" @click="fetchAll" />
+        <Button label="전체조회" @click="fetchAll" />
         <!--전체를 누르면 전체의 지시코드가 생김-->
       </div>
       <Button label="검사항목 선택" severity="info" @click="openModal" />
