@@ -155,7 +155,8 @@ export const useQuality1Store = defineStore('quality', {
     async fetchRemoveQir(data) {
       console.log(data);
       const response = await axios.delete('/api/quality/removeqir/' + data);
-      if (response.data.affectedRows == 1) {
+      console.log(response.data.affectedRows >= 1);
+      if (response.data.affectedRows >= 1) {
         alert('삭제완료');
       }
     },

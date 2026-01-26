@@ -14,9 +14,9 @@ const props = defineProps({
         <div class="flex flex-row gap-2">
           <Button type="button" label="삭제" @click="$emit('delQiOrder', orderInput.qio_code)" severity="danger" />
           <Button type="button" label="초기화" @click="$emit('resetQiOrder')" severity="secondary" />
-          <Button v-if="qualityState == 0" type="button" label="등록" @click="$emit('submitQiOrder')" severity="success" />
-          <Button v-else type="button" label="저장" @click="$emit('submitQiOrder')" severity="success" />
-          <Button type="button" label="검사지 불러오기" :disabled="callQiOrder" @click="$emit('searchOrderList')" />
+          <Button v-if="qualityState == 0" type="button" label="등록" @click="$emit('submitQiOrder')" />
+          <Button v-else type="button" label="저장" @click="$emit('submitQiOrder')" />
+          <Button type="button" label="검사지 불러오기" :disabled="callQiOrder" @click="$emit('searchOrderList')" severity="info" />
         </div>
       </div>
       <div class="grid grid-cols-4 gap-4">

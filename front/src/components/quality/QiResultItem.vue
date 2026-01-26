@@ -12,9 +12,9 @@ QiOrderItemInput.value = props.selectedMinbnd;
   <div class="flex mt-8">
     <div class="card flex flex-col gap-4 w-full">
       <div class="font-semibold text-xl flex justify-between">
-        <p>지시 정보</p>
+        지시 정보
         <div class="flex flex-row gap-2">
-          <Button type="button" label="검사지시 불러오기" @click="$emit('selectQiOrder')" :disabled="props.callQirList" />
+          <Button type="button" label="검사지시 불러오기" severity="info" @click="$emit('selectQiOrder')" :disabled="props.callQirList" />
         </div>
       </div>
       <div class="grid grid-cols-8 gap-20" style="margin-top: 20px">

@@ -19,9 +19,9 @@ QiOrderItemInput.value = props.selectedMinbnd;
       <div class="font-semibold text-xl flex justify-between">
         <div>기본 정보</div>
         <div class="flex flex-row gap-2">
-          <Button type="button" :disabled="callQiMinbnd" @click="$emit('searchList')" label="재고목록 불러오기" />
+          <Button type="button" :disabled="callQiMinbnd" @click="$emit('searchList')" label="재고목록 불러오기" severity="info" />
 
-          <Button type="button" :disabled="callQiProd" @click="$emit('searchProduceList')" label="생산목록 불러오기" />
+          <Button type="button" :disabled="callQiProd" @click="$emit('searchProduceList')" label="생산목록 불러오기" severity="info" />
         </div>
       </div>
       <div class="grid grid-cols-4 gap-4">

@@ -181,12 +181,7 @@ const updateQiResult = async () => {
   let date = new Date();
   let dDay = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
 
-  if (quality1.qirProdInfo.length > 0) {
-    if (seletedMinbnd.value.req_qtt > quality1.qirProdInfo[0].production_qtt) {
-      alert('수량이 초과했습니다. 다시 지정해주세요.');
-      return;
-    }
-  } else if (quality1.qiOrderThing.length > 0) {
+  if (quality1.qiOrderThing.length > 0) {
     if (seletedMinbnd.value.req_qtt > quality1.qiOrderThing[0].req_qtt) {
       alert('수량이 초과했습니다. 다시 지정해주세요.');
       return;
@@ -198,44 +193,40 @@ const updateQiResult = async () => {
       return;
     }
   }
-  // 첫번째 검사
-  if (orderInput.value.remaining == orderInput.value.insp_vol) {
-    console.log('??');
-    // i1 or i2일경우(생산)
-    if (quality1.qirProdInfo.length > 0) {
-      if (quality1.qirProdInfo[0].production_qtt == seletedMinbnd.value.req_qtt) {
-        console.log('첫번째 검사 생산 전체 갯수');
-        for (let data of allQiList.value) {
-          if (data.result == '합격') {
-            console.log("data.result == '합격'", info.value);
 
-            info.value = { result: 'g2', end_date: dDay, unpass_qtt: 0, pass_qtt: seletedMinbnd.value.req_qtt, unpass_rate: countRate(), qio_code: seletedMinbnd.value.qio_code, qcr_code: data.qcr_code };
-          } else if (data.result == '불합격') {
-            console.log('불합격');
+  console.log('??');
+  // i1 or i2일경우(생산)
+  if (quality1.qirProdInfo.length > 0) {
+    console.log('첫번째 검사 생산 전체 갯수');
+    for (let data of allQiList.value) {
+      if (data.result == '합격') {
+        console.log("data.result == '합격'", info.value);
 
-            info.value = { result: 'g1', end_date: dDay, unpass_qtt: seletedMinbnd.value.req_qtt, pass_qtt: 0, unpass_rate: countRate(), qio_code: seletedMinbnd.value.qio_code, qcr_code: data.qcr_code };
-          }
-          await quality1.fetchModifyQirList(info.value);
-        }
+        info.value = { result: 'g2', end_date: dDay, unpass_qtt: 0, pass_qtt: seletedMinbnd.value.req_qtt, unpass_rate: countRate(), qio_code: seletedMinbnd.value.qio_code, qcr_code: data.qcr_code };
+      } else if (data.result == '불합격') {
+        console.log('불합격');
+
+        info.value = { result: 'g1', end_date: dDay, unpass_qtt: seletedMinbnd.value.req_qtt, pass_qtt: 0, unpass_rate: countRate(), qio_code: seletedMinbnd.value.qio_code, qcr_code: data.qcr_code };
       }
-      // i3 or i4일 경우(자재)
-    } else if (quality1.qiOrderThing.length > 0) {
-      if (quality1.qiOrderThing[0].req_qtt == seletedMinbnd.value.req_qtt) {
-        console.log('첫번째 검사 자재 전체 갯수');
-        for (let data of allQiList.value) {
-          if (data.result == '합격') {
-            console.log('합격');
-            info.value = { result: 'g2', end_date: dDay, unpass_qtt: 0, pass_qtt: seletedMinbnd.value.req_qtt, unpass_rate: countRate(), qio_code: seletedMinbnd.value.qio_code, qcr_code: data.qcr_code };
-          } else if (data.result == '불합격') {
-            console.log('불합격');
+      await quality1.fetchModifyQirList(info.value);
+    }
 
-            info.value = { result: 'g1', end_date: dDay, unpass_qtt: seletedMinbnd.value.req_qtt, pass_qtt: 0, unpass_rate: countRate(), qio_code: seletedMinbnd.value.qio_code, qcr_code: data.qcr_code };
-          }
-          await quality1.fetchModifyQirList(info.value);
-        }
+    // i3 or i4일 경우(자재)
+  } else if (quality1.qiOrderThing.length > 0) {
+    console.log('첫번째 검사 자재 전체 갯수');
+    for (let data of allQiList.value) {
+      if (data.result == '합격') {
+        console.log('합격');
+        info.value = { result: 'g2', end_date: dDay, unpass_qtt: 0, pass_qtt: seletedMinbnd.value.req_qtt, unpass_rate: countRate(), qio_code: seletedMinbnd.value.qio_code, qcr_code: data.qcr_code };
+      } else if (data.result == '불합격') {
+        console.log('불합격');
+
+        info.value = { result: 'g1', end_date: dDay, unpass_qtt: seletedMinbnd.value.req_qtt, pass_qtt: 0, unpass_rate: countRate(), qio_code: seletedMinbnd.value.qio_code, qcr_code: data.qcr_code };
       }
+      await quality1.fetchModifyQirList(info.value);
     }
   }
+
   alert('합격, 불합격 등록 완료');
   await resetQiResult();
 };
@@ -265,6 +256,7 @@ const countRate = () => {
 // 검사 결과서 삭제
 const removeQiResult = async () => {
   if (quality1.qiOrderThing.length > 0) {
+    if (!confirm('삭제하시겠습니까?')) return;
     await quality1.fetchRemoveQir(quality1.qiOrderThing[0].qio_code);
     orderInput.value = { qio_code: '', qio_date: '', emp_name: '' }; // 검사지 불러오기 선택값
     seletedMinbnd.value = { mpo_d_code: '', mat_code: '', mat_name: '', req_qtt: '', note: '', mat_type: '' }; // Item 컴포넌트에 들어갈 값
@@ -272,9 +264,10 @@ const removeQiResult = async () => {
 
     resetQiResult();
   } else if (quality1.qirProdInfo.length > 0) {
+    if (!confirm('삭제하시겠습니까?')) return;
     await quality1.fetchRemoveQir(quality1.qirProdInfo[0].qio_code);
-    await resetQiResult();
   }
+  await resetQiResult();
 };
 
 // 검사 결과서 초기화버튼
