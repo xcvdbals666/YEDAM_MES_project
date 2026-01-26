@@ -47,7 +47,7 @@ const groupedOutboundList = computed(() => {
       grouped[item.out_req_code] = {
         out_req_code: item.out_req_code,
         out_req_date: item.out_req_date,
-        ord_amount: item.ord_amount,
+        ord_amount: 0,
         emp_name: item.emp_name,
         client_name: item.client_name,
         out_req_stat: item.out_req_stat,
@@ -61,6 +61,7 @@ const groupedOutboundList = computed(() => {
     grouped[item.out_req_code].products.push(item.prod_name);
 
     // 수량 합산
+    grouped[item.out_req_code].ord_amount += item.ord_amount || 0;
     grouped[item.out_req_code].outbnd_qtt += item.outbnd_qtt || 0;
   });
 
@@ -242,17 +243,21 @@ const handleExcelDownload = () => {
 
   // 각 출고 데이터를 엑셀 행으로 변환
   // 주의: headers 배열 순서와 동일하게 매핑해야 함
-  const mapFunction = (item) => [item.out_req_code, item.prod_name, item.ord_amount, item.outbnd_qtt, item.un_qtt, formatDate(item.out_req_date), item.emp_name, item.client_name, statusMap[item.stat]?.label || item.stat];
+  const mapFunction = (item) => [item.out_req_code, item.prod_display, item.ord_amount, item.outbnd_qtt, item.un_qtt, formatDate(item.out_req_date), item.emp_name, item.client_name, statusMap[item.out_req_stat]?.label || item.out_req_stat];
 
   // 엑셀 다운로드 실행
-  downloadExcel(selectedRows.value.length > 0 ? selectedRows.value : groupedOutboundList, headers, mapFunction, '출고조회');
+  downloadExcel(selectedRows.value.length > 0 ? selectedRows.value : groupedOutboundList.value, headers, mapFunction, '출고조회');
 };
 </script>
 <template>
   <Fluid class="card">
     <!-- 헤더 -->
-    <div class="mb-3 flex align-items-center">
-      <span class="text-2xl font-semibold">출고 조회</span>
+    <div class="header-section">
+      <div class="text-2xl font-semibold">출고 조회</div>
+      <div class="button-group">
+        <Button label="초기화" icon="pi pi-undo" severity="secondary" @click="resetSearch" />
+        <Button label="조회" icon="pi pi-search" severity="" @click="handleSearch" />
+      </div>
     </div>
     <!-- 검색 테이블 -->
     <table class="w-full">
@@ -303,10 +308,6 @@ const handleExcelDownload = () => {
         </tr>
       </tbody>
     </table>
-    <div class="button-group">
-      <Button label="초기화" severity="contrast" @click="resetSearch" />
-      <Button label="조회" severity="warn" @click="handleSearch" />
-    </div>
   </Fluid>
 
   <!-- 목록 -->
@@ -419,17 +420,22 @@ td {
   vertical-align: middle;
 }
 
+.header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
 .button-group {
   display: flex;
-  justify-content: center;
-  gap: 12px;
-  padding-top: 18px;
+  gap: 10px;
 }
 
 .button-group :deep(.p-button) {
   width: auto;
   min-width: auto;
-  padding: 10px 35px;
+  padding: 7px 15px;
 }
 
 .p-error {

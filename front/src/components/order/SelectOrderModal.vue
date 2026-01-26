@@ -113,15 +113,13 @@ const formatDate = (v) => {
     </DataTable>
 
     <template #footer>
-      <div class="button-group">
-        <Button label="취소" severity="contrast" @click="close" />
-        <Button label="확인" severity="warn" @click="confirm" />
-      </div>
+      <Button label="취소" severity="secondary" @click="close" />
+      <Button label="확인" severity="" @click="confirm" />
     </template>
   </Dialog>
 </template>
 <style scoped>
-.button-group {
+/* .button-group {
   display: flex;
   justify-content: center;
   gap: 12px;
@@ -132,5 +130,5 @@ const formatDate = (v) => {
   width: auto;
   min-width: auto;
   padding: 10px 35px;
-}
+} */
 </style>
