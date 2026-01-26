@@ -109,4 +109,68 @@ router.get(`/qcrlist`, async (req, res) => {
   res.send(list);
 });
 
+// 품질기준정보 등록
+router.post("/addqcrform", async (req, res) => {
+  let data = req.body;
+  console.log(data);
+  let list = await qualityService.addQcrForm(data);
+  res.send(list);
+});
+
+// 기준정보 등록 단위 공통코드 변환
+router.get(`/qcrcomvalue/:id`, async (req, res) => {
+  let id = req.params.id;
+  let list = await qualityService.findComValue(id);
+  res.send(list);
+});
+
+// 기준정보 수정
+router.put(`/modifyqcrinfo`, async (req, res) => {
+  let data = req.body;
+  console.log("data: ", data);
+  let list = await qualityService.modifyQcrInfo(data);
+  res.send(list);
+});
+
+// 기준정보 삭제
+router.delete(`/delqcrinfo/:id`, async (req, res) => {
+  let id = req.params.id;
+  let list = await qualityService.removeQcrInfo(id);
+  res.send(list);
+});
+
+// 제품별 품질검사항목 선택
+// 생산품 정보 불러오기
+router.get(`/qiprodinfo`, async (req, res) => {
+  let list = await qualityService.findAllProd();
+  res.send(list);
+});
+
+// 자재 정보 불러오기
+router.get(`/qibominfo`, async (req, res) => {
+  let list = await qualityService.findAllBom();
+  res.send(list);
+});
+
+// 제품별 검사항목 불러오기
+router.get(`/qilist/:id`, async (req, res) => {
+  let id = req.params.id;
+  let list = await qualityService.findAllQiList(id);
+  res.send(list);
+});
+
+// 제품별 검사항목 등록
+router.post("/addqiinfo", async (req, res) => {
+  let data = req.body;
+  let list = await qualityService.addQiInfo(data);
+  res.send(list);
+});
+
+// 검사항목 삭제
+router.delete(`/removeqi/:id`, async (req, res) => {
+  let id = req.params.id;
+  let list = await qualityService.removeQi(id);
+  res.send(list);
+});
+
 module.exports = router;

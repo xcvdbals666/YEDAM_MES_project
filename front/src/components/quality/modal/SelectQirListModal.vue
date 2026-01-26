@@ -1,6 +1,8 @@
 <!-- 검사 결과서 - 관리 결과서 불러오기 모달창-->
 <script setup>
-import { defineProps, watch } from 'vue';
+import { ref, defineProps, watch } from 'vue';
+
+let selectedProducts = ref([]);
 
 const props = defineProps({
   display: { type: Boolean, required: true },
@@ -21,7 +23,7 @@ watch(
 </script>
 <template>
   <Dialog v-model:visible="props.display" @update:visible="$emit('close')" :breakpoints="{ '960px': '75vw' }" :style="{ width: '50vw' }" :modal="true">
-    <DataTable ref="dt" v-model:selection="selectedProducts" :value="props.qiOrderList" dataKey="prdp_code" v-if="props.qiOrderList.length > 0">
+    <DataTable ref="dt" v-model:selection="selectedProducts" :value="props.qiOrderList" dataKey="qio_code" v-if="props.qiOrderList.length > 0">
       <template #header>
         <div class="flex flex-wrap gap-2 items-center justify-between">
           <h4 class="m-0">검사결과서 불러오기</h4>
@@ -29,6 +31,7 @@ watch(
       </template>
       <Column selectionMode="single" style="width: 3rem" :exportable="true"></Column>
       <Column field="qio_code" header="검사지시서  코드" sortable style="min-width: 12rem"></Column>
+      <Column field="mat_name" header="제품명" sortable style="min-width: 12rem"></Column>
       <Column field="emp_name" header="검사자" sortable style="min-width: 12rem"></Column>
       <Column field="start_date" header="시작일시" sortable style="min-width: 12rem"></Column>
     </DataTable>
