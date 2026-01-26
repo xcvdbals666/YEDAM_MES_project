@@ -407,7 +407,7 @@ const toggleReason = (event, product) => {
     <div class="flex mt-8">
       <div class="card flex flex-col gap-4 w-full">
         <div class="font-semibold text-xl flex justify-between items-center">
-          <div>제품</div>
+          <div>주문 상세</div>
           <div class="flex items-center gap-2">
             <Button label="제품삭제" severity="danger" class="min-w-[100px]" @click="deleteProduct" :disabled="orderInfo.ord_stat !== 'a1' && orderInfo.ord_stat != null" />
             <Button label="제품추가" severity="success" class="min-w-[100px]" @click="addProduct" :disabled="orderInfo.ord_stat !== 'a1' && orderInfo.ord_stat != null" />
