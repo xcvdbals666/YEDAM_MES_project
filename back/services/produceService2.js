@@ -65,11 +65,13 @@ const findByCodeOrNameProd = async (data) => {
 // 라인 검색
 const findByCodeOrNameLine = async (data) => {
   const query = `%${data.q}%`;
+  const prodCode = data.prod;
   let list = await mysql.query(
     "selectByCodeOrNameLine",
-    [query, query],
+    [query, query, prodCode],
     "produce2"
   );
+  console.log(query, prodCode, list);
   return list;
 };
 
@@ -201,7 +203,11 @@ const findByCodeOrNameMat = async (data) => {
 // BOM 불러오기
 const findBomMat = async (data) => {
   const { prdpCode } = data;
-  let list = await mysql.query("selectBomMat", [prdpCode], "produce2");
+  let list = await mysql.query(
+    "selectBomMat",
+    [prdpCode, prdpCode],
+    "produce2"
+  );
   return list;
 };
 

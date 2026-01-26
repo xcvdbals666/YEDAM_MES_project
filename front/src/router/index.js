@@ -14,8 +14,8 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      name: 'test',
-      component: () => import('@/views/test.vue')
+      name: 'main',
+      component: () => import('@/views/order/OrderList.vue')
     },
     ...productionRoutes1,
     ...productionRoutes2,
