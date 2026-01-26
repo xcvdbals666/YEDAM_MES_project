@@ -132,7 +132,7 @@ watch(
 </script>
 
 <template>
-  <Dialog v-model:visible="ordVisible" header="주문 상세 정보" :style="{ width: '60vw', maxWidth: '1000px' }" modal :draggable="false">
+  <Dialog v-model:visible="ordVisible" header="주문 상세 정보" :style="{ width: '60vw', maxWidth: '1000px' }" modal :draggable="false" @after-hide="closeModal">
     <div class="flex flex-col gap-6">
       <div>
         <h3 class="text-lg font-bold mb-3 text-gray-700">주문 정보</h3>
