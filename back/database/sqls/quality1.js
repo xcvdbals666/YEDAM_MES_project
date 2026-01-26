@@ -2,7 +2,8 @@
 // 전체조회
 const selectAllQiOrderCheckList = `SELECT q.qcr_code ,q.inspection_item, q.range_top, q.range_bot, q.check_method, q.com_value, c.note
                                    FROM qcr_tbl q
-                                   JOIN common_code c ON q.unit = c.com_value`;
+                                   JOIN common_code c ON q.unit = c.com_value
+                                   ORDER BY q.qcr_code`;
 
 // 검사지 전체 불러오기
 const selectAllQiOrderList = `SELECT q.qio_code, qio_date, e.emp_name, q.prdr_code, q.mpo_d_code
@@ -163,7 +164,7 @@ const selecAlltQcrList = `SELECT q.*, c.note, c.com_value type , c2.com_value, c
                           FROM qcr_tbl q
                           JOIN common_code c ON q.com_value = c.com_value
                           JOIN common_code c2 ON q.unit = c2.com_value
-                          ORDER BY q.qcr_code DESC`;
+                          ORDER BY q.qcr_code`;
 
 // 품질기준정보(생산) 코드 생성(qir_code)
 const createProdQcrCode = `SELECT  concat(

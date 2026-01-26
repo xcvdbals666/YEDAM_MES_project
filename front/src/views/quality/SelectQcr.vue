@@ -53,13 +53,22 @@ const selectedOrder = async (orders) => {
   console.log('selectedQcr: ', selectedQcr.value);
 
   await qualityStore.fetchQiList(orders.mat_code);
-  qualityStore.qcrList.forEach((data) => {
+  for (let data of qualityStore.qcrList) {
     qualityStore.qiList.forEach((info) => {
       if (info.qcr_code == data.qcr_code) {
         selectedProducts.value.push(data);
       }
     });
+  }
+
+  let typeQcr = ref([]);
+  qualityStore.qcrList.forEach((data) => {
+    if (data.type == selectedQcr.value.prod_type || data.type == selectedQcr.value.mat_type) {
+      typeQcr.value.push(data);
+    }
   });
+
+  qualityStore.qcrList = typeQcr.value;
 
   orderDisplay.value = false;
 };
@@ -78,6 +87,8 @@ const formatDate = (date) => {
 
 // 초기화버튼
 const resetQcrForm = async () => {
+  await qualityStore.fetchQcrList();
+
   selectedQcr.value = { qcr_code: '', inspection_item: '', range_top: '', range_bot: '', note: '', unit: '', regdate: '', check_method: '' };
   selectedQcr.value.regdate = `${new Date().getFullYear()}-${new Date().getMonth() + 1}-${new Date().getDate()}`;
   selectedProducts.value = [];
