@@ -123,6 +123,21 @@ const fetchAll = async () => {
   modalKey.value++; // 모달 강제 리셋
   await qualityStore.fetchQiOrderList();
 };
+
+const qioStatusMap = {
+  완료: {
+    label: '완료',
+    severity: 'success'
+  },
+  미완료: {
+    label: '미완료',
+    severity: 'danger'
+  },
+  미지시: {
+    label: '미지시',
+    severity: 'info'
+  }
+};
 </script>
 
 <!---->
@@ -206,24 +221,16 @@ const fetchAll = async () => {
         <Column header="제품명" field="mat_name" headerClass="table-header" bodyClass="table-body" sortable style="min-width: 12rem">
           <template #body="slotProps">
             <template v-if="!slotProps.data.mat_name">
-              <span class="text-gray-400">제품명 없음</span>
+              <span class="text-gray-400">제품명 미등록</span>
             </template>
             <template v-else>
               {{ formatDate(slotProps.data.mat_name) }}
             </template>
           </template>
         </Column>
-        <Column header="상태" field="qio_status" headerClass="table-header" bodyClass="table-body" sortable style="min-width: 1rem">
-          <template #body="slotProps">
-            <span
-              :class="{
-                'text-green-600 font-semibold': slotProps.data.qio_status === '완료',
-                'text-red-600 font-semibold': slotProps.data.qio_status === '미완료',
-                'text-blue-500 font-semibold': slotProps.data.qio_status !== '미지시' && slotProps.data.result !== '불합격'
-              }"
-            >
-              {{ slotProps.data.qio_status }}
-            </span>
+        <Column header="상태" field="qio_status" headerClass="table-header" bodyClass="table-body" sortable style="width: 100px">
+          <template #body="{ data }">
+            <Tag :value="qioStatusMap[data.qio_status]?.label || '알수없음'" :severity="qioStatusMap[data.qio_status]?.severity || 'secondary'" rounded />
           </template>
         </Column>
       </DataTable>
