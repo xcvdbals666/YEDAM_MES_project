@@ -2,10 +2,12 @@
 import { ref } from 'vue';
 import { useOrderStore2 } from '@/stores/order2';
 import SelectOrderModal from '@/components/order/SelectOrderModal.vue';
+import SelectOutReqModal from '@/components/order/SelectOutReqModal.vue';
 const user = JSON.parse(localStorage.getItem('user'));
 
 const orderStore = useOrderStore2();
-const showOrderModal = ref(false); // 모달 표시 여부
+const showOrderModal = ref(false); // 주문 모달 표시 여부
+const showOutReqModal = ref(false); // 출고 요청 모달 표시 여부
 const productList = ref([]); // 제품 목록
 
 // 초기 상태 정의
@@ -21,12 +23,17 @@ const getInitialOutInfo = () => ({
 
 const outInfo = ref(getInitialOutInfo()); // 출고 요청 정보
 
-// 모달 열기
+// 주문 모달 열기
 const openOrderModal = () => {
   showOrderModal.value = true;
 };
 
-// 모달에서 선택 시
+// 출고요청 모달 열기 
+const openOutReqModal = () => {
+  showOutReqModal.value = true;
+};
+
+// 주문 모달에서 선택 시
 const selectOrder = async (selectedOrder) => {
   // console.log('선택된 주문:', selectedOrder);
 
@@ -47,11 +54,40 @@ const selectOrder = async (selectedOrder) => {
   // 4. 제품 목록 복사
   productList.value = orderStore.orderProducts.map((product) => ({
     ...product,
-    out_amount: 0 // 출고 요청 수량(사용자 입력값)
+    out_req_amount: 0 // 출고 요청 수량(사용자 입력값)
   }));
 
   // 5. 모달 닫기
   showOrderModal.value = false;
+};
+
+// 출고요청 모달에서 선택 시
+const selectOutReq = async (selectedOutReq) => {
+  console.log('선택된 출고 요청:', selectedOutReq);
+
+  // 1. 스토어에 선택된 출고요청 정보 저장
+  orderStore.setSelectedOutReq(selectedOutReq);
+
+  // 2. out_req_code로 상세 정보 조회
+  await orderStore.fetchOutReqDetailByCode(selectedOutReq.out_req_code);
+
+  // 3. 출고 요청 정보 복사
+  outInfo.value.out_req_code = orderStore.outReqDetail.out_req_code;
+  outInfo.value.out_req_date = formatDate(orderStore.outReqDetail.out_req_date);
+  outInfo.value.ord_code = orderStore.outReqDetail.ord_code;
+  outInfo.value.ord_date = formatDate(orderStore.outReqDetail.ord_date);
+  outInfo.value.client_name = orderStore.outReqDetail.client_name;
+  outInfo.value.emp_name = orderStore.outReqDetail.emp_name;
+  outInfo.value.note = orderStore.outReqDetail.note;
+
+  // 4. 제품 목록 복사 (기존 출고요청 수량 포함)
+  productList.value = orderStore.outReqProducts.map((product) => ({
+    ...product,
+    out_req_amount: product.out_req_amount || 0 // 기존 출고요청 수량
+  }));
+
+  // 5. 모달 닫기
+  showOutReqModal.value = false;
 };
 
 // 초기화
@@ -76,7 +112,7 @@ const requestOutbound = async () => {
   }
 
   // 2. 출고수량이 있는 제품만 필터링
-  const validProducts = productList.value.filter((p) => p.out_amount > 0);
+  const validProducts = productList.value.filter((p) => p.out_req_amount > 0);
 
   if (validProducts.length === 0) {
     alert('출고할 제품의 수량을 입력해주세요.');
@@ -102,7 +138,7 @@ const requestOutbound = async () => {
       },
       products: validProducts.map((p) => ({
         prod_code: p.prod_code,
-        out_req_d_amount: p.out_amount,
+        out_req_d_amount: p.out_req_amount,
         ord_amount: p.ord_amount,
         com_value: p.prod_type_code
       }))
@@ -130,9 +166,9 @@ const requestOutbound = async () => {
 // 최대 출고 수량 실시간 체크
 const handleOutAmountInput = (data, event) => {
   if (event.value > data.pending_amount) {
-    data.out_amount = data.pending_amount;
+    data.out_req_amount = data.pending_amount;
   } else if (event.value < 0) {
-    data.out_amount = 0;
+    data.out_req_amount = 0;
   }
 };
 
@@ -155,7 +191,7 @@ const formatDate = (v) => {
       <div class="button-group">
         <Button label="초기화" severity="contrast" @click="resetFrom" />
         <Button label="주문정보 불러오기" @click="openOrderModal" />
-        <Button label="출고요청 불러오기" />
+        <Button label="출고요청 불러오기" @click="openOutReqModal" />
       </div>
     </div>
 
@@ -238,6 +274,9 @@ const formatDate = (v) => {
 
   <!-- 주문 검색 모달 -->
   <SelectOrderModal v-model:visible="showOrderModal" @select="selectOrder" />
+
+  <!-- 출고요청 검색 모달 -->
+  <SelectOutReqModal v-model:visible="showOutReqModal" @select="selectOutReq" />
 </template>
 <style scoped>
 .header-section {

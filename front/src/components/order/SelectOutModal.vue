@@ -11,6 +11,14 @@ const emit = defineEmits(['update:visible', 'select']);
 const selectedOutCode = ref(null);
 const keyword = ref(''); // 검색 입력값
 
+// 출고 상태 변환
+const statusMap = {
+  r1: { label: '출고 대기', severity: 'danger' },
+  r2: { label: '부분 출고', severity: 'warn' },
+  r3: { label: '출고 완료', severity: 'success' },
+  r4: { label: '요청 취소', severity: 'secondary'}
+};
+
 // 모달 열렸을 때
 watch(
   () => props.visible,
@@ -54,15 +62,15 @@ const formatDate = (v) => {
 </script>
 
 <template>
-  <Dialog header="출고 번호 선택" :visible="visible" modal style="width: 900px" @update:visible="close">
+  <Dialog header="출고요청 코드 선택" :visible="visible" modal style="width: 900px" @update:visible="close">
     <div class="mb-3">
-      <InputText v-model="keyword" placeholder="출고번호 / 주문번호 / 거래처를 입력해주세요" class="w-full" />
+      <InputText v-model="keyword" placeholder="출고요청코드 / 주문코드 / 거래처를 입력해주세요" class="w-full" />
     </div>
 
     <DataTable :value="store.outboundCode" v-model:selection="selectedOutCode" selectionMode="single" dataKey="out_req_code" scrollable scrollHeight="400px">
       <Column selectionMode="single" style="width: 3rem" />
-      <Column field="out_req_code" header="출고번호" />
-      <Column header="출고일자">
+      <Column field="out_req_code" header="출고요청 코드" />
+      <Column header="출고요청 일자">
         <template #body="{ data }">
           {{ formatDate(data.out_req_date) }}
         </template>
@@ -70,10 +78,9 @@ const formatDate = (v) => {
       <Column field="ord_code" header="주문번호" />
       <Column field="client_name" header="거래처" />
       <Column field="ord_amount" header="주문수량" />
-      <Column field="out_req_d_amount" header="총 출고수량" />
       <Column header="상태">
         <template #body="{ data }">
-          <Tag :value="data.ord_stat === 'a1' ? '출고완료' : '출고 대기'" :severity="data.ord_stat === 'a1' ? 'success' : 'warning'" rounded />
+          <Tag :value="statusMap[data.out_req_stat]?.label || '알수없음'" :severity="statusMap[data.out_req_stat]?.severity || 'info'" rounded />
         </template>
       </Column>
     </DataTable>
