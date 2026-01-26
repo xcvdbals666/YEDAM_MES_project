@@ -149,7 +149,7 @@ const askAI = async (prodCode, orderQty) => {
   };
   console.log(wkoRows);
   const model = genAI.getGenerativeModel({
-    model: "gemma-3-12b-it",
+    model: "gemma-3-4b-it",
   });
   const prompt = `
         당신은 노련한 생산 관리자입니다. 아래 공장 상황 데이터를 분석하여 납기 예정일을 계산해주세요.

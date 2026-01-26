@@ -227,6 +227,10 @@ const currentAiReason = ref({}); // 현재 클릭한 행의 AI 분석 결과 담
 
 // AI 분석 실행 함수
 const runAiCheck = async (product, event) => {
+  const isEditable = orderInfo.value.ord_stat === 'a1' || orderInfo.value.ord_stat === null;
+  if (!isEditable) {
+    return;
+  }
   if (!product.prod_code || !product.ord_amount) return;
 
   product.isLoading = true;
