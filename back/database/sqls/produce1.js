@@ -314,7 +314,7 @@ UPDATE prdr_tbl
 SET
   end_date = NOW(),
   production_qtt = ?,
-  perform_rate = ROUND(production_qtt / order_qtt),
+  perform_rate = ROUND(production_qtt / ord_qtt)*100,
   total_time = SEC_TO_TIME(TIMESTAMPDIFF(SECOND, start_date, NOW()))
 WHERE prdr_code = ?
   AND end_date IS NULL
