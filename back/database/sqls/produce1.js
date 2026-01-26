@@ -241,26 +241,60 @@ WHERE w.wko_code = ?
 //###############작업시작버튼 끝########################################
 
 // 특정 작업지시서의 설비목록과 그 작업진행(생산실적) 조회 (wko_tbl의 code기준으로)
+// const selectPrdrStatusByWko = `
+// SELECT
+//   ld.line_eq_code,
+//   e.eq_name,
+//   pd.prdr_d_code,
+//   pd.start_date,
+//   pd.end_date
+// FROM wko_tbl w
+// JOIN prdr_tbl r
+//   ON r.work_order_code = w.wko_code
+// JOIN prdr_d_tbl pd
+//   ON pd.prdr_code = r.prdr_code
+// RIGHT JOIN line_d_tbl ld
+//   ON ld.line_eq_code = pd.line_eq_code
+// JOIN eq_tbl e
+//   ON e.eq_code = ld.eq_code
+// WHERE w.wko_code = ?
+// ORDER BY ld.line_eq_code
+// `;
+
 const selectPrdrStatusByWko = `
 SELECT
   ld.line_eq_code,
   e.eq_name,
+  e.eq_type,
+  d.po_code,
+  d.no,
   pd.prdr_d_code,
   pd.start_date,
   pd.end_date
 FROM wko_tbl w
-JOIN prdr_tbl r
-  ON r.work_order_code = w.wko_code
-JOIN prdr_d_tbl pd
-  ON pd.prdr_code = r.prdr_code
-RIGHT JOIN line_d_tbl ld
-  ON ld.line_eq_code = pd.line_eq_code
+JOIN prod_proc_tbl pp
+  ON pp.prod_code = w.prod_code
+JOIN prod_proc_d_tbl d
+  ON d.prod_proc_code = pp.prod_proc_code
+
+JOIN line_d_tbl ld
+  ON ld.line_code = w.line_code
 JOIN eq_tbl e
   ON e.eq_code = ld.eq_code
+ AND e.eq_type = d.eq_type
+
+LEFT JOIN prdr_tbl r
+  ON r.work_order_code = w.wko_code
+LEFT JOIN prdr_d_tbl pd
+  ON pd.prdr_code = r.prdr_code
+ AND pd.line_eq_code = ld.line_eq_code
+
 WHERE w.wko_code = ?
-ORDER BY ld.line_eq_code
+ORDER BY d.no, ld.line_eq_code
 `;
 
+
+//######
 // 설비 단건 작업상황 조회
 const selectPrdrDDetail = `
 SELECT
@@ -277,6 +311,9 @@ SELECT
 FROM prdr_d_tbl pd
 WHERE pd.prdr_d_code = ?
 `;
+
+//설비 단건 make_qtt 앞전꺼 불러오기 
+
 
 //작업종료 버튼 클릭 시
 const updatePrdrDEnd = `
