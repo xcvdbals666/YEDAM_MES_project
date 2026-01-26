@@ -470,7 +470,6 @@ const toggleReason = (event, product) => {
                       @value-change="calculateTotal(product)"
                       show-buttons="true"
                       :disabled="orderInfo.ord_stat != 'a1' && orderInfo.ord_stat != null"
-                      @blur="runAiCheck(product)"
                     />
                     <InputGroupAddon>{{ product.unit_note || 'ea' }}</InputGroupAddon>
                   </InputGroup>
