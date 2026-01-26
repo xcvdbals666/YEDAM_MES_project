@@ -10,10 +10,9 @@ const props = defineProps({
 const emit = defineEmits(['update:visible', 'confirm']);
 const store = useOrderStore2();
 
-const lotList = ref([]); // 로트 목록
+const lotList = ref([]);
 const loading = ref(false);
 
-// 모달 열렸을 때 로트 조회
 watch(
   () => props.visible,
   async (val) => {
@@ -21,7 +20,6 @@ watch(
       loading.value = true;
       try {
         const lots = await store.fetchLotsByProdCode(props.productInfo.prod_code);
-        // out_amount 필드 추가 (사용자 입력값)
         lotList.value = lots.map((lot) => ({
           ...lot,
           lot_stock: Number(lot.lot_stock),
@@ -36,31 +34,26 @@ watch(
   }
 );
 
-// 총 출고수량 계산
 const totalOutAmount = computed(() => {
   return lotList.value.reduce((sum, lot) => sum + (lot.out_amount || 0), 0);
 });
 
-// 모달 닫기
 const close = () => {
   emit('update:visible', false);
-  lotList.value = []; // 초기화
+  lotList.value = [];
 };
 
-// 확인 버튼
 const confirm = () => {
-  // 1. 유효성 검사
   if (totalOutAmount.value === 0) {
     alert('출고수량을 입력해주세요.');
     return;
   }
 
   if (totalOutAmount.value > props.productInfo.max_amount) {
-    alert(`출고 가능 수량(${props.productInfo.max_amount})을 초과했습니다.`);
+    alert(`출고요청수량(${props.productInfo.max_amount})을 초과했습니다.`);
     return;
   }
 
-  // 2. 출고수량이 있는 로트만 필터링
   const selectedLots = lotList.value
     .filter((lot) => lot.out_amount > 0)
     .map((lot) => ({
@@ -68,7 +61,6 @@ const confirm = () => {
       out_qtt: lot.out_amount
     }));
 
-  // 3. 부모에게 전달
   emit('confirm', {
     total_amount: totalOutAmount.value,
     lots: selectedLots
@@ -77,16 +69,36 @@ const confirm = () => {
   close();
 };
 
-// 로트별 수량 입력 제한
+// 수정된 부분: 로트 재고수량과 출고요청수량 모두 체크
 const handleLotAmountInput = (lot, value) => {
-  if (value > lot.lot_stock) {
+  const currentLotAmount = Number(value) || 0;
+
+  // 1. 로트 재고수량 초과 체크
+  if (currentLotAmount > lot.lot_stock) {
     lot.out_amount = lot.lot_stock;
-  } else if (value < 0) {
-    lot.out_amount = 0;
+    return;
   }
+
+  // 2. 음수 체크
+  if (currentLotAmount < 0) {
+    lot.out_amount = 0;
+    return;
+  }
+
+  // 3. 출고요청수량 초과 체크
+  const otherLotsTotal = lotList.value.filter((l) => l.lot_num !== lot.lot_num).reduce((sum, l) => sum + (l.out_amount || 0), 0);
+
+  const maxAllowedForThisLot = props.productInfo.max_amount - otherLotsTotal;
+
+  if (currentLotAmount > maxAllowedForThisLot) {
+    lot.out_amount = Math.max(0, maxAllowedForThisLot);
+    alert(`출고요청수량(${props.productInfo.max_amount})을 초과할 수 없습니다.`);
+    return;
+  }
+
+  lot.out_amount = currentLotAmount;
 };
 
-// 날짜 포맷
 const formatDate = (v) => {
   if (!v) return '-';
   const d = new Date(v);
@@ -97,6 +109,7 @@ const formatDate = (v) => {
   return `${y}.${m}.${day}`;
 };
 </script>
+
 <template>
   <Dialog header="출고 수량 선택" :visible="visible" modal style="width: 700px" @update:visible="close">
     <!-- 제품 정보 -->
@@ -104,9 +117,12 @@ const formatDate = (v) => {
       <div class="grid grid-cols-2 gap-2">
         <div><strong>제품코드:</strong> {{ productInfo?.prod_code }}</div>
         <div><strong>제품명:</strong> {{ productInfo?.prod_name }}</div>
-        <div><strong>출고 가능 수량:</strong> {{ productInfo?.max_amount }}</div>
+        <div><strong>출고요청수량:</strong> {{ productInfo?.max_amount }}</div>
         <div>
-          <strong>현재 선택:</strong> <span :class="totalOutAmount > productInfo?.max_amount ? 'text-red-500' : 'text-blue-500'">{{ totalOutAmount }}</span>
+          <strong>현재 선택:</strong>
+          <span :class="totalOutAmount > productInfo?.max_amount ? 'text-red-500' : 'text-blue-500'">
+            {{ totalOutAmount }}
+          </span>
         </div>
       </div>
     </div>
@@ -145,17 +161,4 @@ const formatDate = (v) => {
   border-radius: 0.25rem;
   border: 1px solid #e5e7eb;
 }
-/* 
-.button-group {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-  padding-top: 18px;
-}
-
-.button-group :deep(.p-button) {
-  width: auto;
-  min-width: auto;
-  padding: 10px 35px;
-} */
 </style>
