@@ -57,6 +57,7 @@ const resetBtn = () => {
 };
 //총액 계산식
 const calculateTotal = (product) => {
+  product.ai_data = null;
   const amount = Number(product.ord_amount) || 0;
   const price = Number(product.prod_price) || 0;
   product.total_price = amount * price;
