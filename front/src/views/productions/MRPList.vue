@@ -138,7 +138,7 @@ const goDetail = (row) => {
   </Fluid>
 </template>
 
-<style>
+<style scoped>
 th,
 td {
   padding: 4px;
