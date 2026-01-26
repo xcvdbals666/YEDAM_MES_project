@@ -223,10 +223,17 @@ export const useProductionsStore = defineStore('productions', () => {
   // 설비 상세
   const prdrDDetail = ref(null);
 
+  //###########################
   //가져와서 채우기
   const fetchPrdrDDetail = async (prdrDCode) => {
     const res = await axios.get(`/api/produce/prdrDDetail/${prdrDCode}`);
     prdrDDetail.value = res.data;
+  };
+
+  //직전공정 make_qtt불러오기
+  const fetchPrdrDDetailRaw = async (prdrDCode) => {
+    const res = await axios.get(`/api/produce/prdrDDetail/${prdrDCode}`);
+    return res.data; // state에 저장 안함
   };
 
   const endWork = async (payload) => {
@@ -278,6 +285,7 @@ export const useProductionsStore = defineStore('productions', () => {
     fetchPrdrStatusByWko,
     prdrDDetail,
     fetchPrdrDDetail,
+    fetchPrdrDDetailRaw,
     endWork
   };
 });
