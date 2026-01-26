@@ -221,7 +221,7 @@ const qioStatusMap = {
         <Column header="제품명" field="mat_name" headerClass="table-header" bodyClass="table-body" sortable style="min-width: 12rem">
           <template #body="slotProps">
             <template v-if="!slotProps.data.mat_name">
-              <span class="text-gray-400">제품명 없음</span>
+              <span class="text-gray-400">제품명 미등록</span>
             </template>
             <template v-else>
               {{ formatDate(slotProps.data.mat_name) }}
