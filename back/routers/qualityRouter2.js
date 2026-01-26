@@ -28,9 +28,17 @@ router.get(`/qioresultlist`, async (req, res) => {
   res.send(list);
 });
 
-// 품질 검사 결과 목록 디테일
-router.get(`/qioresultdetail`, async (req, res) => {
-  let list = await qualityService2.findResultDetail();
-  res.send(list);
+// 품질 검사 결과 상세 조회
+router.get(`/qioresultdetail/:qir_code`, async (req, res) => {
+  try {
+    const { qir_code } = req.params; // URL param 받기
+    const detail = await qualityService2.findResultDetail(qir_code); // 서비스에 코드 전달
+    res.json(detail);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "서버 에러", error: err.message });
+  }
 });
+
+
 module.exports = router;
