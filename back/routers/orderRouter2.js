@@ -159,4 +159,54 @@ router.post("/outbound", async (req, res) => {
   }
 });
 
+// 출고 요청 취소
+router.put("/cancel", async (req, res) => {
+  try {
+    const { out_req_code } = req.body;
+
+    if (!out_req_code) {
+      return res.status(400).send({
+        success: false,
+        message: "출고요청 코드가 필요합니다.",
+      });
+    }
+
+    let result = await orderService.removeOutReq(out_req_code);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).send({
+        success: false,
+        message: "출고요청을 찾을 수 없습니다.",
+      });
+    }
+
+    res.send({
+      success: true,
+      message: "출고요청이 취소되었습니다.",
+      out_req_code,
+    });
+  } catch (error) {
+    console.error("출고 요청 취소 실패:", error);
+    res.status(500).send({
+      success: false,
+      message: "출고 요청 취소에 실패했습니다.",
+    });
+  }
+});
+
+// 출고 요청 수정
+router.put("/outbound-request/:out_req_code", async (req, res) => {
+  try {
+    const requestData = req.body;
+    let result = await orderService.updateOutboundRequest(requestData);
+    res.send(result);
+  } catch (error) {
+    console.error("출고 요청 수정 실패:", error);
+    res.status(500).send({
+      success: false,
+      message: "출고 요청 수정에 실패했습니다.",
+    });
+  }
+});
+
 module.exports = router;

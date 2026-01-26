@@ -9,6 +9,7 @@ const orderStore = useOrderStore2();
 const showOrderModal = ref(false); // 주문 모달 표시 여부
 const showOutReqModal = ref(false); // 출고 요청 모달 표시 여부
 const productList = ref([]); // 제품 목록
+const isEditMode = ref(false); // 수정 모드 여부
 
 // 초기 상태 정의
 const getInitialOutInfo = () => ({
@@ -28,7 +29,7 @@ const openOrderModal = () => {
   showOrderModal.value = true;
 };
 
-// 출고요청 모달 열기 
+// 출고요청 모달 열기
 const openOutReqModal = () => {
   showOutReqModal.value = true;
 };
@@ -50,6 +51,7 @@ const selectOrder = async (selectedOrder) => {
   outInfo.value.ord_date = formatDate(selectedOrder.ord_date);
   outInfo.value.client_name = orderStore.orderDetail?.client_name || '';
   outInfo.value.emp_name = user.emp_name;
+  outInfo.value.note = '';
 
   // 4. 제품 목록 복사
   productList.value = orderStore.orderProducts.map((product) => ({
@@ -59,11 +61,14 @@ const selectOrder = async (selectedOrder) => {
 
   // 5. 모달 닫기
   showOrderModal.value = false;
+
+  // 6. 신규 등록 모드로 설정
+  isEditMode.value = false;
 };
 
 // 출고요청 모달에서 선택 시
 const selectOutReq = async (selectedOutReq) => {
-  console.log('선택된 출고 요청:', selectedOutReq);
+  // console.log('선택된 출고 요청:', selectedOutReq);
 
   // 1. 스토어에 선택된 출고요청 정보 저장
   orderStore.setSelectedOutReq(selectedOutReq);
@@ -80,14 +85,23 @@ const selectOutReq = async (selectedOutReq) => {
   outInfo.value.emp_name = orderStore.outReqDetail.emp_name;
   outInfo.value.note = orderStore.outReqDetail.note;
 
+  // console.log('orderStore.outReqDetail: ', orderStore.outReqDetail);
+  // console.log('outInfo: ', outInfo);
+
   // 4. 제품 목록 복사 (기존 출고요청 수량 포함)
   productList.value = orderStore.outReqProducts.map((product) => ({
     ...product,
-    out_req_amount: product.out_req_amount || 0 // 기존 출고요청 수량
+    already_out_amount: product.ord_already_outbnd_qtt || 0, // 기출고수량
+    out_req_amount: product.out_req_amount || 0, // 기존 출고요청 수량
+    pending_amount: product.ord_amount - (product.ord_already_outbnd_qtt || 0) // 미출고수량
   }));
+  // console.log('orderStore.outReqProducts: ', orderStore.outReqProducts);
 
   // 5. 모달 닫기
   showOutReqModal.value = false;
+
+  // 6. 수정 모드로 설정
+  isEditMode.value = true;
 };
 
 // 초기화
@@ -101,6 +115,7 @@ const resetFrom = () => {
   outInfo.value = getInitialOutInfo(); // 출고 정보 초기화
   productList.value = []; // 제품 목록 초기화
   orderStore.resetOutboundRequest(); // 스토어 초기화
+  isEditMode.value = false;
 };
 
 // 출고 요청하기 버튼 클릭 시
@@ -111,50 +126,71 @@ const requestOutbound = async () => {
     return;
   }
 
-  // 2. 출고수량이 있는 제품만 필터링
-  const validProducts = productList.value.filter((p) => p.out_req_amount > 0);
+  // 2. 출고수량 필터링
+  const validProducts = productList.value.filter((p) => (isEditMode.value ? p.out_req_amount >= 0 : p.out_req_amount > 0));
 
   if (validProducts.length === 0) {
     alert('출고할 제품의 수량을 입력해주세요.');
     return;
   }
 
-  // 3. 확인 메시지
-  if (!confirm('출고 요청을 진행하시겠습니까?')) {
+  // 3. 확인 메시지 (수정/등록 구분)
+  const confirmMessage = isEditMode.value ? '출고 요청을 수정하시겠습니까?' : '출고 요청을 진행하시겠습니까?';
+
+  if (!confirm(confirmMessage)) {
     return;
   }
 
   try {
-    // 4. 백엔드로 보낼 데이터 구성
-    const requestData = {
-      outReqInfo: {
-        out_req_code: outInfo.value.out_req_code,
-        out_req_date: outInfo.value.out_req_date,
-        ord_predict_date: outInfo.value.ord_date,
-        note: outInfo.value.note || '',
-        ord_code: outInfo.value.ord_code,
-        mcode: user.emp_code,
-        client_code: orderStore.orderDetail.client_code
-      },
-      products: validProducts.map((p) => ({
-        prod_code: p.prod_code,
-        out_req_d_amount: p.out_req_amount,
-        ord_amount: p.ord_amount,
-        com_value: p.prod_type_code
-      }))
-    };
+    let result;
 
-    // 5. API 호출
-    const result = await orderStore.createOutboundRequest(requestData);
+    if (isEditMode.value) {
+      // === 수정 모드 ===
+      const updateData = {
+        outReqInfo: {
+          out_req_code: outInfo.value.out_req_code,
+          note: outInfo.value.note || '',
+          ord_code: outInfo.value.ord_code
+        },
+        products: validProducts.map((p) => ({
+          prod_code: p.prod_code,
+          out_req_d_amount: p.out_req_amount
+        }))
+      };
+
+      result = await orderStore.updateOutboundRequest(updateData);
+    } else {
+      // === 신규 등록 모드 ===
+      const requestData = {
+        outReqInfo: {
+          out_req_code: outInfo.value.out_req_code,
+          out_req_date: outInfo.value.out_req_date,
+          ord_predict_date: outInfo.value.ord_date,
+          note: outInfo.value.note || '',
+          ord_code: outInfo.value.ord_code,
+          mcode: user.emp_code,
+          client_code: orderStore.orderDetail.client_code
+        },
+        products: validProducts.map((p) => ({
+          prod_code: p.prod_code,
+          out_req_d_amount: p.out_req_amount,
+          ord_amount: p.ord_amount,
+          com_value: p.prod_type_code
+        }))
+      };
+
+      result = await orderStore.createOutboundRequest(requestData);
+    }
 
     // 6. 성공 처리
     if (result.success) {
       alert(result.message || '출고 요청이 완료되었습니다.');
 
-      // 컨펌 없이 바로 초기화
+      // 초기화
       outInfo.value = getInitialOutInfo();
       productList.value = [];
       orderStore.resetOutboundRequest();
+      isEditMode.value = false;
     }
   } catch (error) {
     // 7. 에러 처리
@@ -165,10 +201,49 @@ const requestOutbound = async () => {
 
 // 최대 출고 수량 실시간 체크
 const handleOutAmountInput = (data, event) => {
-  if (event.value > data.pending_amount) {
-    data.out_req_amount = data.pending_amount;
+  const maxAmount = Math.min(data.pending_amount, data.current_stock);
+
+  if (event.value > data.current_stock) {
+    alert('재고 수량을 초과할 수 없습니다.');
+    data.out_req_amount = maxAmount;
+  } else if (event.value > data.pending_amount) {
+    alert('미출고 수량을 초과할 수 없습니다.');
+    data.out_req_amount = maxAmount;
   } else if (event.value < 0) {
     data.out_req_amount = 0;
+  }
+};
+
+// 출고 요청 취소 버튼 클릭 시
+const cancelOutboundReq = async () => {
+  // 1. 유효성 검사
+  if (!outInfo.value.out_req_code) {
+    alert('출고 요청 코드가 없습니다.');
+    return;
+  }
+
+  // 2. 확인 메시지
+  if (!confirm('출고 요청을 취소하시겠습니까?')) {
+    return;
+  }
+
+  try {
+    // 3. API 호출
+    const result = await orderStore.cancelOutReq(outInfo.value.out_req_code);
+
+    // 4. 성공 처리
+    if (result.success) {
+      alert(result.message || '출고 요청이 취소되었습니다.');
+
+      // 초기화
+      outInfo.value = getInitialOutInfo();
+      productList.value = [];
+      orderStore.resetOutboundRequest();
+    }
+  } catch (error) {
+    // 5. 에러 처리
+    console.error('출고 요청 취소 실패:', error);
+    alert('출고 요청 취소에 실패했습니다. 다시 시도해주세요.');
   }
 };
 
@@ -236,7 +311,7 @@ const formatDate = (v) => {
 
     <div class="button-group2">
       <Button label="출고 요청하기" severity="info" @click="requestOutbound" />
-      <Button label="삭제" severity="danger" />
+      <Button label="삭제" severity="danger" @click="cancelOutboundReq" />
     </div>
   </Fluid>
 
@@ -276,7 +351,7 @@ const formatDate = (v) => {
   <SelectOrderModal v-model:visible="showOrderModal" @select="selectOrder" />
 
   <!-- 출고요청 검색 모달 -->
-  <SelectOutReqModal v-model:visible="showOutReqModal" @select="selectOutReq" />
+  <SelectOutReqModal v-model:visible="showOutReqModal" :exclude-statuses="['r2', 'r3', 'r4']" @select="selectOutReq" />
 </template>
 <style scoped>
 .header-section {

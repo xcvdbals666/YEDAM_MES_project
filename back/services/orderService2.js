@@ -274,10 +274,14 @@ const findOutReqDetailForOutbound = async (out_req_code) => {
   // Promise.all(): 여러 개의 비동기 작업을 동시에 실행하고 모두 끝날 때까지 기다림
   const [outReqInfo, products] = await Promise.all([
     mysql.query("selectByOutReqCode", [out_req_code], "order2"),
-    mysql.query("selectProdListByOutreq", [out_req_code, out_req_code], "order2")
+    mysql.query(
+      "selectProdListByOutreq",
+      [out_req_code, out_req_code],
+      "order2",
+    ),
   ]);
 
-    // 제품 목록의 숫자 필드들을 Number로 변환
+  // 제품 목록의 숫자 필드들을 Number로 변환
   const processedProducts = products.map((product) => ({
     ...product,
     out_req_amount: Number(product.out_req_amount),
@@ -294,53 +298,101 @@ const findOutReqDetailForOutbound = async (out_req_code) => {
 
 // 제품별 로트 재고 조회
 const findLotsByProdCode = async (prod_code) => {
-  let list = await mysql.query("selectLotsByProdCode", [prod_code, prod_code], "order2");
+  let list = await mysql.query(
+    "selectLotsByProdCode",
+    [prod_code, prod_code],
+    "order2",
+  );
   return list;
 };
 
 // 출고 등록
 const createOutbound = async (outboundData) => {
   const { outInfo, products } = outboundData;
-  
+
   try {
     // 1. 출고코드 생성 (출고요청코드 기준)
     const [codeResult] = await mysql.query(
-      'generateOutCode', 
-      [outInfo.out_req_code, outInfo.out_req_code], 
-      'order2'
+      "generateOutCode",
+      [outInfo.out_req_code, outInfo.out_req_code],
+      "order2",
     );
     const out_code = codeResult.new_out_code;
-    
+
     // 2. 각 제품의 각 로트별로 INSERT
     for (const product of products) {
       for (const lot of product.selectedLots) {
-        await mysql.query('insertOutbound', [
-          out_code,              // 출고코드
-          lot.out_qtt,           // req_qtt
-          lot.out_qtt,           // outbnd_qtt
-          outInfo.out_date,      // deadline (출고일)
-          outInfo.out_req_code,  // outbound_request_code
-          lot.lot_num,           // lot_num
-          product.prod_code,     // prod_code
-          outInfo.client_code,   // client_code
-          outInfo.mcode          // mcode
-        ], 'order2');
+        await mysql.query(
+          "insertOutbound",
+          [
+            out_code, // 출고코드
+            lot.out_qtt, // req_qtt
+            lot.out_qtt, // outbnd_qtt
+            outInfo.out_date, // deadline (출고일)
+            outInfo.out_req_code, // outbound_request_code
+            lot.lot_num, // lot_num
+            product.prod_code, // prod_code
+            outInfo.client_code, // client_code
+            outInfo.mcode, // mcode
+          ],
+          "order2",
+        );
       }
     }
-    
+
     // 3. 출고요청 상태 업데이트
-    await mysql.query('updateOutReqStat', [outInfo.out_req_code], 'order2');
-    
+    await mysql.query("updateOutReqStat", [outInfo.out_req_code], "order2");
+
     // 4. 주문 상태 업데이트
-    await mysql.query('updateOrdStat', [outInfo.ord_code], 'order2');
-    
+    await mysql.query("updateOrdStat", [outInfo.ord_code], "order2");
+
     return {
       success: true,
-      message: '출고 등록이 완료되었습니다.',
-      out_code: out_code
+      message: "출고 등록이 완료되었습니다.",
+      out_code: out_code,
     };
   } catch (error) {
-    console.error('출고 등록 오류:', error);
+    console.error("출고 등록 오류:", error);
+    throw error;
+  }
+};
+
+// 출고요청 삭제
+const removeOutReq = async (out_req_code) => {
+  let result = await mysql.query("deleteOutReq", [out_req_code], "order2");
+  return result;
+};
+
+// 출고 요청 수정
+const updateOutboundRequest = async (requestData) => {
+  const { outReqInfo, products } = requestData;
+
+  try {
+    // 1. 출고요청 UPDATE (note만)
+    await mysql.query(
+      "updateOutReq",
+      [outReqInfo.note, outReqInfo.out_req_code],
+      "order2",
+    );
+
+    // 2. 출고요청 상세 UPDATE (제품별 수량)
+    const updatePromises = products.map((product) =>
+      mysql.query(
+        "updateOutReqDetail",
+        [product.out_req_d_amount, outReqInfo.out_req_code, product.prod_code],
+        "order2",
+      ),
+    );
+
+    await Promise.all(updatePromises);
+
+    return {
+      success: true,
+      message: "출고 요청이 수정되었습니다.",
+      out_req_code: outReqInfo.out_req_code,
+    };
+  } catch (error) {
+    console.error("출고 요청 수정 오류:", error);
     throw error;
   }
 };
@@ -360,5 +412,7 @@ module.exports = {
   findAllOutReq,
   findOutReqDetailForOutbound,
   findLotsByProdCode,
-  createOutbound
+  createOutbound,
+  removeOutReq,
+  updateOutboundRequest,
 };

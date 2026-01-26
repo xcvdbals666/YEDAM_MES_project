@@ -1,6 +1,6 @@
 <!-- /src/viewsds/order/OutboundList.vue -->
 <script setup>
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, ref, watch, computed } from 'vue';
 import { useOrderStore2 } from '@/stores/order2';
 import SelectManagerModal from '@/components/order/SelectManagerModal.vue';
 import SelectOutModal from '@/components/order/SelectOutModal.vue';
@@ -35,6 +35,41 @@ const searchParams = ref({
 const errors = ref({
   outQty: '',
   date: ''
+});
+
+// 출고요청 코드별로 그룹화 (computed)
+const groupedOutboundList = computed(() => {
+  const grouped = {};
+
+  orderStore.outboundList.forEach((item) => {
+    // 새로운 출고요청 그룹 생성
+    if (!grouped[item.out_req_code]) {
+      grouped[item.out_req_code] = {
+        out_req_code: item.out_req_code,
+        out_req_date: item.out_req_date,
+        ord_amount: item.ord_amount,
+        emp_name: item.emp_name,
+        client_name: item.client_name,
+        out_req_stat: item.out_req_stat,
+        products: [],
+        outbnd_qtt: 0, // 실출고 수량 합계
+        un_qtt: 0 // 미출고 수량 합계
+      };
+    }
+
+    // 제품 추가
+    grouped[item.out_req_code].products.push(item.prod_name);
+
+    // 수량 합산
+    grouped[item.out_req_code].outbnd_qtt += item.outbnd_qtt || 0;
+  });
+
+  // 제품명 표시 형식 변환
+  return Object.values(grouped).map((group) => ({
+    ...group,
+    un_qtt: group.ord_amount - group.outbnd_qtt, // 주문수량 - 실출고수량
+    prod_display: group.products.length > 1 ? `${group.products[0]} 외 ${group.products.length - 1}건` : group.products[0]
+  }));
 });
 
 // 수량 실시간 검증
@@ -165,7 +200,7 @@ const handleSearch = async () => {
 
 // 페이지네이션
 const page = ref(1);
-const rows = ref(13);
+const rows = ref(10);
 
 // 페이지 변경
 const onPageChange = (e) => {
@@ -182,7 +217,7 @@ const statusMap = {
   r1: { label: '출고 대기', severity: 'danger' },
   r2: { label: '부분 출고', severity: 'warn' },
   r3: { label: '출고 완료', severity: 'success' },
-  r4: { label: '요청 취소', severity: 'secondary'}
+  r4: { label: '요청 취소', severity: 'secondary' }
 };
 
 // 날짜 포맷
@@ -203,14 +238,14 @@ const formatDate = (v) => {
  */
 const handleExcelDownload = () => {
   // 엑셀 파일의 컬럼명 (순서 중요)
-  const headers = ['출고번호', '출고제품', '요청수량', '실출고 수량', '미출고 수량', '출고요청일', '출고담당자', '거래처', '상태'];
+  const headers = ['출고번호', '출고제품', '주문수량', '실출고 수량', '미출고 수량', '출고요청일', '출고담당자', '거래처', '상태'];
 
   // 각 출고 데이터를 엑셀 행으로 변환
   // 주의: headers 배열 순서와 동일하게 매핑해야 함
-  const mapFunction = (item) => [item.out_req_code, item.prod_name, item.req_qtt, item.outbnd_qtt, item.un_qtt, formatDate(item.out_req_date), item.emp_name, item.client_name, statusMap[item.stat]?.label || item.stat];
+  const mapFunction = (item) => [item.out_req_code, item.prod_name, item.ord_amount, item.outbnd_qtt, item.un_qtt, formatDate(item.out_req_date), item.emp_name, item.client_name, statusMap[item.stat]?.label || item.stat];
 
   // 엑셀 다운로드 실행
-  downloadExcel(selectedRows.value.length > 0 ? selectedRows.value : orderStore.outboundList, headers, mapFunction, '출고조회');
+  downloadExcel(selectedRows.value.length > 0 ? selectedRows.value : groupedOutboundList, headers, mapFunction, '출고조회');
 };
 </script>
 <template>
@@ -285,7 +320,7 @@ const handleExcelDownload = () => {
     </div>
 
     <div class="flex-1 overflow-auto rounded-lg border border-gray-200">
-      <DataTable :value="orderStore.outboundList" v-model:selection="selectedRows" dataKey="out_req_code" :paginator="true" :rows="rows" :rowHover="true" showGridlines @page="onPageChange" :selectionPageOnly="true" tableLayout="fixed">
+      <DataTable :value="groupedOutboundList" v-model:selection="selectedRows" dataKey="out_req_code" :paginator="true" :rows="rows" :rowHover="true" showGridlines @page="onPageChange" :selectionPageOnly="true" tableLayout="fixed">
         <template #empty>
           <div class="text-center py-6 text-gray-400">데이터 없음</div>
         </template>
@@ -300,13 +335,13 @@ const handleExcelDownload = () => {
 
         <Column header="출고 제품" headerClass="table-header" bodyClass="table-body" style="width: 200px">
           <template #body="{ data }">
-            {{ data.prod_name }}
+            {{ data.prod_display }}
           </template>
         </Column>
 
-        <Column header="요청 수량" headerClass="table-header" bodyClass="table-body" style="width: 100px">
+        <Column header="주문 수량" headerClass="table-header" bodyClass="table-body" style="width: 100px">
           <template #body="{ data }">
-            {{ data.out_req_d_amount }}
+            {{ data.ord_amount }}
           </template>
         </Column>
 
