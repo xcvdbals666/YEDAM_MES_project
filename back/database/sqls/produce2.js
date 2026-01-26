@@ -121,10 +121,10 @@ WITH RECURSIVE bom_tree AS (
   JOIN bom_mat bm2 ON bm2.bom_code = bt2.bom_code
   WHERE btree.mat_code LIKE 'PROD-%'
 )
-SELECT b.mat_code, b.mat_name, ((SELECT planned_qtt FROM prdp_d_tbl WHERE prdp_code = ?) * b.req_qtt) AS req_qtt, (i.inbnd - o.outbnd + m.save_inven) AS inven, c.note AS unit_note, b.unit
+SELECT b.mat_code, b.mat_name, ((SELECT planned_qtt FROM prdp_d_tbl WHERE prdp_code = ?) * b.req_qtt) AS req_qtt, (IFNULL(i.inbnd, 0) - IFNULL(o.outbnd, 0) + IFNULL(m.save_inven, 0)) AS inven, c.note AS unit_note, b.unit
 FROM bom_tree b
-JOIN (SELECT mat_code, SUM(inbnd_qtt) AS inbnd FROM minbnd_tbl GROUP BY mat_code) i ON i.mat_code = b.mat_code
-JOIN (SELECT mat_code, SUM(outbnd_qtt) AS outbnd FROM moutbnd_tbl GROUP BY mat_code) o ON o.mat_code = b.mat_code
+LEFT JOIN (SELECT mat_code, SUM(inbnd_qtt) AS inbnd FROM minbnd_tbl GROUP BY mat_code) i ON i.mat_code = b.mat_code
+LEFT JOIN (SELECT mat_code, SUM(outbnd_qtt) AS outbnd FROM moutbnd_tbl GROUP BY mat_code) o ON o.mat_code = b.mat_code
 JOIN common_code c ON c.com_value = b.unit
 JOIN mat_tbl m ON m.mat_code = b.mat_code
 WHERE b.mat_code LIKE 'MAT-%'`;
