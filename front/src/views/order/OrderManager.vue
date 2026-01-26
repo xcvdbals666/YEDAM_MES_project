@@ -229,17 +229,16 @@ const currentAiReason = ref({}); // 현재 클릭한 행의 AI 분석 결과 담
 const runAiCheck = async (product, event) => {
   if (!product.prod_code || !product.ord_amount) return;
 
-  product.isLoading = true; // 로딩 시작 (행별로 관리 필요)
+  product.isLoading = true;
 
-  // 스토어 액션 호출 (구현하신 것)
   const result = await order.expectDateByAI(product.prod_code, product.ord_amount);
 
   if (result) {
-    product.delivery_date = result.estimated_date; // 날짜 자동 입력
-    product.ai_data = result; // 결과 저장 (risk_level, reason 등)
+    product.delivery_date = result.estimated_date;
+    product.ai_data = result;
   }
 
-  product.isLoading = false; // 로딩 끝
+  product.isLoading = false;
 };
 
 // 말풍선 보여주기 함수

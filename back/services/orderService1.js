@@ -1,9 +1,9 @@
 // 순수 기능에 대한 정의 => 함수(function)
 const mysql = require("../database/mapper.js");
 
-// const { GoogleGenerativeAI } = require("@google/generative-ai");
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-// const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 // 주문 전체 조회
 const findAllOrder = async () => {
   let list = await mysql.query("selectAllOrder", [], "order1");
@@ -147,8 +147,9 @@ const askAI = async (prodCode, orderQty) => {
     factory_load: factoryLoad,
     today: new Date().toISOString().split("T")[0],
   };
+  console.log(wkoRows);
   const model = genAI.getGenerativeModel({
-    model: "gemma-3n-e4b-it",
+    model: "gemma-3-12b-it",
   });
   const prompt = `
         당신은 노련한 생산 관리자입니다. 아래 공장 상황 데이터를 분석하여 납기 예정일을 계산해주세요.
@@ -173,9 +174,6 @@ const askAI = async (prodCode, orderQty) => {
         }
       `;
 
-  // ---------------------------------------------------------
-  // 3. [Response] AI 응답 처리
-  // ---------------------------------------------------------
   const result = await model.generateContent(prompt);
   const response = await result.response;
   console.log(response);

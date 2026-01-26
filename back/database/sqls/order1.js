@@ -142,10 +142,10 @@ const selectProductQty = `SELECT current_qty, prod_name FROM view_prod_stock WHE
 const selectMatStock = `SELECT 
              bm.mat_code,
              bm.mat_name,
-             (bm.req_qtt * ?) as need_qty,      -- 필요량 = (개당 소요량 * 생산수량)
-             IFNULL(v.current_qty, 0) as stock_qty -- 현재고 (만들어둔 뷰 활용)
+             (bm.req_qtt * ?) as need_qty,     
+             IFNULL(v.current_qty, 0) as stock_qty 
            FROM bom_tbl b
-           JOIN bom_mat bm ON b.bom_code = bm.bom_code  -- [핵심] 헤더와 상세를 코드로 연결
+           JOIN bom_mat bm ON b.bom_code = bm.bom_code  
            LEFT JOIN view_mat_stock v ON bm.mat_code = v.mat_code
            WHERE b.prod_code = ? 
              AND b.is_used = 'f2'`;
