@@ -39,7 +39,7 @@ const formatDate = (date) => {
       <Column selectionMode="multiple" style="width:3rem" />
       <Column field="qio_code" header="품질검사지시코드" />
       <Column field="inspect_type" header="검사유형" />
-      <Column field="qio_status" header="제품명"" />
+      <Column field="mat_name" header="제품명"" />
       <Column header="완료일자">
         <template #body="{ data }">
           {{ formatDate(data.insp_date) }}
