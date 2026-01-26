@@ -10,6 +10,14 @@ const router = useRouter();
 const qualityStore = useQualityStore2();
 const qirCode = route.params.qir_code;
 
+// 값 없을 때 공통 표시
+const displayValue = (value, emptyText = '데이터 없음') => {
+  if (value === null || value === undefined || value === '') {
+    return emptyText;
+  }
+  return value;
+};
+
 const goToQiResultList = () => {
   router.push({ name: 'QiResultList' }); // 라우터 이름 기반
 };
@@ -140,7 +148,7 @@ const formatDate = (date) => {
         <div class="col-span-2">
           <div class="grid grid-cols-3">
             <label class="col-span-1">자재명</label>
-            <InputText class="col-span-2" :value="header.mat_name" readonly />
+            <InputText class="col-span-2" :value="displayValue(header.mat_name)" readonly />
           </div>
         </div>
         <div class="col-span-2">
@@ -155,7 +163,7 @@ const formatDate = (date) => {
         <div class="col-span-2">
           <div class="grid grid-cols-3">
             <label class="col-span-1">검사일시</label>
-            <InputText class="col-span-2" :value="formatDate(header.inspect_datetime)" readonly />
+            <InputText class="col-span-2" :value="displayValue(formatDate(header.inspect_datetime))" readonly />
           </div>
         </div>
         <div class="col-span-2">
@@ -196,13 +204,13 @@ const formatDate = (date) => {
         <div class="col-span-2">
           <div class="grid grid-cols-3">
             <label class="col-span-1">상한 값</label>
-            <InputText class="col-span-2" v-model="criteriaInput.range_top" readonly />
+            <InputText class="col-span-2" :value="displayValue(criteriaInput.range_top)" readonly />
           </div>
         </div>
         <div class="col-span-2">
           <div class="grid grid-cols-3">
             <label class="col-span-1">하한 값</label>
-            <InputText class="col-span-2" v-model="criteriaInput.range_bot" readonly />
+            <InputText class="col-span-2" :value="displayValue(criteriaInput.range_bot)" readonly />
           </div>
         </div>
         <div class="col-span-2">
@@ -240,7 +248,7 @@ const formatDate = (date) => {
         <div class="col-span-2">
           <div class="grid grid-cols-3">
             <label class="col-span-1">검사 종료일</label>
-            <InputText class="col-span-2" :value="formatDate(resultInput.end_date)" readonly />
+            <InputText class="col-span-2" :value="displayValue(criteriaInput.end_date)" readonly />
           </div>
         </div>
       </div>
