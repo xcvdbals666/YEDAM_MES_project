@@ -286,7 +286,6 @@ SET
   make_qtt   = ?,
   def_qtt    = ?,
   proc_rate  = ?,
-  perform_rate = ROUND(production_qtt / order_qtt),
   total_time = SEC_TO_TIME(TIMESTAMPDIFF(SECOND, start_date, NOW()))
 WHERE prdr_d_code = ?
   AND end_date IS NULL
@@ -315,6 +314,7 @@ UPDATE prdr_tbl
 SET
   end_date = NOW(),
   production_qtt = ?,
+  perform_rate = ROUND(production_qtt / order_qtt),
   total_time = SEC_TO_TIME(TIMESTAMPDIFF(SECOND, start_date, NOW()))
 WHERE prdr_code = ?
   AND end_date IS NULL
