@@ -22,6 +22,9 @@ export const useProductionsStore = defineStore('productions', () => {
   const line = ref('');
   const name = ref('');
   const wko = ref('');
+  // const start = ref('');
+  // const end = ref('');
+
 
   // 작업지시서 목록 조회(검색 포함)
   const fetchWorkOrders = async (overrideParams = null) => {
@@ -140,7 +143,7 @@ export const useProductionsStore = defineStore('productions', () => {
         name: name.value || undefined,
         line: line.value || undefined,
         from: from.value || undefined,
-        to: to.value || undefined
+        to: to.value || undefined,
       };
 
       const res = await axios.get('/api/produce/workInProcessList', { params });

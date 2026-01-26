@@ -30,11 +30,7 @@ const convertDate = (d) => {
   return d.slice(0, 10);
 };
 
-const fmtDateTime = (v) => {
-  if (!v) return '';
-  const s = String(v);
-  return s.replace('T', ' ').slice(0, 19);
-};
+const fmtDateTime = (v) => { if (!v) return ''; const s = String(v); return s.replace('T', ' ').slice(0, 19); };
 
 const statusMap = {
   v1: '작업대기',
@@ -67,7 +63,7 @@ onMounted(async () => {
   await store.fetchWorkInProcess();
 });
 </script>
-
+<!--         <Button label="조회" severity="info" @click="onSearch" /> -->
 <template>
   <div class="card">
     <div class="flex justify-between items-center mb-4">
@@ -75,7 +71,7 @@ onMounted(async () => {
 
       <div class="flex gap-2">
         <Button label="초기화" severity="secondary" @click="onReset" />
-        <Button label="조회" severity="info" @click="onSearch" />
+        <Button label="조회" @click="onSearch" />
       </div>
     </div>
 
@@ -85,26 +81,32 @@ onMounted(async () => {
         <InputText v-model="wko" placeholder="작업지시번호 입력" class="w-full" />
       </div>
 
-      <div class="col-span-12 lg:col-span-4 flex items-center gap-3">
+      <div class="col-span-12 lg:col-span-5 flex items-center gap-3 lg:pl-4">
         <label class="w-28 shrink-0 text-lg font-semibold">작업지시명</label>
         <InputText v-model="wkoName" placeholder="작업지시명 입력" class="w-full" />
       </div>
 
-      <div class="col-span-12 lg:col-span-4 flex items-center gap-3">
-        <label class="w-28 shrink-0 text-lg font-semibold">제품명</label>
+      <div class="col-span-12 lg:col-span-3 flex items-center gap-3 lg:pl-4">
+        <label class="shrink-0 text-lg font-semibold">제품명</label>
         <InputText v-model="name" placeholder="제품명" class="w-full" />
       </div>
+
 
       <div class="col-span-12 lg:col-span-4 flex items-center gap-3">
         <label class="w-28 shrink-0 text-lg font-semibold">라인코드</label>
         <Dropdown v-model="line" :options="lines" optionLabel="line_code" optionValue="line_code" placeholder="라인 선택" class="w-full" showClear />
       </div>
 
-      <div class="col-span-12 lg:col-span-4 flex items-center gap-3">
+      <div class="col-span-12 lg:col-span-5 flex items-center gap-3 lg:pl-4">
         <label class="w-28 shrink-0 text-lg font-semibold">등록일자</label>
         <div class="flex gap-2 w-full">
-          <input type="date" class="p-inputtext w-full" v-model="from" />
-          <input type="date" class="p-inputtext w-full" v-model="to" />
+            <div class="flex-1">
+              <DatePicker :showIcon="true" :showButtonBar="true" v-model="from" dateFormat="yy-mm-dd" class="w-full"></DatePicker>
+            </div>
+              <span>-   </span>
+            <div class="flex-1">
+              <DatePicker :showIcon="true" :showButtonBar="true" v-model="to" dateFormat="yy-mm-dd" class="w-full"></DatePicker>
+            </div>
         </div>
       </div>
 
@@ -118,8 +120,7 @@ onMounted(async () => {
     <div class="flex justify-between items-center mb-3">
       <div class="font-semibold text-xl">작업진행 조회</div>
     </div>
-
-    <DataTable :value="wipList" :loading="wipLoading" dataKey="wko_code" scrollable scrollHeight="520px" selectionMode="single" @rowClick="(e) => goDetail(e.data)" class="w-full">
+    <DataTable :value="wipList" :paginator="true" :sortOrder="-1" :rows="8" :loading="wipLoading" dataKey="wko_code" scrollable scrollHeight="520px" selectionMode="single" @rowClick="(e) => goDetail(e.data)" class="w-full">
       <Column field="wko_code" header="작업지시코드" style="min-width: 160px" />
       <Column field="wko_name" header="작업지시명" style="min-width: 180px" />
       <Column field="prod_code" header="제품코드" style="min-width: 120px" />
@@ -141,13 +142,13 @@ onMounted(async () => {
 
       <Column header="시작시간" style="min-width: 160px">
         <template #body="{ data }">
-          {{ fmtDateTime(data.start_time) }}
+          {{ fmtDateTime(data.start_date) }}
         </template>
       </Column>
 
       <Column header="종료시간" style="min-width: 160px">
         <template #body="{ data }">
-          {{ fmtDateTime(data.end_time) }}
+          {{ fmtDateTime(data.end_date) }}
         </template>
       </Column>
 
