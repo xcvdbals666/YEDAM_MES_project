@@ -37,7 +37,7 @@ const stockStatusClass = (code) => {
 <template>
   <div v-if="loading" class="text-center py-12 text-gray-400">로딩중...</div>
 
-  <div v-else-if="detail" class="h-[600px] overflow-auto pr-2">
+  <div v-else-if="detail" class="h-[650px] overflow-auto pr-2">
     <!-- 기본 정보 -->
     <section class="mb-8 p-4 border rounded bg-gray-50">
       <h5 class="border-b border-blue-500 pb-1 mb-4 font-semibold">기본 정보</h5>
@@ -45,7 +45,7 @@ const stockStatusClass = (code) => {
       <div class="grid grid-cols-2 gap-x-4 gap-y-2">
         <div>자재코드 : {{ detail.mat_code }}</div>
         <div>자재명 : {{ detail.mat_name }}</div>
-        <div>분류 : {{ detail.mat_type_name }}</div>
+        <div>분류 : {{ detail.mat_type_name ? detail.mat_type_name : '-' }}</div>
         <div>단위 : {{ detail.unit_label }}</div>
         <div class="col-span-2">규격 : {{ detail.spec }}</div>
       </div>
@@ -85,7 +85,11 @@ const stockStatusClass = (code) => {
       <template v-if="inout.length">
         <DataTable :value="inout" scrollable scrollHeight="200px">
           <Column field="process_date" header="일시" />
-          <Column field="io_type" header="구분" />
+          <Column field="io_type" header="구분">
+            <template #body="{ data }">
+              {{ data.io_type === 'IN' ? '입고' : '출고' }}
+            </template>
+          </Column>
           <Column field="qty" header="수량" />
           <Column field="client_name" header="공급업체" />
           <Column field="emp_name" header="담당자" />
