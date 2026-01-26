@@ -198,7 +198,7 @@ const saveMpo = async () => {
         <div class="font-semibold text-xl">발주 기본정보</div>
         <div class="flex gap-2">
           <Button label="삭제" severity="danger" size="middle" @click="deleteMpo" />
-          <Button label="초기화" severity="contrast" size="middle" @click="resetForm" />
+          <Button label="초기화" icon="pi pi-undo" severity="secondary" size="middle" @click="resetForm" />
           <Button label="저장" severity="info" size="middle" @click="saveMpo" />
           <Button label="발주정보 불러오기" severity="success" size="middle" @click="showMpoModal = true" />
         </div>
