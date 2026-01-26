@@ -356,7 +356,15 @@ const toggleReason = (event, product) => {
                 <tr>
                   <th class="min-w-[150px] bg-gray-100 border border-gray-200 p-3 text-center font-bold text-gray-700">거래처담당자</th>
                   <td class="min-w-[275px] border border-gray-200 p-2">
-                    <Select v-model="orderInfo.mcode" :options="order.employees" option-label="emp_name" option-value="emp_code" class="w-full" :disabled="orderInfo.ord_stat !== 'a1' && orderInfo.ord_stat != null">
+                    <Select
+                      v-model="orderInfo.mcode"
+                      :options="order.employees"
+                      option-label="emp_name"
+                      option-value="emp_code"
+                      class="w-full"
+                      :disabled="orderInfo.ord_stat !== 'a1' && orderInfo.ord_stat != null"
+                      placeholder="담당자를 선택해주세요."
+                    >
                       <template #option="slotProps">
                         <div class="flex items-center">
                           <span>{{ `${slotProps.option.emp_name} (${slotProps.option.emp_code})` }}</span>
