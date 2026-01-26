@@ -251,14 +251,12 @@ const selectMprDExists = `SELECT 1
 // 재고현황 목록 + 검색
 const selectMaterialStockList = `SELECT m.mat_code, m.mat_name, bm.mat_type, cc_i.note AS mat_type_name,
                                         IFNULL(s.current_qty, 0) AS current_qty, IFNULL(m.save_inven, 0) AS save_inven,
-
                                         CASE WHEN IFNULL(m.save_inven, 0) = 0 THEN 'd2'
-                                             WHEN IFNULL(s.current_qty, 0) < IFNULL(m.save_inven, 0) THEN 'd4'
-                                             WHEN IFNULL(s.current_qty, 0) < IFNULL(m.save_inven, 0) * 1.2 THEN 'd1'
-                                             WHEN IFNULL(s.current_qty, 0) <= IFNULL(m.save_inven, 0) * 2 THEN 'd2'
+                                             WHEN IFNULL(s.current_qty, 0) < m.save_inven THEN 'd4'
+                                             WHEN IFNULL(s.current_qty, 0) < m.save_inven * 1.2 THEN 'd1'
+                                             WHEN IFNULL(s.current_qty, 0) < m.save_inven * 2 THEN 'd2'
                                              ELSE 'd3'
-                                        END AS stock_status_code, cc_d.note AS stock_status_name
-
+                                        END AS stock_status_code , cc_d.note AS stock_status_name
                                  FROM mat_tbl m
                                  LEFT JOIN bom_mat bm ON bm.mat_code = m.mat_code
                                  LEFT JOIN common_code cc_i ON cc_i.group_value = '0I'
@@ -272,20 +270,19 @@ const selectMaterialStockList = `SELECT m.mat_code, m.mat_name, bm.mat_type, cc_
                                        GROUP BY mat_code) s ON s.mat_code = m.mat_code
                                  LEFT JOIN common_code cc_d ON cc_d.group_value = '0D'
                                                                AND cc_d.com_value = (CASE WHEN IFNULL(m.save_inven, 0) = 0 THEN 'd2'
-                                                                                          WHEN IFNULL(s.current_qty, 0) < IFNULL(m.save_inven, 0) THEN 'd4'
-                                                                                          WHEN IFNULL(s.current_qty, 0) < IFNULL(m.save_inven, 0) * 1.2 THEN 'd1'
-                                                                                          WHEN IFNULL(s.current_qty, 0) <= IFNULL(m.save_inven, 0) * 2 THEN 'd2'
-                                                                                          ELSE 'd3'
-                                                                                          END)
+                                             WHEN IFNULL(s.current_qty, 0) < m.save_inven THEN 'd4'
+                                             WHEN IFNULL(s.current_qty, 0) < m.save_inven * 1.2 THEN 'd1'
+                                             WHEN IFNULL(s.current_qty, 0) < m.save_inven * 2 THEN 'd2'
+                                             ELSE 'd3'
+                                            END)
                                  WHERE m.is_used = 'f2'
                                        AND (? = '' OR m.mat_code LIKE CONCAT('%', ?, '%') OR m.mat_name LIKE CONCAT('%', ?, '%'))
                                        AND (? = 'ALL' OR bm.mat_type = ?)
-                                       AND (? = 'ALL' OR (CASE
-                                                            WHEN IFNULL(m.save_inven, 0) = 0 THEN 'd2'
-                                                            WHEN IFNULL(s.current_qty, 0) < IFNULL(m.save_inven, 0) THEN 'd4'
-                                                            WHEN IFNULL(s.current_qty, 0) < IFNULL(m.save_inven, 0) * 1.2 THEN 'd1'
-                                                            WHEN IFNULL(s.current_qty, 0) <= IFNULL(m.save_inven, 0) * 2 THEN 'd2'
-                                                            ELSE 'd3'
+                                       AND (? = 'ALL' OR (CASE WHEN IFNULL(m.save_inven, 0) = 0 THEN 'd2'
+                                             WHEN IFNULL(s.current_qty, 0) < m.save_inven THEN 'd4'
+                                             WHEN IFNULL(s.current_qty, 0) < m.save_inven * 1.2 THEN 'd1'
+                                             WHEN IFNULL(s.current_qty, 0) < m.save_inven * 2 THEN 'd2'
+                                             ELSE 'd3'
                                                           END) = ?)
                                  ORDER BY m.mat_code`;
 
@@ -296,10 +293,10 @@ const selectMaterialStockDetail = `SELECT m.mat_code, m.mat_name, bm.mat_type,
                                           IFNULL(s.current_qty, 0) AS current_qty,
                                           IFNULL(m.save_inven, 0) AS save_inven,
                                           CASE WHEN IFNULL(m.save_inven, 0) = 0 THEN 'd2'
-                                               WHEN IFNULL(s.current_qty, 0) < IFNULL(m.save_inven, 0) THEN 'd4'
-                                               WHEN IFNULL(s.current_qty, 0) < IFNULL(m.save_inven, 0) * 1.2 THEN 'd1'
-                                               WHEN IFNULL(s.current_qty, 0) <= IFNULL(m.save_inven, 0) * 2 THEN 'd2'
-                                               ELSE 'd3'
+                                             WHEN IFNULL(s.current_qty, 0) < m.save_inven THEN 'd4'
+                                             WHEN IFNULL(s.current_qty, 0) < m.save_inven * 1.2 THEN 'd1'
+                                             WHEN IFNULL(s.current_qty, 0) < m.save_inven * 2 THEN 'd2'
+                                             ELSE 'd3'
                                           END AS stock_status_code, cc_d.note AS stock_status_name
                                    FROM mat_tbl m
                                    LEFT JOIN bom_mat bm ON bm.mat_code = m.mat_code
@@ -313,12 +310,11 @@ const selectMaterialStockDetail = `SELECT m.mat_code, m.mat_name, bm.mat_type,
                                                     FROM moutbnd_tbl) x
                                                     GROUP BY mat_code) s ON s.mat_code = m.mat_code 
                                    LEFT JOIN common_code cc_d ON cc_d.group_value = '0D'
-                                                                 AND cc_d.com_value = (CASE
-                                                                                          WHEN IFNULL(m.save_inven, 0) = 0 THEN 'd2'
-                                                                                          WHEN IFNULL(s.current_qty, 0) < IFNULL(m.save_inven, 0) THEN 'd4'
-                                                                                          WHEN IFNULL(s.current_qty, 0) < IFNULL(m.save_inven, 0) * 1.2 THEN 'd1'
-                                                                                          WHEN IFNULL(s.current_qty, 0) <= IFNULL(m.save_inven, 0) * 2 THEN 'd2'
-                                                                                          ELSE 'd3'
+                                                                 AND cc_d.com_value = (CASE WHEN IFNULL(m.save_inven, 0) = 0 THEN 'd2'
+                                             WHEN IFNULL(s.current_qty, 0) < m.save_inven THEN 'd4'
+                                             WHEN IFNULL(s.current_qty, 0) < m.save_inven * 1.2 THEN 'd1'
+                                             WHEN IFNULL(s.current_qty, 0) < m.save_inven * 2 THEN 'd2'
+                                             ELSE 'd3'
                                                                                        END )
 
                                    WHERE m.mat_code = ? AND m.is_used = 'f2'`;

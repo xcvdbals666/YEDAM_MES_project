@@ -10,7 +10,8 @@ const selectAllQiOrderList = `SELECT q.qio_code, qio_date, e.emp_name, q.prdr_co
                               JOIN emp_tbl e ON q.emp_code = e.emp_code
                               LEFT JOIN qir_tbl q2 ON q.qio_code = q2.qio_code
                               WHERE q2.qir_code IS NULL
-                              GROUP BY q.qio_code`;
+                              GROUP BY q.qio_code
+                              ORDER BY q.qio_date DESC`;
 
 // 검사지에 해당하는 자재 및 검사항목 불러오기
 const selectQiOrderItem = `SELECT q.qio_code, q.insp_vol, m.deadline, b.mat_name, b.mat_code, b.mat_type, m.req_qtt, c.note, c2.com_value, c2.note, q2.inspection_item    
@@ -24,7 +25,7 @@ const selectQiOrderItem = `SELECT q.qio_code, q.insp_vol, m.deadline, b.mat_name
                            GROUP BY q.qio_code, q2.inspection_item`;
 
 // 검사지에 해당하는 생산 및 검사항목
-const selectQiProdInfo = `SELECT p.prdr_code, w.prdp_code, p6.prod_name, p6.prod_type, p5.end_date, p.production_qtt, c.note, q.qio_code
+const selectQiProdInfo = `SELECT p.prdr_code, w.prdp_code, p6.prod_name, p6.prod_code,  p6.prod_type, p5.end_date, p.production_qtt, c.note, q.qio_code
                              FROM prdr_tbl p 
                              LEFT JOIN wko_tbl w ON p.work_order_code = w.wko_code
                              LEFT JOIN prdp_tbl p5 ON w.prdp_code = p5.prdp_code
@@ -34,7 +35,7 @@ const selectQiProdInfo = `SELECT p.prdr_code, w.prdp_code, p6.prod_name, p6.prod
                              WHERE q.qio_code = ?`;
 
 // 생산실적 불러오기
-const selectQiProduceList = `SELECT p.prdr_code, w.prdp_code, p6.prod_name, p6.prod_type, p5.end_date, p.production_qtt, c.note
+const selectQiProduceList = `SELECT p.prdr_code, w.prdp_code, p6.prod_code, p6.prod_name, p6.prod_type, p5.end_date, p.production_qtt, c.note
                              FROM prdr_tbl p 
                              LEFT JOIN wko_tbl w ON p.work_order_code = w.wko_code
                              LEFT JOIN prdp_tbl p5 ON w.prdp_code = p5.prdp_code
@@ -118,7 +119,7 @@ const insertQir_tblPro = `INSERT INTO qir_tbl SET qir_code = ?,
                                                qcr_code = ?`;
 
 // 검사지 정보 불러오기(생산일 경우)
-const selectQirProdInfo = `SELECT w.prdp_code,q.qio_code, p.end_date, p.production_qtt, p.prdr_code, c.note, p4.po_code, p4.po_name, p7.prod_name, p7.prod_type, c2.note AS type  
+const selectQirProdInfo = `SELECT w.prdp_code,q.qio_code, p.end_date, p.production_qtt, p.prdr_code, c.note, p4.po_code, p4.po_name,p7.prod_code, p7.prod_name, p7.prod_type, c2.note AS type  
                              FROM prdr_tbl p 
                              LEFT JOIN qio_tbl q ON p.prdr_code = q.prdr_code
                              LEFT JOIN common_code c ON p.stat = c.com_value  
@@ -156,11 +157,99 @@ const deleteQir = `DELETE
                    FROM qir_tbl
                    WHERE qio_code = ?`;
 
-// 검사결과서 삭제
-const selecAlltQcrList = `SELECT q.*, c.note, c2.note unit 
+// 품질기준정보관리
+// 품질기준정보 불러오기
+const selecAlltQcrList = `SELECT q.*, c.note, c.com_value type , c2.com_value, c2.note unit , c2.com_value 'unit_type' 
                           FROM qcr_tbl q
                           JOIN common_code c ON q.com_value = c.com_value
-                          JOIN common_code c2 ON q.unit = c2.com_value`;
+                          JOIN common_code c2 ON q.unit = c2.com_value
+                          ORDER BY q.qcr_code DESC`;
+
+// 품질기준정보(생산) 코드 생성(qir_code)
+const createProdQcrCode = `SELECT  concat(
+                              'QCR-PROD-',
+                               LPAD(ifnull((SELECT MAX(SUBSTR(qcr_code, -3))
+                                            FROM qcr_tbl
+                                            WHERE SUBSTR(qcr_code, 5, 4) = 'PROD'
+                                            FOR UPDATE),0) + 1
+                                     , 3 , '0')) AS newQcr`;
+
+// 품질기준정보(자재) 코드 생성(qir_code)
+const createBomQcrCode = `SELECT  concat(
+                              'QCR-MAT-',
+                               LPAD(ifnull((SELECT MAX(SUBSTR(qcr_code, -3))
+                                            FROM qcr_tbl
+                                            WHERE SUBSTR(qcr_code, 5, 3) = 'MAT'
+                                            FOR UPDATE),0) + 1
+                                     , 3 , '0')) AS newQcr`;
+
+// 품질기준정보 등록
+const insertQcr_tbl = `INSERT INTO qcr_tbl SET qcr_code = ?,
+                                               inspection_item = ?,
+                                               range_top = ?,
+                                               range_bot = ?,
+                                               com_value= ?,
+                                               unit = ?,
+                                               regdate = ?,
+                                               check_method = ?
+                                               `;
+
+// 기준정보 등록 단위 공통코드 변환
+const selectCommonCode = `SELECT com_value
+                            FROM common_code
+                            WHERE note = ?`;
+
+// 품질기준정보 수정
+const updateQcr_tbl = `UPDATE qcr_tbl SET inspection_item = ?,
+                                          range_top = ?,
+                                          range_bot = ?,
+                                          com_value= ?,
+                                          unit = ?,
+                                          regdate = ?,
+                                          check_method = ?
+                       WHERE qcr_code = ?`;
+
+// 검사결과서 삭제
+const deleteQcr = `DELETE 
+                   FROM qcr_tbl
+                   WHERE qcr_code = ?`;
+
+// 제품별 품질검사항목 선택
+//생산품 정보 불러오기
+const selectAllProd = `SELECT p.prod_code mat_code, p.prod_name mat_name, p.regdate, p.note,p.unit, c.note 'unit_type',p.com_value, c2.note com_value_name,p.prod_type, c3.note unit_name
+                       FROM prod_tbl p
+                       JOIN common_code c ON p.unit = c.com_value
+                       JOIN common_code c2 ON p.com_value = c2.com_value
+                       JOIN common_code c3 ON p.prod_type = c3.com_value`;
+
+//자재 정보 불러오기
+const selectAllBom = `SELECT b.*, c.note mat_type_name, c2.note unit_name
+                       FROM bom_mat b
+                       JOIN common_code c ON b.unit = c.com_value
+                       JOIN common_code c2 ON b.mat_type = c2.com_value`;
+
+// 제품별 검사항목 불러오기
+const selectAllQiList = `SELECT *
+                         FROM qi_tbl                       
+                         where prod_code = ?`;
+
+// 새로운 qi코드
+const createNewQi = `SELECT  concat(
+                              'QI-',
+                               LPAD(ifnull((SELECT MAX(SUBSTR(qi_code, -3))
+                                            FROM qi_tbl                                            
+                                            FOR UPDATE),0) + 1
+                                     , 3 , '0')) AS newQi`;
+
+// 제품별 검사항목 등록
+const insertQi_tbl = `INSERT INTO qi_tbl SET qi_code = ?,
+                                             prod_code = ?,
+                                             qcr_code = ?`;
+
+// 제품별 검사항목 삭제
+const deleteQi = `DELETE 
+                   FROM qi_tbl
+                   WHERE prod_code = ?`;
 
 const selectAllQirOrder = (module.exports = {
   selectAllQiOrderCheckList,
@@ -183,4 +272,17 @@ const selectAllQirOrder = (module.exports = {
   selectQiProdInfo,
   // 품질기준정보 관리
   selecAlltQcrList,
+  createProdQcrCode,
+  createBomQcrCode,
+  insertQcr_tbl,
+  selectCommonCode,
+  updateQcr_tbl,
+  deleteQcr,
+  // 제품별 품질검사항목
+  selectAllProd,
+  selectAllBom,
+  selectAllQiList,
+  createNewQi,
+  insertQi_tbl,
+  deleteQi,
 });

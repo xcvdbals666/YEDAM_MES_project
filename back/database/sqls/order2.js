@@ -5,10 +5,10 @@ SELECT r.out_req_code,
 
        pr.prod_name,
 
-       po.req_qtt, 
-       po.outbnd_qtt,
-       (po.req_qtt - po.outbnd_qtt) as un_qtt, 
-       po.stat,
+       d.out_req_d_amount, 
+       COALESCE(po.outbnd_qtt, 0) as outbnd_qtt,
+       (d.out_req_d_amount - COALESCE(po.outbnd_qtt, 0)) as un_qtt, 
+       r.out_req_stat,
 
        e.emp_name,
 
@@ -18,7 +18,7 @@ FROM out_req_tbl r
 
 JOIN out_req_d_tbl d ON r.out_req_code = d.out_req_code
 JOIN prod_tbl pr ON pr.prod_code = d.prod_code
-JOIN poutbnd_tbl po ON po.outbound_request_code = r.out_req_code
+LEFT JOIN poutbnd_tbl po ON po.outbound_request_code = r.out_req_code
 JOIN emp_tbl e ON e.emp_code = r.mcode
 JOIN client_tbl c ON c.client_code = r.client_code
 ORDER BY r.out_req_date DESC
@@ -131,7 +131,7 @@ WHERE od.ord_code = ?
 `;
 
 // 출고 요청 코드 생성
-const generateOutCode = `
+const generateOutReqCode = `
 SELECT CONCAT(
   'OUT-', DATE_FORMAT(NOW(), '%Y%m%d'), '-', 
   LPAD(
@@ -156,8 +156,9 @@ INSERT INTO out_req_tbl (
   note,
   ord_code,
   mcode,
-  client_code
-) VALUES (?, ?, ?, ?, ?, ?, ?)
+  client_code,
+  out_req_stat  
+) VALUES (?, ?, ?, ?, ?, ?, ?, 'r1')
 `;
 
 // 출고 요청 상세 insert
@@ -172,11 +173,29 @@ INSERT INTO out_req_d_tbl (
 ) VALUES (?, ?, ?, ?, ?, ?)
 `;
 
-// 주문 상태 UPDATE
+// 주문 상태 자동 계산 UPDATE (출고요청 등록 & 출고 등록 공통 사용)
 const updateOrdStat = `
-UPDATE ord_tbl
-SET ord_stat = 'q1'
-WHERE ord_code = ?
+UPDATE ord_tbl o
+SET o.ord_stat = CASE
+  WHEN (
+    SELECT COALESCE(SUM(p.outbnd_qtt), 0)
+    FROM poutbnd_tbl p
+    JOIN out_req_tbl r ON p.outbound_request_code = r.out_req_code
+    WHERE r.ord_code = o.ord_code
+  ) = 0 THEN 'q1'
+  WHEN (
+    SELECT COALESCE(SUM(p.outbnd_qtt), 0)
+    FROM poutbnd_tbl p
+    JOIN out_req_tbl r ON p.outbound_request_code = r.out_req_code
+    WHERE r.ord_code = o.ord_code
+  ) >= (
+    SELECT COALESCE(SUM(od.ord_amount), 0)
+    FROM ord_d_tbl od
+    WHERE od.ord_code = o.ord_code
+  ) THEN 'q3'
+  ELSE 'q2'
+END
+WHERE o.ord_code = ?
 `;
 
 // 출고요청 기본 정보
@@ -273,16 +292,69 @@ WHERE p.prod_code = ?
 ORDER BY p.pinbnd_date ASC
 `;
 
+// 완제품 출고 등록 (로트별)
+const insertOutbound = `
+INSERT INTO poutbnd_tbl (
+  poutbnd_code,
+  req_qtt,
+  outbnd_qtt,
+  deadline,
+  stat,
+  outbound_request_code,
+  lot_num,
+  prod_code,
+  client_code,
+  mcode
+) VALUES (?, ?, ?, ?, 'w3', ?, ?, ?, ?, ?)
+`;
+
+// 출고요청 상태 자동 계산 업데이트
+const updateOutReqStat = `
+UPDATE out_req_tbl o
+SET o.out_req_stat = CASE
+  WHEN (
+    SELECT COALESCE(SUM(outbnd_qtt), 0)
+    FROM poutbnd_tbl
+    WHERE outbound_request_code = o.out_req_code
+  ) = 0 THEN 'r1'
+  WHEN (
+    SELECT COALESCE(SUM(outbnd_qtt), 0)
+    FROM poutbnd_tbl
+    WHERE outbound_request_code = o.out_req_code
+  ) < (
+    SELECT SUM(out_req_d_amount)
+    FROM out_req_d_tbl
+    WHERE out_req_code = o.out_req_code
+  ) THEN 'r2'
+  ELSE 'r3'
+END
+WHERE o.out_req_code = ?
+`;
+
+// 출고코드 생성 (출고요청별 순번)
+const generateOutCode = `
+SELECT CONCAT(
+  ?,
+  '-P',
+  LPAD(COALESCE(MAX(CAST(SUBSTRING(poutbnd_code, -4) AS UNSIGNED)), 0) + 1, 4, '0')
+) AS new_out_code
+FROM poutbnd_tbl
+WHERE poutbnd_code LIKE CONCAT(?, '-P%')
+`;
+
 module.exports = {
   selectAllOutreqtbl,
   searchOutreqtbl,
   selectByOrdcode,
   selectProdList,
-  generateOutCode,
+  generateOutReqCode,
   insertOutReq,
   insertOutReqDetail,
   updateOrdStat,
   selectByOutReqCode,
   selectProdListByOutreq,
-  selectLotsByProdCode
+  selectLotsByProdCode,
+  insertOutbound,
+  updateOutReqStat,
+  generateOutCode
 };

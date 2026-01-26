@@ -144,4 +144,19 @@ router.get("/lots/:prod_code", async (req, res) => {
   }
 });
 
+// 출고 등록
+router.post("/outbound", async (req, res) => {
+  try {
+    const outboundData = req.body;
+    let result = await orderService.createOutbound(outboundData);
+    res.send(result);
+  } catch (error) {
+    console.error("출고 등록 실패:", error);
+    res.status(500).send({
+      success: false,
+      message: "출고 등록에 실패했습니다.",
+    });
+  }
+});
+
 module.exports = router;

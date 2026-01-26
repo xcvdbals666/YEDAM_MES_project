@@ -3,7 +3,7 @@ import { ref, defineProps } from 'vue';
 const props = defineProps({
   selectedMinbnd: { type: Object, required: true },
   checkCallQir: { type: Boolean, required: true },
-  callQiList: { type: Boolean, required: true }
+  callQirList: { type: Boolean, required: true }
 });
 let QiOrderItemInput = ref({ mpo_d_code: '', mat_code: '', mat_name: '', insp_vol: '', note: '', mat_type: '' });
 QiOrderItemInput.value = props.selectedMinbnd;
@@ -12,9 +12,9 @@ QiOrderItemInput.value = props.selectedMinbnd;
   <div class="flex mt-8">
     <div class="card flex flex-col gap-4 w-full">
       <div class="font-semibold text-xl flex justify-between">
-        <p>지시 정보</p>
+        지시 정보
         <div class="flex flex-row gap-2">
-          <Button type="button" label="검사지시 불러오기" @click="$emit('selectQiOrder')" />
+          <Button type="button" label="검사지시 불러오기" severity="info" @click="$emit('selectQiOrder')" :disabled="props.callQirList" />
         </div>
       </div>
       <div class="grid grid-cols-8 gap-20" style="margin-top: 20px">

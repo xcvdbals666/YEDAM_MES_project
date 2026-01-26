@@ -25,10 +25,10 @@ const data = computed({
       <h4 class="m-0 font-semibold">자재 구매 요청</h4>
 
       <div class="flex items-center gap-2 whitespace-nowrap">
-        <Button label="삭제" severity="danger" @click="emit('delete')" :disabled="!isEditable || !isEditMode" />
-        <Button label="초기화" severity="contrast" @click="emit('reset')" />
-        <Button label="저장" severity="info" @click="emit('save')" :disabled="isSaved || !isEditable" />
-        <Button label="MPR 불러오기" @click="emit('open-mpr')" />
+        <Button icon="pi pi-trash" label="삭제" severity="danger" @click="emit('delete')" :disabled="!isEditable || !isEditMode" />
+        <Button icon="pi pi-undo" label="초기화" severity="secondary" @click="emit('reset')" />
+        <Button icon="pi pi-save" label="저장" @click="emit('save')" :disabled="isSaved || !isEditable" />
+        <Button icon="pi pi-plus" label="MPR 불러오기" severity="info" @click="emit('open-mpr')" />
       </div>
     </div>
 

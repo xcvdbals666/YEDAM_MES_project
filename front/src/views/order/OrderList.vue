@@ -230,15 +230,62 @@ watch(
     </template>
   </Dialog>
   <Fluid>
-    <div class="card mb-4">
+    <div class="card">
       <div class="font-semibold text-xl flex justify-between items-center mb-4">
         <div>검색 조건</div>
-        <div class="flex items-center gap-2">
+        <div class="button-group">
           <Button label="초기화" severity="contrast" variant="outlined" class="w-full sm:w-auto" @click="resetBtn" />
         </div>
       </div>
+      <table class="w-full border-separate border-spacing-y-4">
+        <colgroup>
+          <col style="width: 100px" />
+          <col />
+          <col style="width: 140px" />
+          <col />
+        </colgroup>
+        <tbody>
+          <tr>
+            <th>주문코드</th>
+            <td>
+              <IconField>
+                <InputIcon class="pi pi-search" />
+                <InputText id="search_code" v-model="filters['ord_code'].value" placeholder="주문코드" class="w-full" />
+              </IconField>
+            </td>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 items-end">
+            <th>주문명</th>
+            <td>
+              <IconField>
+                <InputIcon class="pi pi-search" />
+                <InputText id="search_name" v-model="filters['ord_name'].value" placeholder="주문명" class="w-full" />
+              </IconField>
+            </td>
+
+            <th>주문일자 (기간)</th>
+            <td colspan="3">
+              <div class="flex items-center gap-2">
+                <DatePicker v-model="startDate" showIcon dateFormat="yy-mm-dd" placeholder="시작일" class="w-full" />
+                <span class="text-gray-500">~</span>
+                <DatePicker v-model="endDate" showIcon dateFormat="yy-mm-dd" placeholder="종료일" class="w-full" />
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <th>거래처</th>
+            <td>
+              <IconField>
+                <InputIcon class="pi pi-search" />
+                <InputText id="search_client" v-model="filters['client_name'].value" placeholder="거래처" class="w-full" />
+              </IconField>
+            </td>
+
+            <th>주문상태</th>
+            <td><Select id="search_stat" v-model="filters['ord_stat'].value" placeholder="주문상태 선택" class="w-full" :options="statOptions" option-label="note" option-value="com_value" /></td>
+          </tr>
+        </tbody>
+      </table>
+      <!-- <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 items-end">
         <div class="flex flex-col gap-2">
           <label for="search_code" class="font-bold">주문코드</label>
           <IconField>
@@ -276,7 +323,7 @@ watch(
             <DatePicker v-model="endDate" showIcon dateFormat="yy-mm-dd" placeholder="종료일" class="w-full" />
           </div>
         </div>
-      </div>
+      </div> -->
     </div>
 
     <div class="flex mt-8">

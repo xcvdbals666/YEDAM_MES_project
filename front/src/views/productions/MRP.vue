@@ -150,22 +150,6 @@ const deleteList = () => {
   }
 };
 
-// 필요수량 체크
-// watch(
-//   () => mrpMaterialList.value,
-//   (newList) => {
-//     for (const row of newList) {
-//       if (row.req_qtt > row.inven) {
-//         row.req_qtt = row.inven;
-
-//         alert('필요수량은 재고보다 많게 설정할 수 없습니다!');
-//         break; // 한 번만 띄우기
-//       }
-//     }
-//   },
-//   { deep: true }
-// );
-
 // 자재 검색 모달 열기
 const openMaterialModal = () => {
   searchMaterial();
@@ -288,29 +272,29 @@ const importBOM = async () => {
             <InputIcon class="pi pi-search" @click="searchPrdp" />
           </IconField>
         </Fluid>
-        <DataTable :value="prdpList" v-model:selection="selectedPrdp" :paginator="true" :rows="10" dataKey="prdp_code" :rowHover="true" showGridlines>
+        <DataTable :value="prdpList" v-model:selection="selectedPrdp" sortField="prdp_code" :sortOrder="-1" :paginator="true" :rows="10" dataKey="prdp_code" :rowHover="true" showGridlines>
           <template #empty>
             <div class="text-center py-6 text-gray-400">데이터 없음</div>
           </template>
           <Column selectionMode="single" style="width: 4px; text-align: center" />
-          <Column field="prdp_code" header="생산계획코드" headerClass="table-header" bodyClass="table-body" style="width: 140px" />
+          <Column sortable field="prdp_code" header="생산계획코드" headerClass="table-header" bodyClass="table-body" style="width: 140px" />
           <Column field="prdp_name" header="계획명" headerClass="table-header" bodyClass="table-body" style="width: 140px" />
-          <Column field="prdp_date" header="계획일자" headerClass="table-header" bodyClass="table-body" style="width: 95px">
+          <Column sortable field="prdp_date" header="계획일자" headerClass="table-header" bodyClass="table-body" style="width: 95px">
             <template #body="{ data }">
               {{ data.prdp_date.slice(0, 10) }}
             </template>
           </Column>
-          <Column field="start_date" header="계획시작일" headerClass="table-header" bodyClass="table-body" style="width: 95px">
+          <Column sortable field="start_date" header="계획시작일" headerClass="table-header" bodyClass="table-body" style="width: 95px">
             <template #body="{ data }">
               {{ data.start_date.slice(0, 10) }}
             </template>
           </Column>
-          <Column field="end_date" header="계획종료일" headerClass="table-header" bodyClass="table-body" style="width: 95px">
+          <Column sortable field="end_date" header="계획종료일" headerClass="table-header" bodyClass="table-body" style="width: 95px">
             <template #body="{ data }">
               {{ data.end_date.slice(0, 10) }}
             </template>
           </Column>
-          <Column field="due_date" header="납기일자" headerClass="table-header" bodyClass="table-body" style="width: 95px">
+          <Column sortable field="due_date" header="납기일자" headerClass="table-header" bodyClass="table-body" style="width: 95px">
             <template #body="{ data }">
               {{ data.due_date.slice(0, 10) }}
             </template>

@@ -109,8 +109,8 @@ const activeTab = computed({
     <div class="flex justify-between items-center pb-4">
       <h4 class="m-0 font-semibold">입출고 내역 조회</h4>
       <div class="flex gap-3">
-        <Button label="초기화" severity="contrast" @click="reset" class="px-4 py-2" />
-        <Button label="조회" @click="search" class="px-4 py-2" />
+        <Button icon="pi pi-undo" label="초기화" severity="secondary" @click="reset" class="px-4 py-2" />
+        <Button icon="pi pi-search" label="조회" @click="search" class="px-4 py-2" />
       </div>
     </div>
 

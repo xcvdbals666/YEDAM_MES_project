@@ -11,17 +11,30 @@ const emit = defineEmits(['update:visible', 'select']);
 const selectedOrder = ref(null);
 const keyword = ref(''); // 검색 입력값
 
+// 주문 상태 변환
+// const statusMap = {
+//   q1: { label: '출고 대기', severity: 'warn' },
+//   q2: { label: '부분 출고', severity: 'help' },
+//   q3: { label: '출고 완료', severity: 'success' }
+// };
+
 // 주문 단위로 그룹화
 const groupedOrders = computed(() => {
   const grouped = {};
 
   store.orderCode.forEach((order) => {
+    // q3(출고 완료) 상태인 주문은 제외
+    if (order.ord_stat === 'q3') {
+      return;
+    }
+
     // 새로운 주문 객체 생성
     if (!grouped[order.ord_code]) {
       grouped[order.ord_code] = {
         ord_code: order.ord_code,
         ord_date: order.ord_date,
         ord_name: order.ord_name,
+        ord_stat: order.ord_stat,
         products: []
       };
     }
@@ -92,6 +105,11 @@ const formatDate = (v) => {
           {{ formatDate(data.ord_date) }}
         </template>
       </Column>
+      <!-- <Column header="상태">
+        <template #body="{ data }">
+          <Tag :value="statusMap[data.ord_stat]?.label || '출고 요청전'" :severity="statusMap[data.ord_stat]?.severity || 'info'" rounded />
+        </template>
+      </Column> -->
     </DataTable>
 
     <template #footer>

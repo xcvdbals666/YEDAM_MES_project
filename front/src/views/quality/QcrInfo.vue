@@ -3,6 +3,7 @@
 <script setup>
 import { ref, computed, onBeforeMount } from 'vue';
 import { useQuality1Store } from '../../stores/quality1.js';
+import axios from 'axios';
 
 import SelectQcrModal from '../../components/quality/modal/SelectQcrModal.vue';
 import QcrInfoMain from '../../components/quality/QcrInfoMain.vue';
@@ -21,7 +22,8 @@ const range_top = ref('');
 const range_bot = ref('');
 const unit = ref('');
 const regdate = ref('');
-const selectedQcr = ref({ qcr_code: '', inspection_item: '', range_top: '', range_bot: '', note: '', unit: '' });
+const selectedQcr = ref({ qcr_code: '', inspection_item: '', range_top: '', range_bot: '', note: '', unit: '', regdate: '', check_method: '' });
+selectedQcr.value.regdate = `${new Date().getFullYear()}-${new Date().getMonth() + 1}-${new Date().getDate()}`;
 
 // 모달 표시 여부
 const orderDisplay = ref(false);
@@ -41,6 +43,11 @@ const closeModal = () => {
 const selectedOrder = (orders) => {
   if (!orders || orders.length === 0) return;
 
+  orders.regdate = formatDate(orders.regdate);
+  selectedQcr.value = orders;
+
+  console.log('selectedQcr: ', selectedQcr.value);
+
   selectedOrders.value = orders;
 
   // 지시코드 InputText용 (표시 목적)
@@ -49,10 +56,6 @@ const selectedOrder = (orders) => {
   note.value = orders.note;
 
   orderDisplay.value = false;
-};
-//코드로 찾기
-const search = () => {
-  qualityStore.fetchQcrList(qcr_code.value);
 };
 
 const formatDate = (date) => {
@@ -105,9 +108,115 @@ const fetchAll = async () => {
 };
 
 // 상세정보보기
-const qcrDetail = (e) => {
-  selectedQcr.value = e.data;
+const qcrDetail = (data) => {
+  console.log(data.data);
+  data.data.regdate = formatDate(data.data.regdate);
+  selectedQcr.value = data.data;
+
   console.log('selectedQcr: ', selectedQcr.value);
+};
+
+// 초기화버튼
+const resetQcrForm = async () => {
+  selectedQcr.value = { qcr_code: '', inspection_item: '', range_top: '', range_bot: '', note: '', unit: '', regdate: '', check_method: '' };
+  selectedQcr.value.regdate = `${new Date().getFullYear()}-${new Date().getMonth() + 1}-${new Date().getDate()}`;
+  qcr_code.value = '';
+  inspection_item.value = '';
+  note.value = '';
+};
+
+// 품질기준정보 등록
+const insertQcrForm = async (data) => {
+  if (data.inspection_item == '' || data.range_top == '' || data.range_bot == '' || data.unit == '' || data.check_method == '' || note == '') {
+    alert('입력을 완료해주세요');
+    return;
+  }
+
+  console.log(data);
+
+  data = { inspection_item: data.inspection_item, range_top: data.range_top, range_bot: data.range_bot, unit: data.unit, com_value: data.note, regdate: data.regdate, check_method: data.check_method };
+
+  if (data.com_value == '완제품') {
+    data.com_value = 'i1';
+  } else if (data.com_value == '반제품') {
+    data.com_value = 'i2';
+  } else if (data.com_value == '부자재') {
+    data.com_value = 'i3';
+  } else if (data.com_value == '원자재') {
+    data.com_value = 'i4';
+  }
+
+  await axios //
+    .get('api/quality/qcrcomvalue/' + data.unit)
+    .then((res) => {
+      data.unit = res.data[0].com_value;
+    });
+
+  console.log('전송데이터: ', data);
+
+  await axios //
+    .post('api/quality/addqcrform', data)
+    .then((res) => {
+      if (res.data.affectedRows == 1) {
+        alert('등록완료');
+      }
+      selectedQcr.value = ref({ qcr_code: '', inspection_item: '', range_top: '', range_bot: '', note: '', unit: '', regdate: '', check_method: '' });
+      resetQcrForm();
+    });
+  await qualityStore.fetchQcrList();
+};
+
+// 품질기준정보 수정
+const updateQcrForm = async (data) => {
+  if (data.inspection_item == '' || data.range_top == '' || data.range_bot == '' || data.unit == '' || data.check_method == '' || note == '') {
+    alert('입력을 완료해주세요');
+    return;
+  }
+  data.regdate = `${new Date().getFullYear()}-${new Date().getMonth() + 1}-${new Date().getDate()}`;
+  data = { qcr_code: data.qcr_code, inspection_item: data.inspection_item, range_top: data.range_top, range_bot: data.range_bot, unit: data.unit_type, com_value: data.note, regdate: data.regdate, check_method: data.check_method };
+
+  if (data.com_value == '완제품') {
+    data.com_value = 'i1';
+  } else if (data.com_value == '반제품') {
+    data.com_value = 'i2';
+  } else if (data.com_value == '부자재') {
+    data.com_value = 'i3';
+  } else if (data.com_value == '원자재') {
+    data.com_value = 'i4';
+  }
+
+  console.log('수정정보: ', data);
+
+  await axios //
+    .put('api/quality/modifyqcrinfo', data)
+    .then((res) => {
+      console.log(res.data);
+      if (res.data.affectedRows == 1) {
+        alert('수정완료');
+      }
+      selectedQcr.value = ref({ qcr_code: '', inspection_item: '', range_top: '', range_bot: '', note: '', unit: '', regdate: '', check_method: '' });
+      resetQcrForm();
+    });
+  await qualityStore.fetchQcrList();
+};
+
+// 품질기준정보 삭제
+const delQcrForm = async (data) => {
+  console.log(data);
+  if (!confirm('정말 삭제하시겠습니까?')) {
+    return;
+  }
+
+  await axios //
+    .delete('/api/quality/delqcrinfo/' + data)
+    .then((res) => {
+      if (res.data.affectedRows == 1) {
+        alert('삭제완료');
+        selectedQcr.value = ref({ qcr_code: '', inspection_item: '', range_top: '', range_bot: '', note: '', unit: '', regdate: '', check_method: '' });
+        resetQcrForm();
+      }
+    });
+  await qualityStore.fetchQcrList();
 };
 </script>
 
@@ -144,14 +253,14 @@ const qcrDetail = (e) => {
     <div class="flex items-center justify-between mt-2">
       <!-- 왼쪽 영역 -->
       <div class="flex gap-4">
-        <Button label="전체조회" severity="contrast" @click="fetchAll" />
+        <Button label="전체조회" @click="fetchAll" />
         <!--전체를 누르면 전체의 지시코드가 생김-->
       </div>
       <Button label="검사항목 선택" severity="info" @click="openModal" />
     </div>
   </div>
-  <div class="grid grid-cols-2 gap-3">
-    <section class="flex-1 bg-white px-6 pt-5 pb-6 rounded-xl shadow-sm border border-gray-200 flex flex-col">
+  <div class="grid grid-cols-12 gap-8">
+    <section class="col-span-7 flex-1 bg-white px-6 pt-5 pb-6 rounded-xl shadow-sm border border-gray-200 flex flex-col">
       <div class="flex justify-between items-center mb-2">
         <div class="text-s text-gray-800">
           검색결과
@@ -182,7 +291,9 @@ const qcrDetail = (e) => {
         </DataTable>
       </div>
     </section>
-    <QcrInfoMain :selected-qcr="selectedQcr" :key="selectedQcr"></QcrInfoMain>
+    <div class="col-span-5 flex-1 bg-white rounded-xl border border-gray-200 flex flex-col">
+      <QcrInfoMain :selected-qcr="selectedQcr" :key="selectedQcr" @insert-qcr-form="insertQcrForm" @update-qcr-form="updateQcrForm" @del-qcr-form="delQcrForm" @reset-qcr-form="resetQcrForm"></QcrInfoMain>
+    </div>
   </div>
 </template>
 <style scoped>

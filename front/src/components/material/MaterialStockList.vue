@@ -58,13 +58,13 @@ const statusClass = (code) => {
 </script>
 
 <template>
-  <div class="card h-[800px] flex flex-col">
+  <div class="card h-[833px] flex flex-col">
     <div class="flex items-center justify-between mb-4">
       <h3 class="font-semibold">자재 재고 현황</h3>
 
       <div class="flex gap-2">
-        <Button label="초기화" severity="contrast" class="h-[38px]" @click="emit('reset')" />
-        <Button label="조회" class="bg-green-500 border-none h-[38px]" @click="emit('search')" />
+        <Button icon="pi pi-undo" label="초기화" severity="secondary" class="h-[38px]" @click="emit('reset')" />
+        <Button icon="pi pi-search" label="조회" class="bg-green-500 border-none h-[38px]" @click="emit('search')" />
       </div>
     </div>
 
@@ -90,7 +90,7 @@ const statusClass = (code) => {
       <span class="text-sm"> (총 {{ list.length }}건) </span>
     </h4>
     <div class="flex-1">
-      <DataTable :value="list" dataKey="mat_code" v-model:selection="selectedRow" selectionMode="single" @rowSelect="onRowSelect" scrollable scrollHeight="550px" showGridlines emptyMessage="데이터가 없습니다." rowHover>
+      <DataTable :value="list" dataKey="mat_code" v-model:selection="selectedRow" selectionMode="single" @rowSelect="onRowSelect" scrollable scrollHeight="560px" showGridlines emptyMessage="데이터가 없습니다." rowHover :paginator="true" :rows="10">
         <template #empty>
           <div class="text-center py-6 text-gray-400">데이터 없음</div>
         </template>
