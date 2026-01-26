@@ -12,7 +12,11 @@ const qualityStore = useQualityStore2();
 const selectedResults = ref([]); //모달에서 선택한 결과서 목록불러오기
 
 onBeforeMount(async () => {
-  await fetchAll(); // 페이지가 마운트되면 전체 데이터를 바로 조회
+  resetFilters();
+  modalKey.value++;
+  await qualityStore.fetchQiResultList();
+  // 이 코드를 추가해서 개발자 도구(F12) 콘솔을 확인하세요.
+  console.log('받아온 데이터:', qualityStore.qiResultList[0]);
 });
 
 //행 클릭하면 상세체이지로 이동
@@ -30,6 +34,7 @@ const qir_code = ref(''); //검사결과 코드
 const qcr_code = ref(''); //검사지시 항목 코드
 const inspection_item = ref(''); //검사항목
 const com_value = ref(''); //품목명
+const mat_name = ref(''); //제품명
 const result = ref(''); //결과
 const end_date = ref(''); //검사일자
 const qir_emp_code = ref(''); //검사자
@@ -105,7 +110,7 @@ const filteredResults = computed(() => {
     const isCodeMatch = isExactCodeMatch || isPartialCodeMatch;
 
     const isInspectionMatch = !inspection_item.value || item.inspection_item?.includes(inspection_item.value);
-
+    const isMatNameMatch = !mat_name.value || item.mat_name?.includes(mat_name.value);
     const isEmpcodeMatch = !qir_emp_code.value || item.qir_emp_code?.includes(qir_emp_code.value);
 
     // 드롭다운 품목명 필터
@@ -116,7 +121,7 @@ const filteredResults = computed(() => {
 
     const isEndDateMatch = !end_date.value || (itemEndDate && itemEndDate === new Date(end_date.value).toISOString().slice(0, 10));
 
-    return isCodeMatch && isInspectionMatch && isDropdownMatch && isEndDateMatch && isEmpcodeMatch && isDropdownMatch2;
+    return isCodeMatch && isInspectionMatch && isDropdownMatch && isEndDateMatch && isEmpcodeMatch && isDropdownMatch2 && isMatNameMatch;
   });
 });
 
@@ -125,6 +130,7 @@ const resetFilters = () => {
   qir_code.value = '';
   qcr_code.value = '';
   inspection_item.value = '';
+  mat_name.value = '';
   com_value.value = '';
   result.value = '';
   end_date.value = '';
@@ -225,11 +231,12 @@ const fetchAll = async () => {
         <!-- <Column selectionMode="multiple" headerStyle="width:48px" /> -->
         <Column header="검사결과 코드" field="qir_code" headerClass="table-header" bodyClass="table-body" sortable style="min-width: 1rem" />
         <Column header="품질기준 정보 코드" field="qcr_code" headerClass="table-header" bodyClass="table-body" sortable style="min-width: 1rem" />
-        <Column header="품목명(공통코드)" field="com_value" headerClass="table-header" bodyClass="table-body" sortable style="min-width: 1rem" />
+        <Column header="품목명" field="com_value" headerClass="table-header" bodyClass="table-body" sortable style="min-width: 1rem" />
+        <Column header="자재명" field="mat_name" headerClass="table-header" bodyClass="table-body" sortable style="min-width: 1rem" />
         <Column header="검사항목" field="inspection_item" headerClass="table-header" bodyClass="table-body" sortable style="min-width: 1rem" />
         <Column header="품질 상한값" field="range_top" headerClass="table-header" bodyClass="table-body" sortable style="min-width: 1rem" />
         <Column header="품질 하한값" field="range_bot" headerClass="table-header" bodyClass="table-body" sortable style="min-width: 1rem" />
-        <Column header="단위(공통코드)" field="unit" headerClass="table-header" bodyClass="table-body" sortable style="min-width: 1rem" />
+        <Column header="단위" field="unit" headerClass="table-header" bodyClass="table-body" sortable style="min-width: 1rem" />
         <Column header="품질결과" field="result" headerClass="table-header" sortable style="min-width: 1rem">
           <template #body="slotProps">
             <span

@@ -81,7 +81,8 @@ onMounted(async () => {
       check_method: first.check_method || '',
       range_top: first.range_top || '',
       range_bot: first.range_bot || '',
-      unit: first.unit || ''
+      unit: first.unit || '',
+      mat_name: first.mat_name || ''
     };
 
     // 검사 결과 매핑
@@ -138,8 +139,8 @@ const formatDate = (date) => {
       <div class="grid grid-cols-4 gap-4">
         <div class="col-span-2">
           <div class="grid grid-cols-3">
-            <label class="col-span-1">검사 요청량</label>
-            <InputText class="col-span-2" :value="header.insp_vol" readonly />
+            <label class="col-span-1">자재명</label>
+            <InputText class="col-span-2" :value="header.mat_name" readonly />
           </div>
         </div>
         <div class="col-span-2">
@@ -202,6 +203,12 @@ const formatDate = (date) => {
           <div class="grid grid-cols-3">
             <label class="col-span-1">하한 값</label>
             <InputText class="col-span-2" v-model="criteriaInput.range_bot" readonly />
+          </div>
+        </div>
+        <div class="col-span-2">
+          <div class="grid grid-cols-3">
+            <label class="col-span-1">검사 요청량</label>
+            <InputText class="col-span-2" :value="header.insp_vol" readonly />
           </div>
         </div>
         <div class="col-span-2">
