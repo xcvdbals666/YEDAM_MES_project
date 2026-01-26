@@ -126,7 +126,7 @@ FROM bom_tree b
 LEFT JOIN (SELECT mat_code, SUM(inbnd_qtt) AS inbnd FROM minbnd_tbl GROUP BY mat_code) i ON i.mat_code = b.mat_code
 LEFT JOIN (SELECT mat_code, SUM(outbnd_qtt) AS outbnd FROM moutbnd_tbl GROUP BY mat_code) o ON o.mat_code = b.mat_code
 JOIN common_code c ON c.com_value = b.unit
-JOIN mat_tbl m ON m.mat_code = b.mat_code
+LEFT JOIN mat_tbl m ON m.mat_code = b.mat_code
 WHERE b.mat_code LIKE 'MAT-%'`;
 
 // MRP 상세조회
