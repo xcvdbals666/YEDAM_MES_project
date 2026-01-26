@@ -1,12 +1,5 @@
 <!-- views/Productions/WorkOrderMgt.vue (작업지시서 관리) -->
 <!-- 1. 생산계획 불러오기 (prdp_tbl, prdp_d_tbl)-->
-<!-- 
-  생산 계획을 지정해 작업 지시서를 생성할 수 있으며, 
-  생산 계획이 없어도 작업 지시서를 생성할 수 있습니다.
-  생산 계획이 선택된다면 생산 계획에 해당하는 제품만 선택이 가능하고,
-  생산 라인도 선택된 제품이 사용 가능한 라인만 조회됩니다.
-  작업 지시서 불러오기 버튼으로 등록된 작업 지시서를 수정할 수 있습니다 
-  -->
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { useProductionsStore } from '@/stores/production1';
@@ -131,6 +124,7 @@ const productOptions = computed(() => {
 
 onMounted(() => {
   store.fetchAllPrdDistinct();
+  store.fetchLines();
 });
 
 //wko_code 번호만들기
@@ -247,13 +241,13 @@ const filteredLines = computed(() => {
     <div class="grid grid-cols-12 gap-3">
       <div class="col-span-12 lg:col-span-6 flex items-center gap-3">
         <label class="w-28 shrink-0 text-lg font-semibold">작업지시번호</label>
-        <input type="text" class="p-inputtext w-full" v-model="form.wko_code" readonly />
+        <InputText class="p-inputtext w-full" v-model="form.wko_code" readonly />
       </div>
 
       <div class="col-span-12 lg:col-span-6 flex items-center gap-3">
         <label class="w-28 shrink-0 text-lg font-semibold">생산계획번호</label>
           <div class="flex w-full items-center gap-2">
-            <input type="text" class="p-inputtext w-full" v-model="form.prdp_code" readonly />
+            <InputText class="p-inputtext w-full" v-model="form.prdp_code" readonly />
             <Button icon="pi pi-search" class="p-button-success custom-btn" @click="openPrdpModal" />
           </div>
       </div>
@@ -263,7 +257,7 @@ const filteredLines = computed(() => {
 
       <div class="col-span-12 lg:col-span-6 flex items-center gap-3">
         <label class="w-28 shrink-0 text-lg font-semibold">계획일자</label>
-        <input type="date" class="p-inputtext w-full" v-model="form.prdp_date" />
+        <InputText class="p-inputtext w-full" v-model="form.prdp_date" />
       </div>
 
       <div class="col-span-12 lg:col-span-6"></div>
@@ -287,12 +281,12 @@ const filteredLines = computed(() => {
 
       <div class="col-span-12 lg:col-span-6 flex items-center gap-3">
         <label class="w-28 shrink-0 text-lg font-semibold">지시수량</label>
-        <input type="text" class="p-inputtext w-full" v-model="form.wko_qtt" />
+        <InputText class="p-inputtext w-full" v-model="form.wko_qtt" />
       </div>
 
       <div class="col-span-12 lg:col-span-6 flex items-center gap-3">
         <label class="w-28 shrink-0 text-lg font-semibold">작업시작일시</label>
-        <input type="date" class="p-inputtext w-full" v-model="form.start_date" />
+        <InputText class="p-inputtext w-full" v-model="form.start_date" />
       </div>
 
       <div class="col-span-12 lg:col-span-6 flex items-center gap-3">
@@ -317,7 +311,7 @@ const filteredLines = computed(() => {
 
       <div class="col-span-12 lg:col-span-12 flex items-center gap-3">
         <label class="w-28 shrink-0 text-lg font-semibold">작업이름</label>
-        <input type="text" class="p-inputtext w-full" v-model="form.wko_name" />
+        <InputText class="p-inputtext w-full" v-model="form.wko_name" />
       </div>
     </div>
   </div>
