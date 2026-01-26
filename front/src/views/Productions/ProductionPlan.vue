@@ -567,7 +567,7 @@ const searchProd = async () => {
   </div>
 </template>
 
-<style>
+<style scoped>
 th,
 td {
   padding: 4px;
