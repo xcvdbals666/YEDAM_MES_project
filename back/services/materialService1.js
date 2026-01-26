@@ -234,10 +234,31 @@ const updateMpoTbl = async (statCode, purchaseCode, mpoData) => {
 
   let resObj = {};
   if (result.affectedRows > 0) {
-    // 2. 기존 자재 상세 삭제
+    // 2. 검사결과(qir_tbl) 삭제 - mpo_d_tbl 경유
+    await mysql.rquery(
+      `
+      DELETE qir FROM qir_tbl qir
+      INNER JOIN qio_tbl qio ON qir.qio_code = qio.qio_code
+      INNER JOIN mpo_d_tbl mpod ON qio.mpo_d_code = mpod.mpo_d_code
+      WHERE mpod.purchase_code = ?
+    `,
+      [purchaseCode],
+    );
+
+    // 3. 입고검사(qio_tbl) 삭제 - mpo_d_tbl 경유
+    await mysql.rquery(
+      `
+      DELETE qio FROM qio_tbl qio
+      INNER JOIN mpo_d_tbl mpod ON qio.mpo_d_code = mpod.mpo_d_code
+      WHERE mpod.purchase_code = ?
+    `,
+      [purchaseCode],
+    );
+
+    // 4. 기존 자재 상세 삭제
     await mysql.query("deleteMpoDetailTbl", [purchaseCode], "material1");
 
-    // 3. 자재 상세 다시 등록
+    // 5. 자재 상세 다시 등록
     let seq = 1;
     for (let item of mpoData.materials) {
       const mpo_d_code = `${purchaseCode}-${String(seq).padStart(3, "0")}`;
@@ -263,7 +284,6 @@ const updateMpoTbl = async (statCode, purchaseCode, mpoData) => {
 
   return resObj;
 };
-
 // 발주서 삭제
 const deleteMpoTbl = async (purchaseCode) => {
   // 1. 검사결과(qir_tbl) 삭제 - mpo_d_tbl 경유
