@@ -1,13 +1,16 @@
 <!--QiOrderList.vue-->
 <!--품질검사 지시 목록조회-->
 <script setup>
-
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onBeforeMount } from 'vue';
 import { useQualityStore2 } from '@/stores/quality2.js';
 
 import SelectQiOrderModal2 from '@/components/quality/modal/SelectQiOrderModal2.vue';
 const qualityStore = useQualityStore2();
 const selectedOrders = ref([]); // 모달에서 선택한 지시서 목록
+
+onBeforeMount(async () => {
+  await fetchAll(); // 페이지가 마운트되면 전체 데이터를 바로 조회
+});
 
 //검색
 const qio_code = ref('');
@@ -64,52 +67,42 @@ const filteredOrders = computed(() => {
 
   // 모달 선택 우선
   if (selectedOrders.value.length > 0) {
-    const codes = selectedOrders.value.map(o => o.qio_code);
-    list = qualityStore.qiOrderList.filter(o => codes.includes(o.qio_code));
-  } 
+    const codes = selectedOrders.value.map((o) => o.qio_code);
+    list = qualityStore.qiOrderList.filter((o) => codes.includes(o.qio_code));
+  }
   // 일반 검색
   else {
     list = qualityStore.qiOrderList.filter((item) => {
       const isCodeMatch = !qio_code.value || item.qio_code.includes(qio_code.value);
       const isTypeMatch = !inspect_type.value || item.inspect_type?.includes(inspect_type.value);
 
-      const itemStartDate = item.qio_date
-        ? new Date(item.qio_date).toISOString().slice(0, 10)
-        : null;
+      const itemStartDate = item.qio_date ? new Date(item.qio_date).toISOString().slice(0, 10) : null;
 
-      const isStartDateMatch =
-        !qio_date.value ||
-        (itemStartDate &&
-          itemStartDate >= new Date(qio_date.value).toISOString().slice(0, 10));
+      const isStartDateMatch = !qio_date.value || (itemStartDate && itemStartDate >= new Date(qio_date.value).toISOString().slice(0, 10));
 
-      const itemEndDate = item.insp_date
-        ? new Date(item.insp_date).toISOString().slice(0, 10)
-        : null;
+      const itemEndDate = item.insp_date ? new Date(item.insp_date).toISOString().slice(0, 10) : null;
 
-      const isEndDateMatch =
-        !insp_date.value ||
-        (itemEndDate &&
-          itemEndDate === new Date(insp_date.value).toISOString().slice(0, 10));
+      const isEndDateMatch = !insp_date.value || (itemEndDate && itemEndDate === new Date(insp_date.value).toISOString().slice(0, 10));
 
       return isCodeMatch && isTypeMatch && isStartDateMatch && isEndDateMatch;
     });
   }
 
-// filteredOrders 내의 return 부분을 이 코드로 교체
-return [...list].sort((a, b) => {
-  // 1. 날짜를 타임스탬프(숫자)로 변환하여 정확히 비교
-  const timeA = a.qio_date ? new Date(a.qio_date).getTime() : 0;
-  const timeB = b.qio_date ? new Date(b.qio_date).getTime() : 0;
+  // filteredOrders 내의 return 부분을 이 코드로 교체
+  return [...list].sort((a, b) => {
+    // 1. 날짜를 타임스탬프(숫자)로 변환하여 정확히 비교
+    const timeA = a.qio_date ? new Date(a.qio_date).getTime() : 0;
+    const timeB = b.qio_date ? new Date(b.qio_date).getTime() : 0;
 
-  if (timeB !== timeA) {
-    return timeB - timeA; // 숫자 비교 (내림차순)
-  }
+    if (timeB !== timeA) {
+      return timeB - timeA; // 숫자 비교 (내림차순)
+    }
 
-  // 2. 날짜가 완벽히 같다면 문자열인 지시코드(qio_code)로 2차 비교
-  const codeA = String(a.qio_code || '');
-  const codeB = String(b.qio_code || '');
-  return codeB.localeCompare(codeA, undefined, { numeric: true });
-});
+    // 2. 날짜가 완벽히 같다면 문자열인 지시코드(qio_code)로 2차 비교
+    const codeA = String(a.qio_code || '');
+    const codeB = String(b.qio_code || '');
+    return codeB.localeCompare(codeA, undefined, { numeric: true });
+  });
 });
 
 //전체조회 버튼 기능추가
@@ -137,12 +130,8 @@ const fetchAll = async () => {
 <template>
   <div class="card border border-gray-200 flex flex-col gap-6 p-fluid">
     <!--모달창-->
-<SelectQiOrderModal2
-  :visible="orderDisplay"
-  :qi-order-list="qualityStore.qiOrderList"
-  @update:visible="orderDisplay = $event"
-  @selected-order="selectedOrder"
-/>    <!------------------------------------------------------------------------------------------------->
+    <SelectQiOrderModal2 :visible="orderDisplay" :qi-order-list="qualityStore.qiOrderList" @update:visible="orderDisplay = $event" @selected-order="selectedOrder" />
+    <!------------------------------------------------------------------------------------------------->
     <!-- 검색이 되어야 하는 창-->
     <div class="text-2xl font-bold text-center">품질 검사 목록 조회</div>
 
@@ -195,8 +184,7 @@ const fetchAll = async () => {
     <!--수정해야함-->
 
     <div class="flex-1 overflow-auto rounded-lg border border-gray-200">
-<DataTable :value="filteredOrders" :key="filteredOrders.length">
-
+      <DataTable :value="filteredOrders" :key="filteredOrders.length" scrollable scrollHeight="400px">
         <template #empty>
           <div class="text-center py-6 text-gray-400">데이터 없음</div>
         </template>
@@ -215,8 +203,29 @@ const fetchAll = async () => {
           </template>
         </Column>
         <Column header="검사유형" field="inspect_type" headerClass="table-header" bodyClass="table-body" sortable style="min-width: 6rem" />
-        <Column header="제품명" field="mat_name" headerClass="table-header" bodyClass="table-body" sortable style="min-width: 12rem" />
-        <Column header="상태" field="qio_status" headerClass="table-header" bodyClass="table-body" sortable style="min-width: 1rem" />
+        <Column header="제품명" field="mat_name" headerClass="table-header" bodyClass="table-body" sortable style="min-width: 12rem">
+          <template #body="slotProps">
+            <template v-if="!slotProps.data.mat_name">
+              <span class="text-gray-400">제품명 없음</span>
+            </template>
+            <template v-else>
+              {{ formatDate(slotProps.data.mat_name) }}
+            </template>
+          </template>
+        </Column>
+        <Column header="상태" field="qio_status" headerClass="table-header" bodyClass="table-body" sortable style="min-width: 1rem">
+          <template #body="slotProps">
+            <span
+              :class="{
+                'text-green-600 font-semibold': slotProps.data.qio_status === '완료',
+                'text-red-600 font-semibold': slotProps.data.qio_status === '미완료',
+                'text-blue-500 font-semibold': slotProps.data.qio_status !== '미지시' && slotProps.data.result !== '불합격'
+              }"
+            >
+              {{ slotProps.data.qio_status }}
+            </span>
+          </template>
+        </Column>
       </DataTable>
     </div>
   </section>

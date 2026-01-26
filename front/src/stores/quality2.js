@@ -7,7 +7,7 @@ export const useQualityStore2 = defineStore('quality2', {
   state: () => ({
     qiResultList: [],
     qiOrderList: [],
-    qiResultDetail: [], 
+    qiResultDetail: []
   }),
 
   // getter
@@ -50,19 +50,19 @@ export const useQualityStore2 = defineStore('quality2', {
       this.qiResultList = res.data;
     },
 
-    //품질 검사 결과 목록 상세
-// 품질 검사 결과 상세 조회
-async fetchQiResultDetail(qir_code) {
-  try {
-    if (!qir_code) return;
+    // 품질 검사 결과 상세 조회
+    async fetchQiResultDetail(qir_code) {
+      try {
+        if (!qir_code) return;
 
-    const res = await axios.get(`/api/quality/qioresultdetail/${qir_code}`);
-    // qir_code 기준으로 가져온 데이터만 저장
-    this.qiResultDetail = res.data || [];
-  } catch (err) {
-    console.error('fetchQiResultDetail error:', err);
-    this.qiResultDetail = [];
-  }
-}  },
+        const res = await axios.get(`/api/quality/qioresultdetail/${qir_code}`);
+        // qir_code 기준으로 가져온 데이터만 저장
+        this.qiResultDetail = res.data || [];
+      } catch (err) {
+        console.error('fetchQiResultDetail error:', err);
+        this.qiResultDetail = [];
+      }
+    }
+  },
   persist: true
 });
