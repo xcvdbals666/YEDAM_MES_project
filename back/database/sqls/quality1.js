@@ -10,7 +10,8 @@ const selectAllQiOrderList = `SELECT q.qio_code, qio_date, e.emp_name, q.prdr_co
                               JOIN emp_tbl e ON q.emp_code = e.emp_code
                               LEFT JOIN qir_tbl q2 ON q.qio_code = q2.qio_code
                               WHERE q2.qir_code IS NULL
-                              GROUP BY q.qio_code`;
+                              GROUP BY q.qio_code
+                              ORDER BY q.qio_date DESC`;
 
 // 검사지에 해당하는 자재 및 검사항목 불러오기
 const selectQiOrderItem = `SELECT q.qio_code, q.insp_vol, m.deadline, b.mat_name, b.mat_code, b.mat_type, m.req_qtt, c.note, c2.com_value, c2.note, q2.inspection_item    
