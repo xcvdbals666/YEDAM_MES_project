@@ -3,25 +3,26 @@ import axios from 'axios';
 
 const url = '/order';
 
-export const useOrderStore2 = defineStore('order2', {// state
-state: () => ({
-  outboundList: [], // 출고 조회 결과 목록
-  outboundCode: [], // 출고 선택 모달용 - 전체 출고 코드 목록
-  outboundProd: [], // 출고 제품 선택 모달용 - 전체 제품 목록
-  outboundClient: [], // 거래처 선택 모달용 - 전체 거래처 목록
-  employees: [], // 출고 담당자 선택 모달용 - 전체 담당자 목록
-  
-  orderCode: [], // 주문 선택 모달용 - 전체 주문 코드 목록
-  selectedOrder: null, // 선택한 주문 정보 (주문 선택 모달에서 선택한 값)
-  orderDetail: null, // 선택한 주문의 기본 정보 (주문일, 거래처명 등)
-  outReqCode: '', // 주문 정보에서 생성된 출고요청 코드
-  orderProducts: [], // 주문 선택 시 제품 목록
-  
-  requestCode: [], // 출고요청 선택 모달용 - 전체 출고요청 코드 목록
-  selectedOutReq: null, // 선택한 출고요청 정보 (출고요청 선택 모달에서 선택한 값)
-  outReqDetail: null, // 선택한 출고요청의 기본 정보 (출고요청일, 주문명, 거래처명 등)
-  outReqProducts: [], // 출고요청 선택 시 제품 목록
-}),
+export const useOrderStore2 = defineStore('order2', {
+  // state
+  state: () => ({
+    outboundList: [], // 출고 조회 결과 목록
+    outboundCode: [], // 출고 선택 모달용 - 전체 출고 코드 목록
+    outboundProd: [], // 출고 제품 선택 모달용 - 전체 제품 목록
+    outboundClient: [], // 거래처 선택 모달용 - 전체 거래처 목록
+    employees: [], // 출고 담당자 선택 모달용 - 전체 담당자 목록
+
+    orderCode: [], // 주문 선택 모달용 - 전체 주문 코드 목록
+    selectedOrder: null, // 선택한 주문 정보 (주문 선택 모달에서 선택한 값)
+    orderDetail: null, // 선택한 주문의 기본 정보 (주문일, 거래처명 등)
+    outReqCode: '', // 주문 정보에서 생성된 출고요청 코드
+    orderProducts: [], // 주문 선택 시 제품 목록
+
+    requestCode: [], // 출고요청 선택 모달용 - 전체 출고요청 코드 목록
+    selectedOutReq: null, // 선택한 출고요청 정보 (출고요청 선택 모달에서 선택한 값)
+    outReqDetail: null, // 선택한 출고요청의 기본 정보 (출고요청일, 주문명, 거래처명 등)
+    outReqProducts: [] // 출고요청 선택 시 제품 목록
+  }),
   actions: {
     // 출고 조회 + 검색
     async fetchOutbound(searchParams = {}) {
@@ -168,51 +169,72 @@ state: () => ({
 
     // 선택한 출고요청 코드의 정보 조회
     async fetchOutReqDetailByCode(outReqCode) {
-        try {
-          const response = await axios.get(`/api/order/request-detail/${outReqCode}`);
+      try {
+        const response = await axios.get(`/api/order/request-detail/${outReqCode}`);
 
-          this.outReqDetail = response.data.outReqInfo;
-          this.outReqProducts = response.data.products;
+        this.outReqDetail = response.data.outReqInfo;
+        this.outReqProducts = response.data.products;
 
-          // console.log('출고요청 상세:', this.outReqDetail);
-          // console.log('제품 목록:', this.outReqProducts);
+        // console.log('출고요청 상세:', this.outReqDetail);
+        // console.log('제품 목록:', this.outReqProducts);
 
-          return response.data;
-        } catch (error) {
-          console.error('출고요청 상세 조회 실패:', error);
-          throw error;
-        }
-      },
-
-      // 출고 관련 데이터 초기화
-      resetOutbound() {
-        this.selectedOutReq = null;
-        this.outReqDetail = null;
-        this.outReqProducts = [];
-      },
-
-      // 제품별 로트 재고 조회
-      async fetchLotsByProdCode(prod_code) {
-        try {
-          const response = await axios.get(`/api/order/lots/${prod_code}`);
-          return response.data; // 로트 목록 반환
-        } catch (error) {
-          console.error('로트 조회 실패:', error);
-          throw error;
-        }
-      },
-
-      // 출고 등록
-      async createOutbound(outboundData) {
-        try {
-          const response = await axios.post(`/api/order/outbound`, outboundData);
-          return response.data;
-        } catch (error) {
-          console.error('출고 등록 실패:', error);
-          throw error;
-        }
+        return response.data;
+      } catch (error) {
+        console.error('출고요청 상세 조회 실패:', error);
+        throw error;
       }
-
     },
+
+    // 출고 관련 데이터 초기화
+    resetOutbound() {
+      this.selectedOutReq = null;
+      this.outReqDetail = null;
+      this.outReqProducts = [];
+    },
+
+    // 제품별 로트 재고 조회
+    async fetchLotsByProdCode(prod_code) {
+      try {
+        const response = await axios.get(`/api/order/lots/${prod_code}`);
+        return response.data; // 로트 목록 반환
+      } catch (error) {
+        console.error('로트 조회 실패:', error);
+        throw error;
+      }
+    },
+
+    // 출고 등록
+    async createOutbound(outboundData) {
+      try {
+        const response = await axios.post(`/api/order/outbound`, outboundData);
+        return response.data;
+      } catch (error) {
+        console.error('출고 등록 실패:', error);
+        throw error;
+      }
+    },
+
+    // 출고 요청 취소
+    async cancelOutReq(out_req_code) {
+      try {
+        const response = await axios.put(`/api/order/cancel`, { out_req_code });
+        return response.data;
+      } catch (error) {
+        console.error('출고 요청 취소 실패:', error);
+        throw error;
+      }
+    },
+
+    // 출고 요청 수정
+    async updateOutboundRequest(requestData) {
+      try {
+        const response = await axios.put(`/api/order/outbound-request/${requestData.outReqInfo.out_req_code}`, requestData);
+        return response.data;
+      } catch (error) {
+        console.error('출고 요청 수정 실패:', error);
+        throw error;
+      }
+    }
+  },
   persist: true
 });

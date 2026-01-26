@@ -5,7 +5,11 @@ import { useOrderStore2 } from '@/stores/order2';
 
 const store = useOrderStore2();
 const props = defineProps({
-  visible: Boolean
+  visible: Boolean,
+  excludeStatuses: {
+    type: Array,
+    default: () => [] // 제외할 상태 코드 배열
+  }
 });
 const emit = defineEmits(['update:visible', 'select']);
 const selectedOutReq = ref(null);
@@ -16,17 +20,16 @@ const statusMap = {
   r1: { label: '출고 대기', severity: 'danger' },
   r2: { label: '부분 출고', severity: 'warn' },
   r3: { label: '출고 완료', severity: 'success' },
-  r4: { label: '요청 취소', severity: 'secondary'}
+  r4: { label: '요청 취소', severity: 'secondary' }
 };
 
 // 출고요청 단위로 그룹화
 const groupedOutReq = computed(() => {
   const grouped = {};
 
-  
   store.requestCode.forEach((outReq) => {
-    // q3(출고 완료) 상태인 주문은 제외
-    if (outReq.out_req_stat === 'r3') {
+    // 제외할 상태 체크
+    if (props.excludeStatuses.includes(outReq.out_req_stat)) {
       return;
     }
     // 새로운 출고요청 객체 생성

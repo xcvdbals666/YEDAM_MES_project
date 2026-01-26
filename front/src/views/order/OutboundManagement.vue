@@ -33,7 +33,7 @@ const openOutReqModal = () => {
 
 // 모달에서 선택 시
 const selectOutReq = async (selectedOutReq) => {
-  console.log('선택된 출고 요청:', selectedOutReq);
+  // console.log('선택된 출고 요청:', selectedOutReq);
 
   // 1. 스토어에 선택된 출고요청 정보 저장
   orderStore.setSelectedOutReq(selectedOutReq);
@@ -98,14 +98,12 @@ const openLotModal = (product) => {
 // 로트 선택 확인
 const handleLotConfirm = (lotData) => {
   // productList에서 해당 제품 찾기
-  const product = productList.value.find(
-    p => p.prod_code === selectedProduct.value.prod_code
-  );
-  
+  const product = productList.value.find((p) => p.prod_code === selectedProduct.value.prod_code);
+
   if (product) {
     // 1. 총 출고수량 업데이트
     product.out_amount = lotData.total_amount;
-    
+
     // 2. 선택한 로트 정보 저장
     product.selectedLots = lotData.lots;
   }
@@ -123,15 +121,15 @@ const createOutbound = async () => {
         mcode: user.emp_code
       },
       products: productList.value
-        .filter(p => p.out_amount > 0)
-        .map(p => ({
+        .filter((p) => p.out_amount > 0)
+        .map((p) => ({
           prod_code: p.prod_code,
           selectedLots: p.selectedLots || []
         }))
     };
-    
+
     const result = await orderStore.createOutbound(requestData);
-    
+
     if (result.success) {
       alert(result.message || '출고 등록이 완료되었습니다.');
       // 초기화 등...
@@ -221,43 +219,35 @@ const formatDate = (v) => {
       <h4 class="font-semibold">제품</h4>
     </div>
 
-   <DataTable :value="productList" showGridlines class="p-datatable-sm" tableStyle="table-layout: fixed; width: 100%;" :paginator="true" :rows="10">
-    <template #empty>
-      <div class="text-center py-6 text-gray-400">데이터 없음</div>
-    </template>
-    <Column header="제품명" field="prod_name" headerStyle="width: 200px; padding: 8px 20px;" bodyStyle="padding: 8px 20px;" />
-    <Column header="유형" field="prod_type" headerStyle="width: 100px;" bodyStyle="white-space: nowrap;" />
-    <Column header="규격" field="spec" headerStyle="width: 100px" />
-    <Column header="단위" field="unit" headerStyle="width: 100px" />
-    <Column header="출고요청수량" field="out_req_amount" headerStyle="width: 120px;" />
-    <Column header="기출고수량" field="already_outbnd_qtt" headerStyle="width: 120px;" />
-    
-    <!-- 출고수량 입력 -->
-    <Column header="출고수량" style="width: 120px;">
-      <template #body="{ data }">
-        <InputNumber 
-          v-model="data.out_amount" 
-          :min="0"
-          readonly
-          @click="openLotModal(data)"
-          class="cursor-pointer"
-          style="cursor: pointer;"
-          placeholder="선택"
-        />
+    <DataTable :value="productList" showGridlines class="p-datatable-sm" tableStyle="table-layout: fixed; width: 100%;" :paginator="true" :rows="10">
+      <template #empty>
+        <div class="text-center py-6 text-gray-400">데이터 없음</div>
       </template>
-    </Column>
-    
-    <Column header="현재재고" field="current_stock" headerStyle="width: 100px;" />
-    <Column header="납기일" headerStyle="width: 100px;">
-      <template #body="{ data }">
-        {{ formatDate(data.delivery_date) }}
-      </template>
-    </Column>
-  </DataTable>
+      <Column header="제품명" field="prod_name" headerStyle="width: 200px; padding: 8px 20px;" bodyStyle="padding: 8px 20px;" />
+      <Column header="유형" field="prod_type" headerStyle="width: 100px;" bodyStyle="white-space: nowrap;" />
+      <Column header="규격" field="spec" headerStyle="width: 100px" />
+      <Column header="단위" field="unit" headerStyle="width: 100px" />
+      <Column header="출고요청수량" field="out_req_amount" headerStyle="width: 120px;" />
+      <Column header="기출고수량" field="already_outbnd_qtt" headerStyle="width: 120px;" />
+
+      <!-- 출고수량 입력 -->
+      <Column header="출고수량" style="width: 120px">
+        <template #body="{ data }">
+          <InputNumber v-model="data.out_amount" :min="0" readonly @click="openLotModal(data)" class="cursor-pointer" style="cursor: pointer" placeholder="선택" />
+        </template>
+      </Column>
+
+      <Column header="현재재고" field="current_stock" headerStyle="width: 100px;" />
+      <Column header="납기일" headerStyle="width: 100px;">
+        <template #body="{ data }">
+          {{ formatDate(data.delivery_date) }}
+        </template>
+      </Column>
+    </DataTable>
   </Fluid>
 
   <!-- 출고요청 선택 모달 -->
-  <SelectOutReqModal v-model:visible="showOutReqModal" @select="selectOutReq" />
+  <SelectOutReqModal v-model:visible="showOutReqModal" :exclude-statuses="['r3', 'r4']" @select="selectOutReq" />
 
   <!-- 로트 선택 모달 -->
   <SelectLotModal v-model:visible="showLotModal" :productInfo="selectedProduct" @confirm="handleLotConfirm" />

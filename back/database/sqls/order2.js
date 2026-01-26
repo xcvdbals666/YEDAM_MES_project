@@ -1,26 +1,39 @@
 // 출고 조회
 const selectAllOutreqtbl = `
-SELECT r.out_req_code, 
-       r.out_req_date, 
-
-       pr.prod_name,
-
-       d.out_req_d_amount, 
-       COALESCE(po.outbnd_qtt, 0) as outbnd_qtt,
-       (d.out_req_d_amount - COALESCE(po.outbnd_qtt, 0)) as un_qtt, 
-       r.out_req_stat,
-
-       e.emp_name,
-
-       c.client_name
+SELECT 
+  r.out_req_code, 
+  r.out_req_date, 
+  d.ord_amount,
+  
+  pr.prod_name,
+  d.prod_code,
+  
+  d.out_req_d_amount, 
+  CAST(COALESCE(already_out.total_outbnd_qtt, 0) AS UNSIGNED) as outbnd_qtt,
+  
+  r.out_req_stat,
+  e.emp_name,
+  c.client_name
 
 FROM out_req_tbl r
 
 JOIN out_req_d_tbl d ON r.out_req_code = d.out_req_code
 JOIN prod_tbl pr ON pr.prod_code = d.prod_code
-LEFT JOIN poutbnd_tbl po ON po.outbound_request_code = r.out_req_code
+
+-- 이미 출고된 수량 집계 (제품별로)
+LEFT JOIN (
+  SELECT 
+    outbound_request_code,
+    prod_code,
+    SUM(outbnd_qtt) AS total_outbnd_qtt
+  FROM poutbnd_tbl
+  GROUP BY outbound_request_code, prod_code
+) already_out ON already_out.outbound_request_code = r.out_req_code 
+              AND already_out.prod_code = d.prod_code
+
 JOIN emp_tbl e ON e.emp_code = r.mcode
 JOIN client_tbl c ON c.client_code = r.client_code
+
 ORDER BY r.out_req_date DESC
 `;
 
@@ -93,9 +106,9 @@ SELECT
   od.spec AS spec_code,
   od.unit AS unit_code,   
 
- (COALESCE(stock_in.total_in, 0) - COALESCE(out_req.total_req, 0)) AS current_stock,  
+  (COALESCE(stock_in.total_in, 0) - COALESCE(out_req.total_req, 0)) AS current_stock,  
   COALESCE(already_out.already_out_amount, 0) AS already_out_amount,  
- (od.ord_amount - COALESCE(already_out.already_out_amount, 0)) AS pending_amount
+  (od.ord_amount - COALESCE(already_out.already_out_amount, 0)) AS pending_amount
 
 FROM ord_d_tbl od
 
@@ -111,9 +124,11 @@ LEFT JOIN (
 ) stock_in ON stock_in.prod_code = od.prod_code
 
 LEFT JOIN (
-  SELECT prod_code, SUM(out_req_d_amount) AS total_req
-  FROM out_req_d_tbl
-  GROUP BY prod_code
+  SELECT ord.prod_code, SUM(ord.out_req_d_amount) AS total_req
+  FROM out_req_d_tbl ord
+  JOIN out_req_tbl ore ON ord.out_req_code = ore.out_req_code
+  WHERE ore.out_req_stat != 'r4'
+  GROUP BY ord.prod_code
 ) out_req ON out_req.prod_code = od.prod_code
 
 LEFT JOIN (
@@ -123,6 +138,7 @@ LEFT JOIN (
     SUM(ord.out_req_d_amount) AS already_out_amount
   FROM out_req_d_tbl ord
   JOIN out_req_tbl ore ON ord.out_req_code = ore.out_req_code
+  WHERE ore.out_req_stat != 'r4'
   GROUP BY ore.ord_code, ord.prod_code
 ) already_out ON already_out.ord_code = od.ord_code 
               AND already_out.prod_code = od.prod_code
@@ -239,7 +255,11 @@ SELECT
   od.prod_code,
   od.delivery_date,
   od.spec AS spec_code,
-  od.unit AS unit_code
+  od.unit AS unit_code,
+  od.ord_amount,
+  
+  COALESCE(ord_already_out.ord_already_outbnd_qtt, 0) AS ord_already_outbnd_qtt,
+  (od.ord_amount - COALESCE(ord_already_out.ord_already_outbnd_qtt, 0)) AS remaining_stock
 
 FROM ord_d_tbl od
 
@@ -268,6 +288,16 @@ LEFT JOIN (
   WHERE outbound_request_code = ?
   GROUP BY prod_code
 ) already_out ON already_out.prod_code = od.prod_code
+
+LEFT JOIN (
+  SELECT 
+    outreq_inner.ord_code,
+    pout.prod_code, 
+    SUM(pout.outbnd_qtt) AS ord_already_outbnd_qtt
+  FROM poutbnd_tbl pout
+  JOIN out_req_tbl outreq_inner ON pout.outbound_request_code = outreq_inner.out_req_code
+  GROUP BY outreq_inner.ord_code, pout.prod_code
+) ord_already_out ON ord_already_out.ord_code = od.ord_code AND ord_already_out.prod_code = od.prod_code
 
 WHERE outreq.out_req_code = ?
 `;
@@ -342,6 +372,30 @@ FROM poutbnd_tbl
 WHERE poutbnd_code LIKE CONCAT(?, '-P%')
 `;
 
+// 출고요청 삭제
+const deleteOutReq = `
+UPDATE out_req_tbl 
+  SET out_req_stat = 'r4',
+      updated_at = NOW()
+  WHERE out_req_code = ?
+`;
+
+// 출고요청 업데이트
+const updateOutReq = `
+  UPDATE out_req_tbl 
+  SET note = ?,
+      updated_at = NOW()
+  WHERE out_req_code = ?
+`;
+
+// 출고요청 상세 업데이트
+const updateOutReqDetail = `
+  UPDATE out_req_d_tbl
+  SET out_req_d_amount = ?
+  WHERE out_req_code = ?
+    AND prod_code = ?
+`;
+
 module.exports = {
   selectAllOutreqtbl,
   searchOutreqtbl,
@@ -356,5 +410,8 @@ module.exports = {
   selectLotsByProdCode,
   insertOutbound,
   updateOutReqStat,
-  generateOutCode
+  generateOutCode,
+  deleteOutReq,
+  updateOutReq,
+  updateOutReqDetail,
 };
